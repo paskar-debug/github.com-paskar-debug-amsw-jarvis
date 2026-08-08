@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
@@ -19,7 +20,10 @@ export default function LoginPage() {
   if (sent) {
     return (
       <div className="page">
-        <p>Tjek din indbakke ({email}) for et login-link.</p>
+        <div className="login-form">
+          <Image src="/logo.png" alt="Paramasamy" width={56} height={56} priority />
+          <p>Tjek din indbakke ({email}) for et login-link.</p>
+        </div>
       </div>
     );
   }
@@ -27,6 +31,7 @@ export default function LoginPage() {
   return (
     <div className="page">
       <form className="login-form" onSubmit={handleSubmit}>
+        <Image src="/logo.png" alt="Paramasamy" width={56} height={56} priority />
         <h1>AMSW Jarvis</h1>
         <input
           type="email"

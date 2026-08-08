@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
@@ -44,8 +45,11 @@ export default function DashboardPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>AMSW Jarvis</h1>
-        <span>
+        <div className="brand">
+          <Image src="/logo.png" alt="Paramasamy" width={36} height={36} priority />
+          <h1>AMSW Jarvis</h1>
+        </div>
+        <span className="live-pill">
           <span className="live-dot" />
           Live
         </span>

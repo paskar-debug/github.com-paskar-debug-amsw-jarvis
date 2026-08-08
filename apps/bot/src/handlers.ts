@@ -58,6 +58,57 @@ function significantWords(query: string): string[] {
   return words.length > 0 ? words : query.split(/\s+/).filter(Boolean);
 }
 
+type CalendarEventCandidate = { id: string; title: string; starts_at: string; source: "manual" | "google"; external_id: string | null };
+
+// Single-user personal bot: an in-memory pending-list is enough to let a
+// short follow-up ("begge", "alle", or a name from the list) resolve an
+// ambiguous delete without re-running the fuzzy search from scratch.
+let pendingDeleteCandidates: { candidates: CalendarEventCandidate[]; expiresAt: number } | null = null;
+const PENDING_TTL_MS = 5 * 60 * 1000;
+
+function formatCandidateLine(c: CalendarEventCandidate): string {
+  const when = new Date(c.starts_at).toLocaleString("da-DK", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Copenhagen" });
+  return `- ${c.title} (${when})`;
+}
+
+async function deleteCandidate(candidate: CalendarEventCandidate): Promise<void> {
+  if (candidate.source === "google" && candidate.external_id && env.google.refreshToken && env.google.clientId) {
+    try {
+      await deleteGoogleCalendarEvent(env.google, candidate.external_id);
+    } catch (err) {
+      console.error("Kunne ikke slette Google Kalender-begivenhed:", err);
+    }
+  }
+  const { error } = await supabase.from("calendar_events").delete().eq("id", candidate.id);
+  if (error) throw error;
+}
+
+/** Tries to resolve a short follow-up ("begge", "alle", a name from the list) against the last ambiguous delete list. */
+async function resolveFollowupDelete(text: string): Promise<string | null> {
+  if (!pendingDeleteCandidates || pendingDeleteCandidates.expiresAt < Date.now()) {
+    pendingDeleteCandidates = null;
+    return null;
+  }
+  const { candidates } = pendingDeleteCandidates;
+  const lower = text.toLowerCase();
+
+  if (/\b(begge|alle|dem alle sammen|alle sammen)\b/.test(lower)) {
+    for (const c of candidates) await deleteCandidate(c);
+    pendingDeleteCandidates = null;
+    return `Slettede ${candidates.length} aftaler:\n${candidates.map(formatCandidateLine).join("\n")}`;
+  }
+
+  const words = significantWords(text);
+  const matches = candidates.filter((c) => words.some((w) => c.title.toLowerCase().includes(w)));
+  if (matches.length === 1) {
+    await deleteCandidate(matches[0]);
+    pendingDeleteCandidates = null;
+    return `Aftale slettet: "${matches[0].title}"`;
+  }
+
+  return null;
+}
+
 export async function deleteCalendarEvent(query: string): Promise<string> {
   // Match on individual significant words rather than the whole phrase: the
   // classifier occasionally mis-spells (e.g. Norwegian "møte" for Danish
@@ -80,29 +131,20 @@ export async function deleteCalendarEvent(query: string): Promise<string> {
   }
 
   if (matches.length > 1) {
-    const list = matches
-      .map((m) => `- ${m.title} (${new Date(m.starts_at).toLocaleString("da-DK", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Copenhagen" })})`)
-      .join("\n");
-    return `Fandt flere aftaler der matcher "${query}" – vær mere specifik:\n${list}`;
+    pendingDeleteCandidates = { candidates: matches, expiresAt: Date.now() + PENDING_TTL_MS };
+    return `Fandt flere aftaler der matcher "${query}" – sig "begge"/"alle", eller vær mere specifik:\n${matches.map(formatCandidateLine).join("\n")}`;
   }
 
-  const match = matches[0];
-  if (match.source === "google" && match.external_id && env.google.refreshToken && env.google.clientId) {
-    try {
-      await deleteGoogleCalendarEvent(env.google, match.external_id);
-    } catch (err) {
-      console.error("Kunne ikke slette Google Kalender-begivenhed:", err);
-    }
-  }
-
-  const { error: deleteError } = await supabase.from("calendar_events").delete().eq("id", match.id);
-  if (deleteError) throw deleteError;
-
-  return `Aftale slettet: "${match.title}"`;
+  await deleteCandidate(matches[0]);
+  pendingDeleteCandidates = null;
+  return `Aftale slettet: "${matches[0].title}"`;
 }
 
 /** Classifies a free-form message and routes it to the right action. */
 export async function handleFreeformMessage(text: string): Promise<string> {
+  const followup = await resolveFollowupDelete(text);
+  if (followup) return followup;
+
   if (!env.anthropicApiKey) {
     return createTask(text);
   }

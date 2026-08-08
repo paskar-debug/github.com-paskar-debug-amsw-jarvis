@@ -117,6 +117,22 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["integration_sync_state"]["Row"]>;
         Relationships: [];
       };
+      drafts: {
+        Row: {
+          id: string;
+          owner_id: string;
+          request: string;
+          content: string;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["drafts"]["Row"]> & {
+          owner_id: string;
+          request: string;
+          content: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["drafts"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

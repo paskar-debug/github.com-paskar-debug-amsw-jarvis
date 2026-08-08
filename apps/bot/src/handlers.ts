@@ -158,7 +158,10 @@ export async function handleFreeformMessage(text: string): Promise<string> {
       return deleteCalendarEvent(result.query);
     }
     if (result.kind === "draft") {
-      return generateDraft(text, env.anthropicApiKey);
+      const content = await generateDraft(text, env.anthropicApiKey);
+      const { error } = await supabase.from("drafts").insert({ owner_id: env.ownerId, request: text, content });
+      if (error) console.error("Kunne ikke gemme udkast i databasen:", error);
+      return content;
     }
     return createTask(result.title);
   } catch (err) {

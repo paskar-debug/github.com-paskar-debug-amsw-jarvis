@@ -60,3 +60,21 @@ export function IconHeart(props: IconProps) {
     </svg>
   );
 }
+
+export function IconDraft(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M14 3.5 18.5 8 8 18.5H3.5V14Z" />
+      <path d="M12.5 5 17 9.5" />
+    </svg>
+  );
+}
+
+export function IconCopy(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <rect x="8" y="8" width="12" height="12" rx="2" />
+      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+    </svg>
+  );
+}

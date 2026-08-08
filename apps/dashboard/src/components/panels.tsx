@@ -1,13 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import type { Database } from "@amsw/db";
-import { IconCalendar, IconHeart, IconPulse, IconTarget, IconTasks } from "./icons";
+import { IconCalendar, IconCopy, IconDraft, IconHeart, IconPulse, IconTarget, IconTasks } from "./icons";
 
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
 type CalendarRow = Database["public"]["Tables"]["calendar_events"]["Row"];
 type StatusRow = Database["public"]["Tables"]["amsw_status"]["Row"];
 type GoalRow = Database["public"]["Tables"]["goals"]["Row"];
 type WellbeingRow = Database["public"]["Tables"]["wellbeing_entries"]["Row"];
+type DraftRow = Database["public"]["Tables"]["drafts"]["Row"];
 
 function formatDate(iso: string | null) {
   if (!iso) return null;
@@ -131,6 +133,45 @@ export function WellbeingPanel({ entries }: { entries: WellbeingRow[] }) {
             {formatDate(entry.recorded_at)}
           </div>
         </div>
+      ))}
+    </section>
+  );
+}
+
+function DraftCard({ draft }: { draft: DraftRow }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(draft.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="draft-card">
+      <div className="draft-card-header">
+        <div>
+          <div className="draft-request">{draft.request}</div>
+          <div className="meta">{formatDate(draft.created_at)}</div>
+        </div>
+        <button className="copy-button" onClick={handleCopy} type="button">
+          <IconCopy />
+          {copied ? "Kopieret!" : "Kopiér"}
+        </button>
+      </div>
+      <pre className="draft-content">{draft.content}</pre>
+    </div>
+  );
+}
+
+export function DraftsPanel({ drafts }: { drafts: DraftRow[] }) {
+  const recent = [...drafts].reverse().slice(0, 10);
+  return (
+    <section className="panel panel-wide">
+      <PanelHeader icon={<IconDraft />} title="Udkast" />
+      {recent.length === 0 && <p className="empty">Ingen udkast endnu.</p>}
+      {recent.map((draft) => (
+        <DraftCard draft={draft} key={draft.id} />
       ))}
     </section>
   );

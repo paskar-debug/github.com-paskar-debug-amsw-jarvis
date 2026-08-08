@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
-import { CalendarPanel, GoalsPanel, StatusPanel, TasksPanel, WellbeingPanel } from "@/components/panels";
+import { CalendarPanel, DraftsPanel, GoalsPanel, StatusPanel, TasksPanel, WellbeingPanel } from "@/components/panels";
 
 type Tables = Database["public"]["Tables"];
 
@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const statuses = useLiveTable<"amsw_status", Tables["amsw_status"]["Row"]>("amsw_status", userId ?? null, { column: "recorded_at", ascending: false });
   const goals = useLiveTable<"goals", Tables["goals"]["Row"]>("goals", userId ?? null, { column: "created_at", ascending: false });
   const wellbeing = useLiveTable<"wellbeing_entries", Tables["wellbeing_entries"]["Row"]>("wellbeing_entries", userId ?? null, { column: "recorded_at" });
+  const drafts = useLiveTable<"drafts", Tables["drafts"]["Row"]>("drafts", userId ?? null, { column: "created_at" });
 
   async function handleToggleDone(id: string, done: boolean) {
     await getSupabaseClient()
@@ -59,6 +60,7 @@ export default function DashboardPage() {
         <CalendarPanel events={events} />
         <GoalsPanel goals={goals} />
         <WellbeingPanel entries={wellbeing} />
+        <DraftsPanel drafts={drafts} />
       </div>
     </div>
   );

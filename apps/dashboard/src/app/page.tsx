@@ -32,6 +32,13 @@ export default function DashboardPage() {
   const goals = useLiveTable<"goals", Tables["goals"]["Row"]>("goals", userId ?? null, { column: "created_at", ascending: false });
   const wellbeing = useLiveTable<"wellbeing_entries", Tables["wellbeing_entries"]["Row"]>("wellbeing_entries", userId ?? null, { column: "recorded_at" });
 
+  async function handleToggleDone(id: string, done: boolean) {
+    await getSupabaseClient()
+      .from("tasks")
+      .update({ status: done ? "done" : "todo" })
+      .eq("id", id);
+  }
+
   if (!userId) return null;
 
   return (
@@ -45,7 +52,7 @@ export default function DashboardPage() {
       </div>
       <div className="grid">
         <StatusPanel statuses={statuses} />
-        <TasksPanel tasks={tasks} />
+        <TasksPanel tasks={tasks} onToggleDone={handleToggleDone} />
         <CalendarPanel events={events} />
         <GoalsPanel goals={goals} />
         <WellbeingPanel entries={wellbeing} />

@@ -85,6 +85,22 @@ body {
   font-size: 0.8rem;
 }
 
+.item-checkable {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.item-checkable input[type="checkbox"] {
+  margin-top: 0.2rem;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .empty {
   color: var(--muted);
   font-size: 0.85rem;

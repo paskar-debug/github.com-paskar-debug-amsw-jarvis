@@ -13,20 +13,29 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleString("da-DK", { dateStyle: "short", timeStyle: "short" });
 }
 
-export function TasksPanel({ tasks }: { tasks: TaskRow[] }) {
+export function TasksPanel({
+  tasks,
+  onToggleDone,
+}: {
+  tasks: TaskRow[];
+  onToggleDone: (id: string, done: boolean) => void;
+}) {
   const open = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
   return (
     <section className="panel">
       <h2>Opgaver</h2>
       {open.length === 0 && <p className="empty">Ingen åbne opgaver.</p>}
       {open.map((task) => (
-        <div className="item" key={task.id}>
-          {task.title}
-          <div className="meta">
-            {task.priority.toUpperCase()} · {task.source}
-            {task.due_at ? ` · ${formatDate(task.due_at)}` : ""}
+        <label className="item item-checkable" key={task.id}>
+          <input type="checkbox" onChange={() => onToggleDone(task.id, true)} />
+          <div>
+            {task.title}
+            <div className="meta">
+              {task.priority.toUpperCase()} · {task.source}
+              {task.due_at ? ` · ${formatDate(task.due_at)}` : ""}
+            </div>
           </div>
-        </div>
+        </label>
       ))}
     </section>
   );

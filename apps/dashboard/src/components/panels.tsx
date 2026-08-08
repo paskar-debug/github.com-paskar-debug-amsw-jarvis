@@ -16,6 +16,8 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleString("da-DK", { dateStyle: "short", timeStyle: "short" });
 }
 
+const STATE_LABELS: Record<string, string> = { green: "OK", yellow: "Advarsel", red: "Kritisk" };
+
 function PanelHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="panel-header">
@@ -85,15 +87,38 @@ export function StatusPanel({ statuses }: { statuses: StatusRow[] }) {
     <section className="panel">
       <PanelHeader icon={<IconPulse />} title="AMSW-status" />
       {latest.length === 0 && <p className="empty">Ingen status endnu.</p>}
-      {latest.map((status) => (
-        <div className="item" key={status.id}>
-          <span className={`badge ${status.state}`} />
-          {status.area}
-          <div className="meta">
-            {status.note ?? ""} {formatDate(status.recorded_at)}
+      {latest.map((status) => {
+        const metrics = status.metrics as { ordersToday?: number; revenueToday?: number; currency?: string | null };
+        const hasOrderMetrics = typeof metrics?.ordersToday === "number";
+        return (
+          <div className="item status-item" key={status.id}>
+            <div className="status-item-top">
+              <span className="status-name">
+                <span className={`badge ${status.state}`} />
+                {status.area}
+              </span>
+              <span className={`status-pill ${status.state}`}>{STATE_LABELS[status.state] ?? status.state}</span>
+            </div>
+            {hasOrderMetrics && (
+              <div className="status-stats">
+                <div className="stat">
+                  <span className="stat-value">{metrics.ordersToday}</span>
+                  <span className="stat-label">ordrer i dag</span>
+                </div>
+                <div className="stat">
+                  <span className="stat-value">
+                    {metrics.revenueToday} {metrics.currency ?? ""}
+                  </span>
+                  <span className="stat-label">omsætning</span>
+                </div>
+              </div>
+            )}
+            <div className="meta">
+              {hasOrderMetrics ? "" : (status.note ?? "")} {formatDate(status.recorded_at)}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </section>
   );
 }

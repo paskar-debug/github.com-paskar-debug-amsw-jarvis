@@ -4,6 +4,7 @@ import { env } from "./env.js";
 import { supabase } from "./supabase.js";
 import { syncAll } from "./sync.js";
 import { classifyMessage } from "./classify.js";
+import { generateDraft } from "./draft.js";
 
 export async function createTask(title: string): Promise<string> {
   const { error } = await supabase.from("tasks").insert({
@@ -155,6 +156,9 @@ export async function handleFreeformMessage(text: string): Promise<string> {
     }
     if (result.kind === "delete_event") {
       return deleteCalendarEvent(result.query);
+    }
+    if (result.kind === "draft") {
+      return generateDraft(text, env.anthropicApiKey);
     }
     return createTask(result.title);
   } catch (err) {

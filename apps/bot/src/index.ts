@@ -22,9 +22,28 @@ bot.use(async (ctx, next) => {
   await next();
 });
 
+const TELEGRAM_MESSAGE_LIMIT = 3500;
+
+function splitForTelegram(text: string): string[] {
+  if (text.length <= TELEGRAM_MESSAGE_LIMIT) return [text];
+  const chunks: string[] = [];
+  let remaining = text;
+  while (remaining.length > TELEGRAM_MESSAGE_LIMIT) {
+    const breakPoint = remaining.lastIndexOf("\n\n", TELEGRAM_MESSAGE_LIMIT);
+    const cut = breakPoint > TELEGRAM_MESSAGE_LIMIT * 0.5 ? breakPoint : TELEGRAM_MESSAGE_LIMIT;
+    chunks.push(remaining.slice(0, cut).trim());
+    remaining = remaining.slice(cut).trim();
+  }
+  if (remaining) chunks.push(remaining);
+  return chunks;
+}
+
 async function replyText(ctx: Context, text: string, spokenInput: boolean) {
-  await ctx.reply(text);
-  if (!spokenInput) return;
+  for (const chunk of splitForTelegram(text)) {
+    await ctx.reply(chunk);
+  }
+  // Lange udkast/analyser er ikke egnede til at læse højt - kun korte svar bliver til tale.
+  if (!spokenInput || text.length > 600) return;
   try {
     const { audio, format } = await synthesizeSpeech(text, ttsConfig);
     if (format === "ogg") {
@@ -56,7 +75,7 @@ bot.command("help", (ctx) =>
       "/maal <titel> - opret mål",
       "/velvaere <humør 1-5> <energi 1-5> [søvntimer] [note] - log velvære",
       "/sync - hent nyt fra Google Kalender, Todoist og Shopify",
-      "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave eller en kalenderaftale, alt efter indholdet.",
+      "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave, en kalenderaftale, en sletning af en aftale, eller et udkast/analyse du beder om at få skrevet med det samme, alt efter indholdet.",
     ].join("\n"),
   ),
 );

@@ -46,8 +46,7 @@ export default function DashboardPage() {
     <div className="page">
       <div className="page-header">
         <div className="brand">
-          <Image src="/logo-icon.png" alt="Paramasamy" width={44} height={47} priority />
-          <h1>AMSW Jarvis</h1>
+          <Image src="/logo-icon.png" alt="Paramasamy" width={72} height={77} priority />
         </div>
         <span className="live-pill">
           <span className="live-dot" />

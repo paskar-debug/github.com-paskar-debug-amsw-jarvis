@@ -21,7 +21,7 @@ export default function LoginPage() {
     return (
       <div className="page">
         <div className="login-form">
-          <Image src="/logo-icon.png" alt="Paramasamy" width={68} height={73} priority />
+          <Image src="/logo-icon.png" alt="Paramasamy" width={88} height={94} priority />
           <p>Tjek din indbakke ({email}) for et login-link.</p>
         </div>
       </div>
@@ -31,8 +31,7 @@ export default function LoginPage() {
   return (
     <div className="page">
       <form className="login-form" onSubmit={handleSubmit}>
-        <Image src="/logo.png" alt="Paramasamy" width={56} height={56} priority />
-        <h1>AMSW Jarvis</h1>
+        <Image src="/logo-icon.png" alt="Paramasamy" width={88} height={94} priority />
         <input
           type="email"
           placeholder="din@email.dk"

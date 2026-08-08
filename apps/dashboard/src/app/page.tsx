@@ -41,6 +41,10 @@ export default function DashboardPage() {
       .eq("id", id);
   }
 
+  async function handleDeleteDraft(id: string) {
+    await getSupabaseClient().from("drafts").delete().eq("id", id);
+  }
+
   if (!userId) return null;
 
   return (
@@ -60,7 +64,7 @@ export default function DashboardPage() {
         <CalendarPanel events={events} />
         <GoalsPanel goals={goals} />
         <WellbeingPanel entries={wellbeing} />
-        <DraftsPanel drafts={drafts} />
+        <DraftsPanel drafts={drafts} onDelete={handleDeleteDraft} />
       </div>
     </div>
   );

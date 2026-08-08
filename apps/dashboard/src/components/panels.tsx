@@ -138,7 +138,7 @@ export function WellbeingPanel({ entries }: { entries: WellbeingRow[] }) {
   );
 }
 
-function DraftCard({ draft }: { draft: DraftRow }) {
+function DraftCard({ draft, onDelete }: { draft: DraftRow; onDelete: (id: string) => void }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -150,10 +150,13 @@ function DraftCard({ draft }: { draft: DraftRow }) {
   return (
     <div className="draft-card">
       <div className="draft-card-header">
-        <div>
-          <div className="draft-request">{draft.request}</div>
-          <div className="meta">{formatDate(draft.created_at)}</div>
-        </div>
+        <label className="draft-request-row">
+          <input type="checkbox" onChange={() => onDelete(draft.id)} />
+          <div>
+            <div className="draft-request">{draft.request}</div>
+            <div className="meta">{formatDate(draft.created_at)}</div>
+          </div>
+        </label>
         <button className="copy-button" onClick={handleCopy} type="button">
           <IconCopy />
           {copied ? "Kopieret!" : "Kopiér"}
@@ -164,14 +167,14 @@ function DraftCard({ draft }: { draft: DraftRow }) {
   );
 }
 
-export function DraftsPanel({ drafts }: { drafts: DraftRow[] }) {
+export function DraftsPanel({ drafts, onDelete }: { drafts: DraftRow[]; onDelete: (id: string) => void }) {
   const recent = [...drafts].reverse().slice(0, 10);
   return (
     <section className="panel panel-wide">
       <PanelHeader icon={<IconDraft />} title="Udkast" />
       {recent.length === 0 && <p className="empty">Ingen udkast endnu.</p>}
       {recent.map((draft) => (
-        <DraftCard draft={draft} key={draft.id} />
+        <DraftCard draft={draft} onDelete={onDelete} key={draft.id} />
       ))}
     </section>
   );

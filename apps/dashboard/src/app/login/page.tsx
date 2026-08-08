@@ -21,7 +21,7 @@ export default function LoginPage() {
     return (
       <div className="page">
         <div className="login-form">
-          <Image src="/logo.png" alt="Paramasamy" width={56} height={56} priority />
+          <Image src="/logo-icon.png" alt="Paramasamy" width={68} height={73} priority />
           <p>Tjek din indbakke ({email}) for et login-link.</p>
         </div>
       </div>

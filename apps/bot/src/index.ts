@@ -3,7 +3,7 @@ import type { AmswState } from "@amsw/core";
 import { env } from "./env.js";
 import { transcribeVoice } from "./stt.js";
 import { synthesizeSpeech, type TtsConfig } from "./tts.js";
-import { createGoal, createTask, logWellbeing, runSync, setStatus } from "./handlers.js";
+import { createGoal, createTask, handleFreeformMessage, logWellbeing, runSync, setStatus } from "./handlers.js";
 import { syncAll } from "./sync.js";
 
 const bot = new Bot(env.telegramBotToken);
@@ -56,7 +56,7 @@ bot.command("help", (ctx) =>
       "/maal <titel> - opret mål",
       "/velvaere <humør 1-5> <energi 1-5> [søvntimer] [note] - log velvære",
       "/sync - hent nyt fra Google Kalender, Todoist og Shopify",
-      "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave.",
+      "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave eller en kalenderaftale, alt efter indholdet.",
     ].join("\n"),
   ),
 );
@@ -98,7 +98,7 @@ bot.command("sync", async (ctx) => {
 });
 
 bot.on("message:text", async (ctx) => {
-  await replyText(ctx, await createTask(ctx.message.text), false);
+  await replyText(ctx, await handleFreeformMessage(ctx.message.text), false);
 });
 
 bot.on("message:voice", async (ctx) => {
@@ -112,7 +112,7 @@ bot.on("message:voice", async (ctx) => {
   const audio = Buffer.from(await response.arrayBuffer());
 
   const text = await transcribeVoice(audio, env.openaiApiKey);
-  await replyText(ctx, await createTask(text), true);
+  await replyText(ctx, await handleFreeformMessage(text), true);
 });
 
 bot.catch((err) => console.error("Bot-fejl:", err));

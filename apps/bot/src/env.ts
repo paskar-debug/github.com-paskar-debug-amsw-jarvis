@@ -21,6 +21,8 @@ export const env = {
   telegramAllowedUserId: required("TELEGRAM_ALLOWED_USER_ID"),
 
   openaiApiKey: process.env.OPENAI_API_KEY ?? "",
+  // Bruges kun til at klassificere beskeder som opgave/kalenderaftale - Whisper/TTS bruger stadig OPENAI_API_KEY.
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
 
   ttsProvider: (process.env.TTS_PROVIDER ?? "openai") as "openai" | "elevenlabs",
   openaiTtsVoice: process.env.OPENAI_TTS_VOICE ?? "alloy",

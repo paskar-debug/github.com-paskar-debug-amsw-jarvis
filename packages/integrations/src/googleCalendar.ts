@@ -68,3 +68,25 @@ export async function syncGoogleCalendar(
 
   return rows.length;
 }
+
+/** Creates a real event on the user's Google Calendar and returns its id. */
+export async function createGoogleCalendarEvent(
+  config: GoogleCalendarConfig,
+  event: { title: string; description?: string | null; startsAt: string; endsAt: string },
+): Promise<string> {
+  const auth = createOAuthClient(config);
+  const calendar = google.calendar({ version: "v3", auth });
+
+  const { data } = await calendar.events.insert({
+    calendarId: config.calendarId,
+    requestBody: {
+      summary: event.title,
+      description: event.description ?? undefined,
+      start: { dateTime: event.startsAt },
+      end: { dateTime: event.endsAt },
+    },
+  });
+
+  if (!data.id) throw new Error("Google Calendar returnerede ingen event-id.");
+  return data.id;
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import type { Database } from "@amsw/db";
+import { IconCalendar, IconHeart, IconPulse, IconTarget, IconTasks } from "./icons";
 
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
 type CalendarRow = Database["public"]["Tables"]["calendar_events"]["Row"];
@@ -13,6 +14,15 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleString("da-DK", { dateStyle: "short", timeStyle: "short" });
 }
 
+function PanelHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+  return (
+    <div className="panel-header">
+      <span className="panel-icon">{icon}</span>
+      <h2>{title}</h2>
+    </div>
+  );
+}
+
 export function TasksPanel({
   tasks,
   onToggleDone,
@@ -23,7 +33,7 @@ export function TasksPanel({
   const open = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
   return (
     <section className="panel">
-      <h2>Opgaver</h2>
+      <PanelHeader icon={<IconTasks />} title="Opgaver" />
       {open.length === 0 && <p className="empty">Ingen åbne opgaver.</p>}
       {open.map((task) => (
         <label className="item item-checkable" key={task.id}>
@@ -45,7 +55,7 @@ export function CalendarPanel({ events }: { events: CalendarRow[] }) {
   const upcoming = events.filter((e) => new Date(e.ends_at).getTime() >= Date.now());
   return (
     <section className="panel">
-      <h2>Kalender</h2>
+      <PanelHeader icon={<IconCalendar />} title="Kalender" />
       {upcoming.length === 0 && <p className="empty">Ingen kommende begivenheder.</p>}
       {upcoming.map((event) => (
         <div className="item" key={event.id}>
@@ -71,7 +81,7 @@ export function StatusPanel({ statuses }: { statuses: StatusRow[] }) {
   const latest = [...latestByArea.values()];
   return (
     <section className="panel">
-      <h2>AMSW-status</h2>
+      <PanelHeader icon={<IconPulse />} title="AMSW-status" />
       {latest.length === 0 && <p className="empty">Ingen status endnu.</p>}
       {latest.map((status) => (
         <div className="item" key={status.id}>
@@ -90,7 +100,7 @@ export function GoalsPanel({ goals }: { goals: GoalRow[] }) {
   const active = goals.filter((g) => g.status === "active");
   return (
     <section className="panel">
-      <h2>Mål</h2>
+      <PanelHeader icon={<IconTarget />} title="Mål" />
       {active.length === 0 && <p className="empty">Ingen aktive mål.</p>}
       {active.map((goal) => (
         <div className="item" key={goal.id}>
@@ -111,7 +121,7 @@ export function WellbeingPanel({ entries }: { entries: WellbeingRow[] }) {
   const recent = [...entries].reverse().slice(0, 7);
   return (
     <section className="panel">
-      <h2>Velvære</h2>
+      <PanelHeader icon={<IconHeart />} title="Velvære" />
       {recent.length === 0 && <p className="empty">Ingen registreringer endnu.</p>}
       {recent.map((entry) => (
         <div className="item" key={entry.id}>

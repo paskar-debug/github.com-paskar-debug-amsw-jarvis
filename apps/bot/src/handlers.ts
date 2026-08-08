@@ -1,5 +1,5 @@
 import type { AmswState } from "@amsw/core";
-import { createGoogleCalendarEvent } from "@amsw/integrations";
+import { createGoogleCalendarEvent, deleteGoogleCalendarEvent } from "@amsw/integrations";
 import { env } from "./env.js";
 import { supabase } from "./supabase.js";
 import { syncAll } from "./sync.js";
@@ -47,7 +47,61 @@ export async function createCalendarEvent(title: string, startsAt: string, endsA
   return `Aftale oprettet: "${title}" – ${when}${suffix}`;
 }
 
-/** Classifies a free-form message as a task or calendar event and creates the right thing. */
+const SEARCH_STOPWORDS = new Set(["møde", "møder", "mødet", "aftale", "aftalen", "med", "og", "til", "den", "det", "min", "mit", "hos", "på", "af", "for"]);
+
+function significantWords(query: string): string[] {
+  const words = query
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => w.replace(/[^\p{L}\p{N}]/gu, ""))
+    .filter((w) => w.length >= 3 && !SEARCH_STOPWORDS.has(w));
+  return words.length > 0 ? words : query.split(/\s+/).filter(Boolean);
+}
+
+export async function deleteCalendarEvent(query: string): Promise<string> {
+  // Match on individual significant words rather than the whole phrase: the
+  // classifier occasionally mis-spells (e.g. Norwegian "møte" for Danish
+  // "møde"), so a distinctive word like a name is far more robust than an
+  // exact-substring match on the full query.
+  const words = significantWords(query);
+  const orFilter = words.map((w) => `title.ilike.%${w}%`).join(",");
+
+  const { data: matches, error: searchError } = await supabase
+    .from("calendar_events")
+    .select("id, title, starts_at, source, external_id")
+    .eq("owner_id", env.ownerId)
+    .gte("starts_at", new Date().toISOString())
+    .or(orFilter)
+    .order("starts_at", { ascending: true });
+  if (searchError) throw searchError;
+
+  if (!matches || matches.length === 0) {
+    return `Fandt ingen kommende aftale der matcher "${query}".`;
+  }
+
+  if (matches.length > 1) {
+    const list = matches
+      .map((m) => `- ${m.title} (${new Date(m.starts_at).toLocaleString("da-DK", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Copenhagen" })})`)
+      .join("\n");
+    return `Fandt flere aftaler der matcher "${query}" – vær mere specifik:\n${list}`;
+  }
+
+  const match = matches[0];
+  if (match.source === "google" && match.external_id && env.google.refreshToken && env.google.clientId) {
+    try {
+      await deleteGoogleCalendarEvent(env.google, match.external_id);
+    } catch (err) {
+      console.error("Kunne ikke slette Google Kalender-begivenhed:", err);
+    }
+  }
+
+  const { error: deleteError } = await supabase.from("calendar_events").delete().eq("id", match.id);
+  if (deleteError) throw deleteError;
+
+  return `Aftale slettet: "${match.title}"`;
+}
+
+/** Classifies a free-form message and routes it to the right action. */
 export async function handleFreeformMessage(text: string): Promise<string> {
   if (!env.anthropicApiKey) {
     return createTask(text);
@@ -56,6 +110,9 @@ export async function handleFreeformMessage(text: string): Promise<string> {
     const result = await classifyMessage(text, env.anthropicApiKey);
     if (result.kind === "event") {
       return createCalendarEvent(result.title, result.startsAt, result.endsAt);
+    }
+    if (result.kind === "delete_event") {
+      return deleteCalendarEvent(result.query);
     }
     return createTask(result.title);
   } catch (err) {

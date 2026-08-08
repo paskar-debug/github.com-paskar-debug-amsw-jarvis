@@ -90,3 +90,10 @@ export async function createGoogleCalendarEvent(
   if (!data.id) throw new Error("Google Calendar returnerede ingen event-id.");
   return data.id;
 }
+
+/** Deletes an event from the user's Google Calendar. */
+export async function deleteGoogleCalendarEvent(config: GoogleCalendarConfig, eventId: string): Promise<void> {
+  const auth = createOAuthClient(config);
+  const calendar = google.calendar({ version: "v3", auth });
+  await calendar.events.delete({ calendarId: config.calendarId, eventId });
+}

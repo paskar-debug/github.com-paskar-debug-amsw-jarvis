@@ -8,6 +8,7 @@ import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
 import { CalendarPanel, DraftsPanel, GoalsPanel, StatusPanel, TasksPanel, WellbeingPanel } from "@/components/panels";
 import { Clock } from "@/components/Clock";
+import { QuotePanel } from "@/components/QuotePanel";
 
 type Tables = Database["public"]["Tables"];
 
@@ -61,6 +62,7 @@ export default function DashboardPage() {
         </span>
       </div>
       <div className="grid">
+        <QuotePanel />
         <StatusPanel statuses={statuses} />
         <TasksPanel tasks={tasks} onToggleDone={handleToggleDone} />
         <CalendarPanel events={events} />

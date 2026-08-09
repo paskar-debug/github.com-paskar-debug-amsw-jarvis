@@ -349,6 +349,29 @@ body::before {
   grid-column: 1 / -1;
 }
 
+.quote-block {
+  margin: 0;
+  border-left: 3px solid var(--brand-bright);
+  padding-left: 1.1rem;
+}
+
+.quote-block p {
+  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-size: 1.4rem;
+  font-weight: 400;
+  line-height: 1.35;
+  margin: 0 0 0.6rem;
+  color: var(--text);
+}
+
+.quote-block footer {
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
 .draft-card {
   padding: 0.9rem 0;
   border-bottom: 1px solid var(--border);

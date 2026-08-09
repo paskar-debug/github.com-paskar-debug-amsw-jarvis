@@ -70,6 +70,15 @@ export function IconDraft(props: IconProps) {
   );
 }
 
+export function IconQuote(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M7 8c-1.7 0-3 1.3-3 3v5h5v-5H6c0-1.1.9-2 2-2V8Z" fill="currentColor" stroke="none" />
+      <path d="M17 8c-1.7 0-3 1.3-3 3v5h5v-5h-3c0-1.1.9-2 2-2V8Z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function IconCopy(props: IconProps) {
   return (
     <svg {...common} {...props}>

@@ -18,7 +18,7 @@ function formatDate(iso: string | null) {
 
 const STATE_LABELS: Record<string, string> = { green: "OK", yellow: "Advarsel", red: "Kritisk" };
 
-function PanelHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+export function PanelHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="panel-header">
       <span className="panel-icon">{icon}</span>

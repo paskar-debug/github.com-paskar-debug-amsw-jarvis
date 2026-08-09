@@ -84,7 +84,7 @@ export function StatusPanel({ statuses }: { statuses: StatusRow[] }) {
   const latest = [...latestByArea.values()];
   return (
     <section className="panel">
-      <PanelHeader icon={<IconPulse />} title="AMSW-status" />
+      <PanelHeader icon={<IconPulse />} title="AMSW Shopify status" />
       {latest.length === 0 && <p className="empty">Ingen status endnu.</p>}
       {latest.map((status) => {
         const metrics = status.metrics as {

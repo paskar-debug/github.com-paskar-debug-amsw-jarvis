@@ -27,11 +27,14 @@ function panelClass(...extra: (string | false | undefined)[]) {
 
 const STATE_LABELS: Record<string, string> = { green: "OK", yellow: "Advarsel", red: "Kritisk" };
 
-export function PanelHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+export function PanelHeader({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle?: string }) {
   return (
     <div className="panel-header">
       <span className="panel-icon">{icon}</span>
-      <h2>{title}</h2>
+      <div className="panel-header-text">
+        <h2>{title}</h2>
+        {subtitle && <p className="panel-subtitle">{subtitle}</p>}
+      </div>
     </div>
   );
 }
@@ -58,16 +61,12 @@ export function TasksPanel({
   const open = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
   return (
     <section className={panelClass(flash && "panel-flash")}>
-      <PanelHeader icon={<IconTasks />} title="Opgaver" />
+      <PanelHeader icon={<IconTasks />} title="Opgaver" subtitle="Huskesedler du sender via tekst eller tale i Telegram" />
       {isLoading ? (
         <Skeleton lines={3} />
       ) : (
         <>
-          {open.length === 0 && (
-            <p className="empty">
-              Ingen åbne opgaver. Skriv eller indtal en huskeseddel-agtig besked til botten i Telegram (fx &quot;ring til Thomas&quot;), så dukker den op her – sæt flueben når den er klaret.
-            </p>
-          )}
+          {open.length === 0 && <p className="empty">Ingen åbne opgaver.</p>}
           {open.map((task) => (
             <label className="item item-checkable" key={task.id}>
               <input type="checkbox" onChange={() => onToggleDone(task.id, true)} />
@@ -270,16 +269,12 @@ export function DraftsPanel({ drafts, isLoading, flash, onDelete }: LiveProps & 
   const recent = [...drafts].reverse().slice(0, 10);
   return (
     <section className={panelClass("panel-wide", flash && "panel-flash")}>
-      <PanelHeader icon={<IconDraft />} title="Udkast" />
+      <PanelHeader icon={<IconDraft />} title="Udkast" subtitle="Analyser, opsummeringer og tekster du beder botten skrive med det samme" />
       {isLoading ? (
         <Skeleton lines={2} />
       ) : (
         <>
-          {recent.length === 0 && (
-            <p className="empty">
-              Ingen udkast endnu. Bed botten om et udkast, en analyse, en opsummering eller research om et emne i Telegram – det dukker op her, klar til at kopiere.
-            </p>
-          )}
+          {recent.length === 0 && <p className="empty">Ingen udkast endnu.</p>}
           {recent.map((draft) => (
             <DraftCard draft={draft} onDelete={onDelete} key={draft.id} />
           ))}

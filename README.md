@@ -5,6 +5,7 @@ Personligt Jarvis-system:
 - **Telegram-bot** (`apps/bot`) – tag imod tekst og talebeskeder, opret opgaver/status/mål/velvære, og svar med talebeskeder (OpenAI TTS eller ElevenLabs).
 - **Supabase** (`packages/db`) – central database for opgaver, kalender, AMSW-status, mål og velvære, med Row Level Security scoped til dig som bruger.
 - **Integrationer** (`packages/integrations`) – henter data ind fra Google Kalender og Shopify.
+- **Infrastruktur-status** (`packages/integrations/src/infraStatus.ts`) – tjekker plan/forbrug/sundhed for Supabase, Vercel, Railway, OpenAI og Anthropic hver 6. time.
 - **Dashboard** (`apps/dashboard`) – Next.js-app der opdaterer sig selv live via Supabase Realtime.
 
 ## Struktur
@@ -58,7 +59,16 @@ Opret en custom app i din butiks admin (**Settings -> Apps -> Develop apps**), g
 - **Tale ind**: kræver `OPENAI_API_KEY` (Whisper).
 - **Tale ud**: sæt `TTS_PROVIDER` til `openai` (samme nøgle, stemme via `OPENAI_TTS_VOICE`) eller `elevenlabs` (kræver `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID`).
 
-## 7. Udfyld `.env`
+## 7. Infrastruktur-status (valgfrit)
+
+Viser plan/forbrug/sundhed for selve platformene i dashboardets Integrationer-boks. Uden disse tokens virker resten af systemet fint, men infrastruktur-delen af boksen viser "Ikke sat op".
+
+- **Supabase**: Personal Access Token fra [dashboard.supabase.com/account/tokens](https://supabase.com/dashboard/account/tokens) -> `SUPABASE_ACCESS_TOKEN`.
+- **Vercel**: token fra [vercel.com/account/tokens](https://vercel.com/account/tokens) -> `VERCEL_API_TOKEN`.
+- **Railway**: token fra [railway.app/account/tokens](https://railway.app/account/tokens) -> `RAILWAY_API_TOKEN`.
+- **OpenAI/Anthropic**: genbruger `OPENAI_API_KEY`/`ANTHROPIC_API_KEY` ovenfor.
+
+## 8. Udfyld `.env`
 
 ```bash
 cp .env.example .env
@@ -66,15 +76,15 @@ cp .env.example .env
 
 Udfyld alle værdier beskrevet ovenfor. `apps/bot` og `apps/dashboard` læser fra denne fil via `dotenv` / Next.js' indbyggede env-håndtering – kopiér evt. relevante `NEXT_PUBLIC_*` værdier til `apps/dashboard/.env.local` også.
 
-## 8. Kør botten
+## 9. Kør botten
 
 ```bash
 npm run bot:dev
 ```
 
-Skriv eller indtal en besked til botten i Telegram – den bliver automatisk til en opgave. Brug `/help` for alle kommandoer, og `/sync` for at hente data fra Google Kalender og Shopify med det samme (kører også automatisk hvert 15. minut).
+Skriv eller indtal en besked til botten i Telegram – den bliver automatisk til en opgave. Brug `/help` for alle kommandoer, og `/sync` for at hente data fra Google Kalender og Shopify med det samme (kører også automatisk hvert 15. minut). Infrastruktur-status tjekkes automatisk hver 6. time.
 
-## 9. Kør dashboardet
+## 10. Kør dashboardet
 
 ```bash
 npm run dashboard:dev

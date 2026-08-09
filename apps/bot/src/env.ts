@@ -41,4 +41,13 @@ export const env = {
     adminApiToken: process.env.SHOPIFY_ADMIN_API_TOKEN ?? "",
     apiVersion: process.env.SHOPIFY_API_VERSION ?? "2024-10",
   },
+
+  // Status/plan for platformene selv (Supabase/Vercel/Railway/OpenAI/Anthropic),
+  // adskilt fra forretnings-integrationerne ovenfor.
+  infra: {
+    supabaseAccessToken: process.env.SUPABASE_ACCESS_TOKEN ?? "",
+    vercelApiToken: process.env.VERCEL_API_TOKEN ?? "",
+    vercelProjectName: process.env.VERCEL_PROJECT_NAME ?? "amsw",
+    railwayApiToken: process.env.RAILWAY_API_TOKEN ?? "",
+  },
 };

@@ -5,6 +5,7 @@ import { transcribeVoice } from "./stt.js";
 import { synthesizeSpeech, type TtsConfig } from "./tts.js";
 import { createTask, handleFreeformMessage, logWellbeing, runSync, setStatus } from "./handlers.js";
 import { syncAll } from "./sync.js";
+import { checkInfra } from "./infraSync.js";
 
 const bot = new Bot(env.telegramBotToken);
 
@@ -133,6 +134,13 @@ const SYNC_INTERVAL_MS = 15 * 60 * 1000;
 setInterval(() => {
   syncAll().catch((err) => console.error("Baggrunds-sync fejlede:", err));
 }, SYNC_INTERVAL_MS);
+
+// Sjældnere end data-syncen: OpenAI/Anthropic-tjekket laver et rigtigt (men meget billigt) API-kald hver gang.
+const INFRA_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
+setInterval(() => {
+  checkInfra().catch((err) => console.error("Infrastruktur-tjek fejlede:", err));
+}, INFRA_CHECK_INTERVAL_MS);
+checkInfra().catch((err) => console.error("Infrastruktur-tjek fejlede:", err));
 
 bot.start();
 console.log("AMSW Jarvis-bot kører.");

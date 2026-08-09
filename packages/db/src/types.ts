@@ -106,15 +106,18 @@ export interface Database {
       integration_sync_state: {
         Row: {
           owner_id: string;
-          source: "google_calendar" | "shopify";
+          source: "google_calendar" | "shopify" | "supabase" | "vercel" | "railway" | "openai" | "anthropic";
+          category: "integration" | "infrastructure";
           last_synced_at: string | null;
           cursor: string | null;
           last_error: string | null;
           last_error_at: string | null;
+          plan: string | null;
+          detail: Record<string, unknown>;
         };
         Insert: Partial<Database["public"]["Tables"]["integration_sync_state"]["Row"]> & {
           owner_id: string;
-          source: "google_calendar" | "shopify";
+          source: "google_calendar" | "shopify" | "supabase" | "vercel" | "railway" | "openai" | "anthropic";
         };
         Update: Partial<Database["public"]["Tables"]["integration_sync_state"]["Row"]>;
         Relationships: [];

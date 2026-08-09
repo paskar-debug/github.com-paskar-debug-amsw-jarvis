@@ -17,10 +17,12 @@ interface ShopifyOrdersResponse {
         };
       }>;
     };
-    shop: {
-      customersCount: { count: number } | null;
-    };
   };
+  errors?: Array<{ message: string }>;
+}
+
+interface ShopifyCustomersCountResponse {
+  data: { customersCount: { count: number } };
   errors?: Array<{ message: string }>;
 }
 
@@ -61,18 +63,15 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   startOfDay.setHours(0, 0, 0, 0);
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const query = `
+  const ordersQuery = `
     query OrdersRecent($queryString: String!) {
       orders(first: 100, query: $queryString) {
         edges { node { id createdAt totalPriceSet { shopMoney { amount currencyCode } } } }
       }
-      shop {
-        customersCount { count }
-      }
     }
   `;
 
-  const result = await shopifyGraphql<ShopifyOrdersResponse>(config, query, {
+  const result = await shopifyGraphql<ShopifyOrdersResponse>(config, ordersQuery, {
     queryString: `created_at:>='${sevenDaysAgo.toISOString()}'`,
   });
 
@@ -82,12 +81,22 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   const sum = (list: typeof edges) => list.reduce((total, edge) => total + Number(edge.node.totalPriceSet.shopMoney.amount), 0);
   const currency = edges[0]?.node.totalPriceSet.shopMoney.currencyCode ?? null;
 
+  // Kræver `read_customers`-scope på Shopify-appen. Fejler den (fx manglende scope),
+  // skal det ikke vælte selve ordre-synken - kundetal er en ekstra, ikke-kritisk stat.
+  let totalCustomers: number | null = null;
+  try {
+    const customersResult = await shopifyGraphql<ShopifyCustomersCountResponse>(config, "{ customersCount { count } }");
+    totalCustomers = customersResult.data.customersCount.count;
+  } catch {
+    totalCustomers = null;
+  }
+
   const summary: ShopifySummary = {
     ordersToday: todayEdges.length,
     revenueToday: sum(todayEdges),
     ordersLast7Days: edges.length,
     revenueLast7Days: sum(edges),
-    totalCustomers: result.data.shop.customersCount?.count ?? null,
+    totalCustomers,
     currency,
   };
 

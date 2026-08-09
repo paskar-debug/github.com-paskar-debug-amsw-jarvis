@@ -53,7 +53,7 @@ export default function DashboardPage() {
     <div className="page">
       <div className="page-header">
         <div className="brand">
-          <Image src="/logo-icon-red.png" alt="Paramasamy" width={84} height={90} priority />
+          <Image src="/logo-icon.png" alt="Paramasamy" width={84} height={90} priority />
         </div>
         <Clock />
         <span className="live-pill">

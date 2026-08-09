@@ -62,16 +62,20 @@ export default function DashboardPage() {
           Live
         </span>
       </div>
-      <div className="grid">
-        <QuotePanel />
-        <StatusPanel statuses={statuses} />
-        <TasksPanel tasks={tasks} onToggleDone={handleToggleDone} />
-        <CalendarPanel events={events} />
-        <GoalsPanel goals={goals} />
-        <WellbeingPanel entries={wellbeing} />
-        <NewsPanel source="dr" label="DR Nyheder" />
-        <NewsPanel source="tv2" label="TV2 Nyheder" />
-        <DraftsPanel drafts={drafts} onDelete={handleDeleteDraft} />
+      <div className="page-layout">
+        <div className="grid">
+          <QuotePanel />
+          <StatusPanel statuses={statuses} />
+          <TasksPanel tasks={tasks} onToggleDone={handleToggleDone} />
+          <CalendarPanel events={events} />
+          <GoalsPanel goals={goals} />
+          <WellbeingPanel entries={wellbeing} />
+          <DraftsPanel drafts={drafts} onDelete={handleDeleteDraft} />
+        </div>
+        <aside className="sidebar">
+          <NewsPanel source="dr" label="DR Nyheder" />
+          <NewsPanel source="tv2" label="TV2 Nyheder" />
+        </aside>
       </div>
     </div>
   );

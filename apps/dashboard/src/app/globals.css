@@ -138,9 +138,28 @@ body::before {
   100% { transform: scale(2.6); opacity: 0; }
 }
 
+.page-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .page-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
   gap: 1.25rem;
 }
 

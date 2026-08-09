@@ -62,10 +62,11 @@ export async function syncGoogleCalendar(
   return rows.length;
 }
 
-/** Creates a real event on the user's Google Calendar and returns its id. */
+/** Creates a real event on the user's Google Calendar and returns its id.
+ *  `allDay`: startsAt/endsAt are "YYYY-MM-DD" dates (endsAt exclusive, per Google's all-day convention). */
 export async function createGoogleCalendarEvent(
   config: GoogleCalendarConfig,
-  event: { title: string; description?: string | null; startsAt: string; endsAt: string },
+  event: { title: string; description?: string | null; startsAt: string; endsAt: string; allDay?: boolean },
 ): Promise<string> {
   const auth = createOAuthClient(config);
   const calendar = google.calendar({ version: "v3", auth });
@@ -75,8 +76,8 @@ export async function createGoogleCalendarEvent(
     requestBody: {
       summary: event.title,
       description: event.description ?? undefined,
-      start: { dateTime: event.startsAt },
-      end: { dateTime: event.endsAt },
+      start: event.allDay ? { date: event.startsAt } : { dateTime: event.startsAt },
+      end: event.allDay ? { date: event.endsAt } : { dateTime: event.endsAt },
     },
   });
 

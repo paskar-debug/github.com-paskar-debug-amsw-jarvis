@@ -20,6 +20,12 @@ const INFRA_SOURCES: { key: SyncRow["source"]; label: string }[] = [
   { key: "anthropic", label: "Anthropic" },
 ];
 
+// Tools we depend on but can't check programmatically (no API, runs locally on your device) -
+// listed for completeness, not live health.
+const MANUAL_TOOLS: { label: string; note: string }[] = [
+  { label: "Wispr Flow", note: "Diktering på din enhed – ingen API, tjek selv i appen hvis noget virker mærkeligt" },
+];
+
 function formatDate(iso: string | null) {
   if (!iso) return null;
   return new Date(iso).toLocaleString("da-DK", { dateStyle: "short", timeStyle: "short" });
@@ -61,6 +67,21 @@ function StatusRow({ label, state }: { label: string; state: SyncRow | undefined
   );
 }
 
+function ManualToolRow({ label, note }: { label: string; note: string }) {
+  return (
+    <div className="item status-item">
+      <div className="status-item-top">
+        <span className="status-name">
+          <span className="badge gray" />
+          {label}
+        </span>
+        <span className="status-pill gray">Ikke overvåget</span>
+      </div>
+      <div className="meta">{note}</div>
+    </div>
+  );
+}
+
 function Skeleton({ lines = 3 }: { lines?: number }) {
   return (
     <div className="skeleton-group" aria-hidden="true">
@@ -86,6 +107,10 @@ export function IntegrationsPanel({ states, isLoading, flash }: { states: SyncRo
           <div className="integrations-group-label">Infrastruktur</div>
           {INFRA_SOURCES.map(({ key, label }) => (
             <StatusRow label={label} state={states.find((s) => s.source === key)} key={key} />
+          ))}
+          <div className="integrations-group-label">Eksternt værktøj</div>
+          {MANUAL_TOOLS.map(({ label, note }) => (
+            <ManualToolRow label={label} note={note} key={label} />
           ))}
         </>
       )}

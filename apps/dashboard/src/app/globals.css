@@ -372,6 +372,7 @@ body::before {
 .badge.green { background: var(--green); box-shadow: 0 0 10px rgba(47, 224, 138, 0.7); }
 .badge.yellow { background: var(--yellow); box-shadow: 0 0 10px rgba(255, 197, 66, 0.7); }
 .badge.red { background: var(--red); box-shadow: 0 0 10px rgba(255, 92, 92, 0.7); }
+.badge.gray { background: var(--muted); }
 
 .status-item-top {
   display: flex;
@@ -413,6 +414,7 @@ body::before {
 .status-pill.green { color: #04120c; background: var(--green); }
 .status-pill.yellow { color: #1a1200; background: var(--yellow); }
 .status-pill.red { color: #1a0505; background: var(--red); }
+.status-pill.gray { color: var(--text); background: rgba(255, 255, 255, 0.08); }
 
 .status-stats {
   display: flex;

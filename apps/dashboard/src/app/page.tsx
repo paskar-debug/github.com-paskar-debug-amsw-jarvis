@@ -7,6 +7,7 @@ import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
 import { CalendarPanel, DraftsPanel, GoalsPanel, StatusPanel, TasksPanel, WellbeingPanel } from "@/components/panels";
+import { Clock } from "@/components/Clock";
 
 type Tables = Database["public"]["Tables"];
 
@@ -53,6 +54,7 @@ export default function DashboardPage() {
         <div className="brand">
           <Image src="/logo-icon-red.png" alt="Paramasamy" width={84} height={90} priority />
         </div>
+        <Clock />
         <span className="live-pill">
           <span className="live-dot" />
           Live

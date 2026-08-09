@@ -63,7 +63,11 @@ export function TasksPanel({
         <Skeleton lines={3} />
       ) : (
         <>
-          {open.length === 0 && <p className="empty">Ingen åbne opgaver.</p>}
+          {open.length === 0 && (
+            <p className="empty">
+              Ingen åbne opgaver. Skriv eller indtal en huskeseddel-agtig besked til botten i Telegram (fx &quot;ring til Thomas&quot;), så dukker den op her – sæt flueben når den er klaret.
+            </p>
+          )}
           {open.map((task) => (
             <label className="item item-checkable" key={task.id}>
               <input type="checkbox" onChange={() => onToggleDone(task.id, true)} />

@@ -48,6 +48,12 @@ async function shopifyGraphql<T>(config: ShopifyConfig, query: string, variables
   return json;
 }
 
+export interface ShopifyDailyBucket {
+  date: string;
+  orders: number;
+  revenue: number;
+}
+
 export interface ShopifySummary {
   ordersToday: number;
   revenueToday: number;
@@ -55,6 +61,31 @@ export interface ShopifySummary {
   revenueLast7Days: number;
   totalCustomers: number | null;
   currency: string | null;
+  dailyRevenue: ShopifyDailyBucket[];
+}
+
+function copenhagenDateKey(iso: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Copenhagen", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
+}
+
+/** Buckets orders into the last 7 Copenhagen calendar days, filling in zero-order days so the trend line has no gaps. */
+export function bucketDailyRevenue(edges: ShopifyOrdersResponse["data"]["orders"]["edges"]): ShopifyDailyBucket[] {
+  const byDate = new Map<string, { orders: number; revenue: number }>();
+  for (const edge of edges) {
+    const key = copenhagenDateKey(edge.node.createdAt);
+    const existing = byDate.get(key) ?? { orders: 0, revenue: 0 };
+    existing.orders += 1;
+    existing.revenue += Number(edge.node.totalPriceSet.shopMoney.amount);
+    byDate.set(key, existing);
+  }
+
+  const days: ShopifyDailyBucket[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const key = copenhagenDateKey(new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString());
+    const bucket = byDate.get(key) ?? { orders: 0, revenue: 0 };
+    days.push({ date: key, ...bucket });
+  }
+  return days;
 }
 
 /** Summarizes today's and this week's orders/revenue, plus total customers, and writes it as an amsw_status snapshot. */
@@ -98,6 +129,7 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
     revenueLast7Days: sum(edges),
     totalCustomers,
     currency,
+    dailyRevenue: bucketDailyRevenue(edges),
   };
 
   const { error } = await supabase.from("amsw_status").insert({

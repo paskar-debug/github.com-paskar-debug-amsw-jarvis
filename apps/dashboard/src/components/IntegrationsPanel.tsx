@@ -61,18 +61,34 @@ function StatusRow({ label, state }: { label: string; state: SyncRow | undefined
   );
 }
 
-export function IntegrationsPanel({ states }: { states: SyncRow[] }) {
+function Skeleton({ lines = 3 }: { lines?: number }) {
   return (
-    <section className="panel">
+    <div className="skeleton-group" aria-hidden="true">
+      {Array.from({ length: lines }).map((_, i) => (
+        <div className="skeleton-line" key={i} />
+      ))}
+    </div>
+  );
+}
+
+export function IntegrationsPanel({ states, isLoading, flash }: { states: SyncRow[]; isLoading?: boolean; flash?: boolean }) {
+  return (
+    <section className={["panel", flash && "panel-flash"].filter(Boolean).join(" ")}>
       <PanelHeader icon={<IconPlug />} title="Integrationer" />
-      <div className="integrations-group-label">Forretning</div>
-      {BUSINESS_SOURCES.map(({ key, label }) => (
-        <StatusRow label={label} state={states.find((s) => s.source === key)} key={key} />
-      ))}
-      <div className="integrations-group-label">Infrastruktur</div>
-      {INFRA_SOURCES.map(({ key, label }) => (
-        <StatusRow label={label} state={states.find((s) => s.source === key)} key={key} />
-      ))}
+      {isLoading ? (
+        <Skeleton lines={5} />
+      ) : (
+        <>
+          <div className="integrations-group-label">Forretning</div>
+          {BUSINESS_SOURCES.map(({ key, label }) => (
+            <StatusRow label={label} state={states.find((s) => s.source === key)} key={key} />
+          ))}
+          <div className="integrations-group-label">Infrastruktur</div>
+          {INFRA_SOURCES.map(({ key, label }) => (
+            <StatusRow label={label} state={states.find((s) => s.source === key)} key={key} />
+          ))}
+        </>
+      )}
     </section>
   );
 }

@@ -12,6 +12,7 @@ const BUSINESS_SOURCES: { key: SyncRow["source"]; label: string }[] = [
 ];
 
 const INFRA_SOURCES: { key: SyncRow["source"]; label: string }[] = [
+  { key: "telegram", label: "Telegram" },
   { key: "supabase", label: "Supabase" },
   { key: "vercel", label: "Vercel" },
   { key: "railway", label: "Railway" },

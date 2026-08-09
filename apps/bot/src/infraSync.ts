@@ -3,41 +3,19 @@ import {
   checkOpenAiStatus,
   checkRailwayStatus,
   checkSupabaseStatus,
+  checkTelegramStatus,
   checkVercelStatus,
   type InfraServiceStatus,
 } from "@amsw/integrations";
 import { env } from "./env.js";
-import { supabase } from "./supabase.js";
-
-type InfraSource = "supabase" | "vercel" | "railway" | "openai" | "anthropic";
-
-async function record(source: InfraSource, result: InfraServiceStatus | { error: string }) {
-  if ("error" in result) {
-    await supabase.from("integration_sync_state").upsert(
-      { owner_id: env.ownerId, source, category: "infrastructure", last_error: result.error, last_error_at: new Date().toISOString() },
-      { onConflict: "owner_id,source" },
-    );
-  } else {
-    await supabase.from("integration_sync_state").upsert(
-      {
-        owner_id: env.ownerId,
-        source,
-        category: "infrastructure",
-        plan: result.plan,
-        detail: result.detail,
-        last_synced_at: new Date().toISOString(),
-        last_error: null,
-        last_error_at: null,
-      },
-      { onConflict: "owner_id,source" },
-    );
-  }
-}
+import { recordFailure, recordSuccess, type StatusSource } from "./statusStore.js";
 
 /** Checks the platforms AMSW Jarvis itself runs on. Run on a long interval - the
  *  OpenAI/Anthropic checks make a real (tiny, paid) API call each time. */
 export async function checkInfra() {
-  const checks: [InfraSource, () => Promise<InfraServiceStatus>][] = [];
+  const checks: [StatusSource, () => Promise<InfraServiceStatus>][] = [
+    ["telegram", () => checkTelegramStatus({ botToken: env.telegramBotToken })],
+  ];
 
   if (env.infra.supabaseAccessToken) {
     checks.push(["supabase", () => checkSupabaseStatus({ accessToken: env.infra.supabaseAccessToken, projectUrl: env.supabaseUrl })]);
@@ -58,9 +36,9 @@ export async function checkInfra() {
   for (const [source, fn] of checks) {
     try {
       const result = await fn();
-      await record(source, result);
+      await recordSuccess(source, "infrastructure", result);
     } catch (err) {
-      await record(source, { error: (err as Error).message });
+      await recordFailure(source, "infrastructure", (err as Error).message);
     }
   }
 }

@@ -109,12 +109,5 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   });
   if (error) throw error;
 
-  await supabase
-    .from("integration_sync_state")
-    .upsert(
-      { owner_id: ownerId, source: "shopify", last_synced_at: new Date().toISOString(), last_error: null, last_error_at: null },
-      { onConflict: "owner_id,source" },
-    );
-
   return summary;
 }

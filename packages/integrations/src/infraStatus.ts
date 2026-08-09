@@ -8,6 +8,13 @@ export interface InfraServiceStatus {
   detail: Record<string, unknown>;
 }
 
+export async function checkTelegramStatus(cfg: { botToken: string }): Promise<InfraServiceStatus> {
+  const res = await fetch(`https://api.telegram.org/bot${cfg.botToken}/getMe`);
+  const json = (await res.json()) as { ok: boolean; result?: { username: string }; description?: string };
+  if (!json.ok) throw new Error(json.description ?? `Telegram API fejlede: ${res.status}`);
+  return { plan: null, detail: { username: json.result?.username ?? null } };
+}
+
 export async function checkSupabaseStatus(cfg: { accessToken: string; projectUrl: string }): Promise<InfraServiceStatus> {
   const projectRef = new URL(cfg.projectUrl).hostname.split(".")[0];
   const headers = { Authorization: `Bearer ${cfg.accessToken}` };

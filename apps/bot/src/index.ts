@@ -6,6 +6,8 @@ import { synthesizeSpeech, type TtsConfig } from "./tts.js";
 import { createTask, handleFreeformMessage, logWellbeing, runSync, setStatus } from "./handlers.js";
 import { syncAll } from "./sync.js";
 import { checkInfra } from "./infraSync.js";
+import { sendDailyBriefing } from "./briefing.js";
+import { scheduleDaily } from "./scheduler.js";
 
 const bot = new Bot(env.telegramBotToken);
 
@@ -75,6 +77,7 @@ bot.command("help", (ctx) =>
       "/status <område> <green|yellow|red> [note] - sæt AMSW-status",
       "/velvaere <humør 1-5> <energi 1-5> [søvntimer] [note] - log velvære",
       "/sync - hent nyt fra Google Kalender og Shopify",
+      "Hver morgen kl. 07:00 får du automatisk en briefing med dagens aftaler, åbne opgaver og status.",
       "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave, en kalenderaftale, en sletning af en aftale, eller et udkast/analyse du beder om at få skrevet med det samme, alt efter indholdet.",
     ].join("\n"),
   ),
@@ -141,6 +144,8 @@ setInterval(() => {
   checkInfra().catch((err) => console.error("Infrastruktur-tjek fejlede:", err));
 }, INFRA_CHECK_INTERVAL_MS);
 checkInfra().catch((err) => console.error("Infrastruktur-tjek fejlede:", err));
+
+scheduleDaily(7, 0, "Europe/Copenhagen", sendDailyBriefing);
 
 bot.start();
 console.log("AMSW Jarvis-bot kører.");

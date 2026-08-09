@@ -26,15 +26,20 @@ async function getPreviousError(source: StatusSource): Promise<string | null> {
   return data?.last_error ?? null;
 }
 
+/** Pure decision: what (if anything) to tell the owner about this state change.
+ *  Null means no transition worth mentioning - same error persisting, or ok staying ok. */
+export function transitionMessage(source: StatusSource, previousError: string | null, newError: string | null): string | null {
+  if (previousError === newError) return null;
+  const label = LABELS[source];
+  if (!previousError && newError) return `⚠️ ${label}: ${newError}`;
+  if (previousError && !newError) return `✅ ${label} virker igen.`;
+  return null;
+}
+
 /** Only notifies on a state transition (ok -> fejl or fejl -> ok), never while an error persists across checks. */
 async function notifyOnTransition(source: StatusSource, previousError: string | null, newError: string | null) {
-  if (previousError === newError) return;
-  const label = LABELS[source];
-  if (!previousError && newError) {
-    await notifyOwner(`⚠️ ${label}: ${newError}`);
-  } else if (previousError && !newError) {
-    await notifyOwner(`✅ ${label} virker igen.`);
-  }
+  const message = transitionMessage(source, previousError, newError);
+  if (message) await notifyOwner(message);
 }
 
 export async function recordSuccess(

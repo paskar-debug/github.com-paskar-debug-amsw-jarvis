@@ -141,6 +141,34 @@ export async function deleteCalendarEvent(query: string): Promise<string> {
   return `Aftale slettet: "${matches[0].title}"`;
 }
 
+/** Short plain-text summary of open tasks + upcoming events, given to Sonnet as background for draft generation.
+ *  Best-effort: if this fails, the draft still gets generated, just without situational context. */
+async function buildDraftContext(): Promise<string> {
+  const [tasksRes, eventsRes] = await Promise.all([
+    supabase.from("tasks").select("title").eq("owner_id", env.ownerId).neq("status", "done").neq("status", "cancelled").limit(10),
+    supabase
+      .from("calendar_events")
+      .select("title, starts_at")
+      .eq("owner_id", env.ownerId)
+      .gte("starts_at", new Date().toISOString())
+      .order("starts_at")
+      .limit(5),
+  ]);
+
+  const parts: string[] = [];
+  if (tasksRes.data && tasksRes.data.length > 0) {
+    parts.push(`Åbne opgaver: ${tasksRes.data.map((t) => t.title).join(", ")}.`);
+  }
+  if (eventsRes.data && eventsRes.data.length > 0) {
+    const events = eventsRes.data.map((e) => {
+      const when = new Date(e.starts_at).toLocaleDateString("da-DK", { day: "numeric", month: "short", timeZone: "Europe/Copenhagen" });
+      return `${e.title} (${when})`;
+    });
+    parts.push(`Kommende aftaler: ${events.join(", ")}.`);
+  }
+  return parts.join(" ");
+}
+
 /** Classifies a free-form message and routes it to the right action. */
 export async function handleFreeformMessage(text: string): Promise<string> {
   const followup = await resolveFollowupDelete(text);
@@ -158,7 +186,8 @@ export async function handleFreeformMessage(text: string): Promise<string> {
       return deleteCalendarEvent(result.query);
     }
     if (result.kind === "draft") {
-      const content = await generateDraft(text, env.anthropicApiKey);
+      const context = await buildDraftContext().catch(() => "");
+      const content = await generateDraft(text, env.anthropicApiKey, context);
       const { error } = await supabase.from("drafts").insert({ owner_id: env.ownerId, request: text, content });
       if (error) console.error("Kunne ikke gemme udkast i databasen:", error);
       return content;

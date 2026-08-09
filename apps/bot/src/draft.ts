@@ -1,5 +1,6 @@
-/** Generates a written draft/analysis via Claude. Uses a stronger model than classification since this is the actual deliverable, not just categorization. */
-export async function generateDraft(request: string, apiKey: string): Promise<string> {
+/** Generates a written draft/analysis via Claude. Uses a stronger model than classification since this is the actual deliverable, not just categorization.
+ *  `context`: an optional short summary of the user's current tasks/calendar, so the draft can reference their real situation instead of writing blind. */
+export async function generateDraft(request: string, apiKey: string, context?: string): Promise<string> {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -10,7 +11,7 @@ export async function generateDraft(request: string, apiKey: string): Promise<st
     body: JSON.stringify({
       model: "claude-sonnet-5",
       max_tokens: 3000,
-      system: `Du er en skriveassistent for en personlig Telegram-bot. Brugeren beder om et udkast, en analyse, en opsummering, en procedure eller anden research/viden om et emne, leveret med det samme. Skriv grundigt, struktureret og brugbart, på dansk, klar til direkte brug. Hvis anmodningen kræver aktuelle tal, statistikker eller fakta du ikke er sikker på er korrekte eller opdaterede, gør det tydeligt i teksten at de bør verificeres i stedet for at opfinde præcise tal.`,
+      system: `Du er en skriveassistent for en personlig Telegram-bot. Brugeren beder om et udkast, en analyse, en opsummering, en procedure eller anden research/viden om et emne, leveret med det samme. Skriv grundigt, struktureret og brugbart, på dansk, klar til direkte brug. Hvis anmodningen kræver aktuelle tal, statistikker eller fakta du ikke er sikker på er korrekte eller opdaterede, gør det tydeligt i teksten at de bør verificeres i stedet for at opfinde præcise tal.${context ? `\n\nBrugerens aktuelle situation (brug det kun hvis det er relevant for anmodningen, ignorér ellers): ${context}` : ""}`,
       messages: [{ role: "user", content: request }],
     }),
   });

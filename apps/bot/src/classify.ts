@@ -40,6 +40,20 @@ interface RawClassification {
   ends_at: string | null;
 }
 
+/** Pure mapping from Claude's raw tool-call shape to our result type - the actual branching logic worth testing directly. */
+export function toClassifyResult(parsed: RawClassification): ClassifyResult {
+  if (parsed.kind === "event" && parsed.starts_at && parsed.ends_at) {
+    return { kind: "event", title: parsed.title, startsAt: parsed.starts_at, endsAt: parsed.ends_at };
+  }
+  if (parsed.kind === "delete_event") {
+    return { kind: "delete_event", query: parsed.title };
+  }
+  if (parsed.kind === "draft") {
+    return { kind: "draft" };
+  }
+  return { kind: "task", title: parsed.title };
+}
+
 /** Classifies a message as a task, a new calendar event, a delete request, or a request to actually write/research something. */
 export async function classifyMessage(text: string, apiKey: string): Promise<ClassifyResult> {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -78,16 +92,5 @@ title er en kort, ren version af indholdet (uden dato/tid) for task/event. For d
   };
   const toolUse = data.content.find((block) => block.type === "tool_use");
   if (!toolUse?.input) throw new Error("Claude returnerede intet klassificerings-resultat.");
-  const parsed = toolUse.input;
-
-  if (parsed.kind === "event" && parsed.starts_at && parsed.ends_at) {
-    return { kind: "event", title: parsed.title, startsAt: parsed.starts_at, endsAt: parsed.ends_at };
-  }
-  if (parsed.kind === "delete_event") {
-    return { kind: "delete_event", query: parsed.title };
-  }
-  if (parsed.kind === "draft") {
-    return { kind: "draft" };
-  }
-  return { kind: "task", title: parsed.title };
+  return toClassifyResult(toolUse.input);
 }

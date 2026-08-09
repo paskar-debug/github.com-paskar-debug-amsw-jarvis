@@ -138,6 +138,21 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["drafts"]["Row"]>;
         Relationships: [];
       };
+      user_facts: {
+        Row: {
+          id: string;
+          owner_id: string;
+          category: "familie" | "forretning" | "praeference" | "andet";
+          fact: string;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["user_facts"]["Row"]> & {
+          owner_id: string;
+          fact: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["user_facts"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

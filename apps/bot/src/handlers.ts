@@ -3,7 +3,7 @@ import { createGoogleCalendarEvent, deleteGoogleCalendarEvent } from "@amsw/inte
 import { env } from "./env.js";
 import { supabase } from "./supabase.js";
 import { syncAll } from "./sync.js";
-import { classifyMessage } from "./classify.js";
+import { classifyMessage, type FactCategory } from "./classify.js";
 import { generateDraft } from "./draft.js";
 
 export async function createTask(title: string): Promise<string> {
@@ -14,6 +14,12 @@ export async function createTask(title: string): Promise<string> {
   });
   if (error) throw error;
   return `Opgave oprettet: "${title}"`;
+}
+
+export async function saveFact(fact: string, category: FactCategory = "andet"): Promise<string> {
+  const { error } = await supabase.from("user_facts").insert({ owner_id: env.ownerId, fact, category });
+  if (error) throw error;
+  return `Noteret: "${fact}"`;
 }
 
 export async function createCalendarEvent(title: string, startsAt: string, endsAt: string): Promise<string> {
@@ -141,10 +147,11 @@ export async function deleteCalendarEvent(query: string): Promise<string> {
   return `Aftale slettet: "${matches[0].title}"`;
 }
 
-/** Short plain-text summary of open tasks + upcoming events, given to Sonnet as background for draft generation.
+/** Short plain-text summary of known facts + open tasks + upcoming events, given to Sonnet as background for draft generation.
  *  Best-effort: if this fails, the draft still gets generated, just without situational context. */
 async function buildDraftContext(): Promise<string> {
-  const [tasksRes, eventsRes] = await Promise.all([
+  const [factsRes, tasksRes, eventsRes] = await Promise.all([
+    supabase.from("user_facts").select("fact").eq("owner_id", env.ownerId).order("created_at", { ascending: false }).limit(20),
     supabase.from("tasks").select("title").eq("owner_id", env.ownerId).neq("status", "done").neq("status", "cancelled").limit(10),
     supabase
       .from("calendar_events")
@@ -156,6 +163,9 @@ async function buildDraftContext(): Promise<string> {
   ]);
 
   const parts: string[] = [];
+  if (factsRes.data && factsRes.data.length > 0) {
+    parts.push(`Om brugeren: ${factsRes.data.map((f) => f.fact).join(". ")}.`);
+  }
   if (tasksRes.data && tasksRes.data.length > 0) {
     parts.push(`Åbne opgaver: ${tasksRes.data.map((t) => t.title).join(", ")}.`);
   }
@@ -191,6 +201,9 @@ export async function handleFreeformMessage(text: string): Promise<string> {
       const { error } = await supabase.from("drafts").insert({ owner_id: env.ownerId, request: text, content });
       if (error) console.error("Kunne ikke gemme udkast i databasen:", error);
       return content;
+    }
+    if (result.kind === "fact") {
+      return saveFact(result.fact, result.category);
     }
     return createTask(result.title);
   } catch (err) {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Database } from "@amsw/db";
-import { IconCalendar, IconCopy, IconDraft, IconHeart, IconPulse, IconTasks } from "./icons";
+import { IconCalendar, IconCopy, IconDraft, IconHeart, IconPulse, IconTasks, IconUser } from "./icons";
 import { Sparkline } from "./Sparkline";
 
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
@@ -10,6 +10,7 @@ type CalendarRow = Database["public"]["Tables"]["calendar_events"]["Row"];
 type StatusRow = Database["public"]["Tables"]["amsw_status"]["Row"];
 type WellbeingRow = Database["public"]["Tables"]["wellbeing_entries"]["Row"];
 type DraftRow = Database["public"]["Tables"]["drafts"]["Row"];
+type FactRow = Database["public"]["Tables"]["user_facts"]["Row"];
 
 interface LiveProps {
   isLoading?: boolean;
@@ -229,6 +230,40 @@ export function WellbeingPanel({ entries, isLoading, flash }: LiveProps & { entr
                 {formatDate(entry.recorded_at)}
               </div>
             </div>
+          ))}
+        </>
+      )}
+    </section>
+  );
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  familie: "Familie",
+  forretning: "Forretning",
+  praeference: "Præference",
+  andet: "Andet",
+};
+
+export function ProfilePanel({ facts, isLoading, flash, onDelete }: LiveProps & { facts: FactRow[]; onDelete: (id: string) => void }) {
+  const recent = [...facts].reverse();
+  return (
+    <section className={panelClass(flash && "panel-flash")}>
+      <PanelHeader icon={<IconUser />} title="Om mig" subtitle="Fakta du fortæller botten via Telegram (fx /husk eller almindelig tekst)" />
+      {isLoading ? (
+        <Skeleton lines={3} />
+      ) : (
+        <>
+          {recent.length === 0 && <p className="empty">Ingen fakta endnu.</p>}
+          {recent.map((fact) => (
+            <label className="item item-checkable" key={fact.id}>
+              <input type="checkbox" onChange={() => onDelete(fact.id)} />
+              <div>
+                {fact.fact}
+                <div className="meta">
+                  {CATEGORY_LABELS[fact.category] ?? fact.category} · {formatDate(fact.created_at)}
+                </div>
+              </div>
+            </label>
           ))}
         </>
       )}

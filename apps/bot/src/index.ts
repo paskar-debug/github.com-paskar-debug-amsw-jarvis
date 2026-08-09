@@ -3,7 +3,7 @@ import type { AmswState } from "@amsw/core";
 import { env } from "./env.js";
 import { transcribeVoice } from "./stt.js";
 import { synthesizeSpeech, type TtsConfig } from "./tts.js";
-import { createTask, handleFreeformMessage, logWellbeing, runSync, setStatus } from "./handlers.js";
+import { createTask, handleFreeformMessage, logWellbeing, runSync, saveFact, setStatus } from "./handlers.js";
 import { syncAll } from "./sync.js";
 import { checkInfra } from "./infraSync.js";
 import { sendDailyBriefing } from "./briefing.js";
@@ -74,11 +74,12 @@ bot.command("help", (ctx) =>
   ctx.reply(
     [
       "/opgave <tekst> - opret opgave",
+      "/husk <tekst> - gem et fakta om dig selv (fx navne, præferencer), som botten bruger som kontekst i udkast",
       "/status <område> <green|yellow|red> [note] - sæt AMSW-status",
       "/velvaere <humør 1-5> <energi 1-5> [søvntimer] [note] - log velvære",
       "/sync - hent nyt fra Google Kalender og Shopify",
       "Hver morgen kl. 07:00 får du automatisk en briefing med dagens aftaler, åbne opgaver og status.",
-      "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave, en kalenderaftale, en sletning af en aftale, eller et udkast/analyse du beder om at få skrevet med det samme, alt efter indholdet.",
+      "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave, en kalenderaftale, en sletning af en aftale, et fakta der skal huskes, eller et udkast/analyse du beder om at få skrevet med det samme, alt efter indholdet.",
     ].join("\n"),
   ),
 );
@@ -87,6 +88,12 @@ bot.command("opgave", async (ctx) => {
   const title = ctx.match.trim();
   if (!title) return ctx.reply("Brug: /opgave <tekst>");
   await replyText(ctx, await createTask(title), false);
+});
+
+bot.command("husk", async (ctx) => {
+  const fact = ctx.match.trim();
+  if (!fact) return ctx.reply("Brug: /husk <tekst>");
+  await replyText(ctx, await saveFact(fact), false);
 });
 
 bot.command("status", async (ctx) => {

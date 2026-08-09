@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import type { Database } from "@amsw/db";
-import { IconCalendar, IconCopy, IconDraft, IconHeart, IconPulse, IconTarget, IconTasks } from "./icons";
+import { IconCalendar, IconCopy, IconDraft, IconHeart, IconPulse, IconTasks } from "./icons";
 
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
 type CalendarRow = Database["public"]["Tables"]["calendar_events"]["Row"];
 type StatusRow = Database["public"]["Tables"]["amsw_status"]["Row"];
-type GoalRow = Database["public"]["Tables"]["goals"]["Row"];
 type WellbeingRow = Database["public"]["Tables"]["wellbeing_entries"]["Row"];
 type DraftRow = Database["public"]["Tables"]["drafts"]["Row"];
 
@@ -119,27 +118,6 @@ export function StatusPanel({ statuses }: { statuses: StatusRow[] }) {
           </div>
         );
       })}
-    </section>
-  );
-}
-
-export function GoalsPanel({ goals }: { goals: GoalRow[] }) {
-  const active = goals.filter((g) => g.status === "active");
-  return (
-    <section className="panel">
-      <PanelHeader icon={<IconTarget />} title="Mål" />
-      {active.length === 0 && <p className="empty">Ingen aktive mål.</p>}
-      {active.map((goal) => (
-        <div className="item" key={goal.id}>
-          {goal.title}
-          <div className="progress-bar">
-            <div style={{ width: `${goal.progress}%` }} />
-          </div>
-          <div className="meta">
-            {goal.progress}% {goal.target_date ? `· frist ${goal.target_date}` : ""}
-          </div>
-        </div>
-      ))}
     </section>
   );
 }

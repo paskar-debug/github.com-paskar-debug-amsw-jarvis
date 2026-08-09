@@ -182,15 +182,6 @@ export async function setStatus(area: string, state: AmswState, note?: string): 
   return `Status for "${area}" sat til ${state}${note ? ` (${note})` : ""}`;
 }
 
-export async function createGoal(title: string): Promise<string> {
-  const { error } = await supabase.from("goals").insert({
-    owner_id: env.ownerId,
-    title,
-  });
-  if (error) throw error;
-  return `Mål oprettet: "${title}"`;
-}
-
 export async function logWellbeing(mood: number, energy: number, sleepHours?: number, note?: string): Promise<string> {
   const { error } = await supabase.from("wellbeing_entries").insert({
     owner_id: env.ownerId,

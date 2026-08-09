@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
-import { CalendarPanel, DraftsPanel, GoalsPanel, StatusPanel, TasksPanel, WellbeingPanel } from "@/components/panels";
+import { CalendarPanel, DraftsPanel, StatusPanel, TasksPanel, WellbeingPanel } from "@/components/panels";
 import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
 import { NewsPanel } from "@/components/NewsPanel";
@@ -33,7 +33,6 @@ export default function DashboardPage() {
   const tasks = useLiveTable<"tasks", Tables["tasks"]["Row"]>("tasks", userId ?? null, { column: "created_at", ascending: false });
   const events = useLiveTable<"calendar_events", Tables["calendar_events"]["Row"]>("calendar_events", userId ?? null, { column: "starts_at" });
   const statuses = useLiveTable<"amsw_status", Tables["amsw_status"]["Row"]>("amsw_status", userId ?? null, { column: "recorded_at", ascending: false });
-  const goals = useLiveTable<"goals", Tables["goals"]["Row"]>("goals", userId ?? null, { column: "created_at", ascending: false });
   const wellbeing = useLiveTable<"wellbeing_entries", Tables["wellbeing_entries"]["Row"]>("wellbeing_entries", userId ?? null, { column: "recorded_at" });
   const drafts = useLiveTable<"drafts", Tables["drafts"]["Row"]>("drafts", userId ?? null, { column: "created_at" });
 
@@ -68,7 +67,6 @@ export default function DashboardPage() {
           <StatusPanel statuses={statuses} />
           <TasksPanel tasks={tasks} onToggleDone={handleToggleDone} />
           <CalendarPanel events={events} />
-          <GoalsPanel goals={goals} />
           <WellbeingPanel entries={wellbeing} />
           <DraftsPanel drafts={drafts} onDelete={handleDeleteDraft} />
         </div>

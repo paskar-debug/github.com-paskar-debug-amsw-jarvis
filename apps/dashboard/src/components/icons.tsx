@@ -43,16 +43,6 @@ export function IconPulse(props: IconProps) {
   );
 }
 
-export function IconTarget(props: IconProps) {
-  return (
-    <svg {...common} {...props}>
-      <circle cx="12" cy="12" r="8" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="12" cy="12" r="0.6" fill="currentColor" />
-    </svg>
-  );
-}
-
 export function IconHeart(props: IconProps) {
   return (
     <svg {...common} {...props}>

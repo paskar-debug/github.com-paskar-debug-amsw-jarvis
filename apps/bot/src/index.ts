@@ -3,7 +3,7 @@ import type { AmswState } from "@amsw/core";
 import { env } from "./env.js";
 import { transcribeVoice } from "./stt.js";
 import { synthesizeSpeech, type TtsConfig } from "./tts.js";
-import { createGoal, createTask, handleFreeformMessage, logWellbeing, runSync, setStatus } from "./handlers.js";
+import { createTask, handleFreeformMessage, logWellbeing, runSync, setStatus } from "./handlers.js";
 import { syncAll } from "./sync.js";
 
 const bot = new Bot(env.telegramBotToken);
@@ -72,7 +72,6 @@ bot.command("help", (ctx) =>
     [
       "/opgave <tekst> - opret opgave",
       "/status <område> <green|yellow|red> [note] - sæt AMSW-status",
-      "/maal <titel> - opret mål",
       "/velvaere <humør 1-5> <energi 1-5> [søvntimer] [note] - log velvære",
       "/sync - hent nyt fra Google Kalender, Todoist og Shopify",
       "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave, en kalenderaftale, en sletning af en aftale, eller et udkast/analyse du beder om at få skrevet med det samme, alt efter indholdet.",
@@ -91,12 +90,6 @@ bot.command("status", async (ctx) => {
   const state = rawState ? STATE_ALIASES[rawState.toLowerCase()] : undefined;
   if (!area || !state) return ctx.reply("Brug: /status <område> <green|yellow|red> [note]");
   await replyText(ctx, await setStatus(area, state, noteParts.join(" ") || undefined), false);
-});
-
-bot.command("maal", async (ctx) => {
-  const title = ctx.match.trim();
-  if (!title) return ctx.reply("Brug: /maal <titel>");
-  await replyText(ctx, await createGoal(title), false);
 });
 
 bot.command("velvaere", async (ctx) => {

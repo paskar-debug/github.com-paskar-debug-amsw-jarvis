@@ -225,6 +225,21 @@ body::before {
   margin-top: 0.2rem;
 }
 
+.news-item {
+  display: block;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 8px;
+  margin: 0 -0.5rem;
+  padding: 0.55rem 0.5rem;
+  transition: background 0.12s ease;
+}
+
+.news-item:hover {
+  background: var(--accent-soft);
+  color: var(--brand-bright);
+}
+
 .item-checkable {
   display: flex;
   align-items: flex-start;

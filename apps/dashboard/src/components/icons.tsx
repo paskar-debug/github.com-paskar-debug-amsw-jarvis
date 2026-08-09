@@ -79,6 +79,17 @@ export function IconQuote(props: IconProps) {
   );
 }
 
+export function IconNews(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <rect x="3.5" y="5" width="17" height="14" rx="2" />
+      <path d="M7 9h6" />
+      <path d="M7 12.5h10" />
+      <path d="M7 16h10" />
+    </svg>
+  );
+}
+
 export function IconCopy(props: IconProps) {
   return (
     <svg {...common} {...props}>

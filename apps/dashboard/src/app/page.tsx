@@ -9,6 +9,7 @@ import { useLiveTable } from "@/lib/useLiveTable";
 import { CalendarPanel, DraftsPanel, GoalsPanel, StatusPanel, TasksPanel, WellbeingPanel } from "@/components/panels";
 import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
+import { NewsPanel } from "@/components/NewsPanel";
 
 type Tables = Database["public"]["Tables"];
 
@@ -68,6 +69,8 @@ export default function DashboardPage() {
         <CalendarPanel events={events} />
         <GoalsPanel goals={goals} />
         <WellbeingPanel entries={wellbeing} />
+        <NewsPanel source="dr" label="DR Nyheder" />
+        <NewsPanel source="tv2" label="TV2 Nyheder" />
         <DraftsPanel drafts={drafts} onDelete={handleDeleteDraft} />
       </div>
     </div>

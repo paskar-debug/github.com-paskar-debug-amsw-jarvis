@@ -62,7 +62,7 @@ export async function syncGoogleCalendar(
   await supabase
     .from("integration_sync_state")
     .upsert(
-      { owner_id: ownerId, source: "google_calendar", last_synced_at: new Date().toISOString() },
+      { owner_id: ownerId, source: "google_calendar", last_synced_at: new Date().toISOString(), last_error: null, last_error_at: null },
       { onConflict: "owner_id,source" },
     );
 

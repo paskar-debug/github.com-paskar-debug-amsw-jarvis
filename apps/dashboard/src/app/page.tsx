@@ -10,6 +10,7 @@ import { CalendarPanel, DraftsPanel, StatusPanel, TasksPanel, WellbeingPanel } f
 import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
 import { NewsPanel } from "@/components/NewsPanel";
+import { IntegrationsPanel } from "@/components/IntegrationsPanel";
 
 type Tables = Database["public"]["Tables"];
 
@@ -35,6 +36,11 @@ export default function DashboardPage() {
   const statuses = useLiveTable<"amsw_status", Tables["amsw_status"]["Row"]>("amsw_status", userId ?? null, { column: "recorded_at", ascending: false });
   const wellbeing = useLiveTable<"wellbeing_entries", Tables["wellbeing_entries"]["Row"]>("wellbeing_entries", userId ?? null, { column: "recorded_at" });
   const drafts = useLiveTable<"drafts", Tables["drafts"]["Row"]>("drafts", userId ?? null, { column: "created_at" });
+  const integrationStates = useLiveTable<"integration_sync_state", Tables["integration_sync_state"]["Row"]>(
+    "integration_sync_state",
+    userId ?? null,
+    { column: "source" },
+  );
 
   async function handleToggleDone(id: string, done: boolean) {
     await getSupabaseClient()
@@ -68,6 +74,7 @@ export default function DashboardPage() {
           <StatusPanel statuses={statuses} />
           <TasksPanel tasks={tasks} onToggleDone={handleToggleDone} />
           <CalendarPanel events={events} />
+          <IntegrationsPanel states={integrationStates} />
           <WellbeingPanel entries={wellbeing} />
           <DraftsPanel drafts={drafts} onDelete={handleDeleteDraft} />
         </div>

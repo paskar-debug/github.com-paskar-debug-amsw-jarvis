@@ -12,9 +12,13 @@ interface ShopifyOrdersResponse {
       edges: Array<{
         node: {
           id: string;
+          createdAt: string;
           totalPriceSet: { shopMoney: { amount: string; currencyCode: string } };
         };
       }>;
+    };
+    shop: {
+      customersCount: { count: number } | null;
     };
   };
   errors?: Array<{ message: string }>;
@@ -42,46 +46,66 @@ async function shopifyGraphql<T>(config: ShopifyConfig, query: string, variables
   return json;
 }
 
-/** Summarizes today's orders/revenue and writes it as an amsw_status snapshot. */
-export async function syncShopify(
-  supabase: TypedSupabaseClient,
-  ownerId: string,
-  config: ShopifyConfig,
-): Promise<{ ordersToday: number; revenueToday: number; currency: string | null }> {
+export interface ShopifySummary {
+  ordersToday: number;
+  revenueToday: number;
+  ordersLast7Days: number;
+  revenueLast7Days: number;
+  totalCustomers: number | null;
+  currency: string | null;
+}
+
+/** Summarizes today's and this week's orders/revenue, plus total customers, and writes it as an amsw_status snapshot. */
+export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string, config: ShopifyConfig): Promise<ShopifySummary> {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const query = `
-    query OrdersToday($queryString: String!) {
+    query OrdersRecent($queryString: String!) {
       orders(first: 100, query: $queryString) {
-        edges { node { id totalPriceSet { shopMoney { amount currencyCode } } } }
+        edges { node { id createdAt totalPriceSet { shopMoney { amount currencyCode } } } }
+      }
+      shop {
+        customersCount { count }
       }
     }
   `;
 
   const result = await shopifyGraphql<ShopifyOrdersResponse>(config, query, {
-    queryString: `created_at:>='${startOfDay.toISOString()}'`,
+    queryString: `created_at:>='${sevenDaysAgo.toISOString()}'`,
   });
 
   const edges = result.data.orders.edges;
-  const revenueToday = edges.reduce((sum, edge) => sum + Number(edge.node.totalPriceSet.shopMoney.amount), 0);
+  const todayEdges = edges.filter((edge) => new Date(edge.node.createdAt) >= startOfDay);
+
+  const sum = (list: typeof edges) => list.reduce((total, edge) => total + Number(edge.node.totalPriceSet.shopMoney.amount), 0);
   const currency = edges[0]?.node.totalPriceSet.shopMoney.currencyCode ?? null;
+
+  const summary: ShopifySummary = {
+    ordersToday: todayEdges.length,
+    revenueToday: sum(todayEdges),
+    ordersLast7Days: edges.length,
+    revenueLast7Days: sum(edges),
+    totalCustomers: result.data.shop.customersCount?.count ?? null,
+    currency,
+  };
 
   const { error } = await supabase.from("amsw_status").insert({
     owner_id: ownerId,
     area: "shopify",
     state: "green",
-    note: `${edges.length} ordrer i dag`,
-    metrics: { ordersToday: edges.length, revenueToday, currency },
+    note: `${summary.ordersToday} ordrer i dag`,
+    metrics: { ...summary },
   });
   if (error) throw error;
 
   await supabase
     .from("integration_sync_state")
     .upsert(
-      { owner_id: ownerId, source: "shopify", last_synced_at: new Date().toISOString() },
+      { owner_id: ownerId, source: "shopify", last_synced_at: new Date().toISOString(), last_error: null, last_error_at: null },
       { onConflict: "owner_id,source" },
     );
 
-  return { ordersToday: edges.length, revenueToday, currency };
+  return summary;
 }

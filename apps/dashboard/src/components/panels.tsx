@@ -87,7 +87,14 @@ export function StatusPanel({ statuses }: { statuses: StatusRow[] }) {
       <PanelHeader icon={<IconPulse />} title="AMSW-status" />
       {latest.length === 0 && <p className="empty">Ingen status endnu.</p>}
       {latest.map((status) => {
-        const metrics = status.metrics as { ordersToday?: number; revenueToday?: number; currency?: string | null };
+        const metrics = status.metrics as {
+          ordersToday?: number;
+          revenueToday?: number;
+          ordersLast7Days?: number;
+          revenueLast7Days?: number;
+          totalCustomers?: number;
+          currency?: string | null;
+        };
         const hasOrderMetrics = typeof metrics?.ordersToday === "number";
         return (
           <div className="item status-item" key={status.id}>
@@ -108,8 +115,28 @@ export function StatusPanel({ statuses }: { statuses: StatusRow[] }) {
                   <span className="stat-value">
                     {metrics.revenueToday} {metrics.currency ?? ""}
                   </span>
-                  <span className="stat-label">omsætning</span>
+                  <span className="stat-label">omsætning i dag</span>
                 </div>
+                {typeof metrics.ordersLast7Days === "number" && (
+                  <div className="stat">
+                    <span className="stat-value">{metrics.ordersLast7Days}</span>
+                    <span className="stat-label">ordrer, 7 dage</span>
+                  </div>
+                )}
+                {typeof metrics.revenueLast7Days === "number" && (
+                  <div className="stat">
+                    <span className="stat-value">
+                      {metrics.revenueLast7Days} {metrics.currency ?? ""}
+                    </span>
+                    <span className="stat-label">omsætning, 7 dage</span>
+                  </div>
+                )}
+                {typeof metrics.totalCustomers === "number" && (
+                  <div className="stat">
+                    <span className="stat-value">{metrics.totalCustomers}</span>
+                    <span className="stat-label">kunder i alt</span>
+                  </div>
+                )}
               </div>
             )}
             <div className="meta">

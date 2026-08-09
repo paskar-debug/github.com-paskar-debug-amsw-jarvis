@@ -1,12 +1,19 @@
-import { syncGoogleCalendar, syncShopify, syncTodoist } from "@amsw/integrations";
+import { syncGoogleCalendar, syncShopify, syncTodoist, type ShopifySummary } from "@amsw/integrations";
 import { env } from "./env.js";
 import { supabase } from "./supabase.js";
 
 export interface SyncSummary {
   googleCalendar?: number;
   todoist?: number;
-  shopify?: { ordersToday: number; revenueToday: number };
+  shopify?: ShopifySummary;
   errors: string[];
+}
+
+async function recordError(source: "google_calendar" | "todoist" | "shopify", message: string) {
+  await supabase.from("integration_sync_state").upsert(
+    { owner_id: env.ownerId, source, last_error: message, last_error_at: new Date().toISOString() },
+    { onConflict: "owner_id,source" },
+  );
 }
 
 export async function syncAll(): Promise<SyncSummary> {
@@ -16,7 +23,9 @@ export async function syncAll(): Promise<SyncSummary> {
     try {
       summary.googleCalendar = await syncGoogleCalendar(supabase, env.ownerId, env.google);
     } catch (err) {
-      summary.errors.push(`Google Kalender: ${(err as Error).message}`);
+      const message = (err as Error).message;
+      summary.errors.push(`Google Kalender: ${message}`);
+      await recordError("google_calendar", message);
     }
   }
 
@@ -24,7 +33,9 @@ export async function syncAll(): Promise<SyncSummary> {
     try {
       summary.todoist = await syncTodoist(supabase, env.ownerId, env.todoist);
     } catch (err) {
-      summary.errors.push(`Todoist: ${(err as Error).message}`);
+      const message = (err as Error).message;
+      summary.errors.push(`Todoist: ${message}`);
+      await recordError("todoist", message);
     }
   }
 
@@ -32,7 +43,9 @@ export async function syncAll(): Promise<SyncSummary> {
     try {
       summary.shopify = await syncShopify(supabase, env.ownerId, env.shopify);
     } catch (err) {
-      summary.errors.push(`Shopify: ${(err as Error).message}`);
+      const message = (err as Error).message;
+      summary.errors.push(`Shopify: ${message}`);
+      await recordError("shopify", message);
     }
   }
 

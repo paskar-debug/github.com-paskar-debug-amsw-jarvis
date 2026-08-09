@@ -109,6 +109,8 @@ export interface Database {
           source: "google_calendar" | "todoist" | "shopify";
           last_synced_at: string | null;
           cursor: string | null;
+          last_error: string | null;
+          last_error_at: string | null;
         };
         Insert: Partial<Database["public"]["Tables"]["integration_sync_state"]["Row"]> & {
           owner_id: string;

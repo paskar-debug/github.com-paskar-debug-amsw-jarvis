@@ -1,15 +1,14 @@
-import { syncGoogleCalendar, syncShopify, syncTodoist, type ShopifySummary } from "@amsw/integrations";
+import { syncGoogleCalendar, syncShopify, type ShopifySummary } from "@amsw/integrations";
 import { env } from "./env.js";
 import { supabase } from "./supabase.js";
 
 export interface SyncSummary {
   googleCalendar?: number;
-  todoist?: number;
   shopify?: ShopifySummary;
   errors: string[];
 }
 
-async function recordError(source: "google_calendar" | "todoist" | "shopify", message: string) {
+async function recordError(source: "google_calendar" | "shopify", message: string) {
   await supabase.from("integration_sync_state").upsert(
     { owner_id: env.ownerId, source, last_error: message, last_error_at: new Date().toISOString() },
     { onConflict: "owner_id,source" },
@@ -26,16 +25,6 @@ export async function syncAll(): Promise<SyncSummary> {
       const message = (err as Error).message;
       summary.errors.push(`Google Kalender: ${message}`);
       await recordError("google_calendar", message);
-    }
-  }
-
-  if (env.todoist.apiToken) {
-    try {
-      summary.todoist = await syncTodoist(supabase, env.ownerId, env.todoist);
-    } catch (err) {
-      const message = (err as Error).message;
-      summary.errors.push(`Todoist: ${message}`);
-      await recordError("todoist", message);
     }
   }
 

@@ -10,7 +10,7 @@ export interface Database {
           status: "todo" | "in_progress" | "done" | "cancelled";
           priority: "p1" | "p2" | "p3" | "p4";
           due_at: string | null;
-          source: "manual" | "telegram" | "todoist";
+          source: "manual" | "telegram";
           external_id: string | null;
           created_at: string;
           updated_at: string;
@@ -106,7 +106,7 @@ export interface Database {
       integration_sync_state: {
         Row: {
           owner_id: string;
-          source: "google_calendar" | "todoist" | "shopify";
+          source: "google_calendar" | "shopify";
           last_synced_at: string | null;
           cursor: string | null;
           last_error: string | null;
@@ -114,7 +114,7 @@ export interface Database {
         };
         Insert: Partial<Database["public"]["Tables"]["integration_sync_state"]["Row"]> & {
           owner_id: string;
-          source: "google_calendar" | "todoist" | "shopify";
+          source: "google_calendar" | "shopify";
         };
         Update: Partial<Database["public"]["Tables"]["integration_sync_state"]["Row"]>;
         Relationships: [];

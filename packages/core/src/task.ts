@@ -1,6 +1,6 @@
 export type TaskStatus = "todo" | "in_progress" | "done" | "cancelled";
 export type TaskPriority = "p1" | "p2" | "p3" | "p4";
-export type TaskSource = "manual" | "telegram" | "todoist";
+export type TaskSource = "manual" | "telegram";
 
 export interface Task {
   id: string;

@@ -73,7 +73,7 @@ bot.command("help", (ctx) =>
       "/opgave <tekst> - opret opgave",
       "/status <område> <green|yellow|red> [note] - sæt AMSW-status",
       "/velvaere <humør 1-5> <energi 1-5> [søvntimer] [note] - log velvære",
-      "/sync - hent nyt fra Google Kalender, Todoist og Shopify",
+      "/sync - hent nyt fra Google Kalender og Shopify",
       "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave, en kalenderaftale, en sletning af en aftale, eller et udkast/analyse du beder om at få skrevet med det samme, alt efter indholdet.",
     ].join("\n"),
   ),

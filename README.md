@@ -4,7 +4,7 @@ Personligt Jarvis-system:
 
 - **Telegram-bot** (`apps/bot`) – tag imod tekst og talebeskeder, opret opgaver/status/mål/velvære, og svar med talebeskeder (OpenAI TTS eller ElevenLabs).
 - **Supabase** (`packages/db`) – central database for opgaver, kalender, AMSW-status, mål og velvære, med Row Level Security scoped til dig som bruger.
-- **Integrationer** (`packages/integrations`) – henter data ind fra Google Kalender, Todoist og Shopify.
+- **Integrationer** (`packages/integrations`) – henter data ind fra Google Kalender og Shopify.
 - **Dashboard** (`apps/dashboard`) – Next.js-app der opdaterer sig selv live via Supabase Realtime.
 
 ## Struktur
@@ -16,7 +16,7 @@ apps/
 packages/
   core/         Fælles TypeScript-typer
   db/           Supabase-skema (SQL-migrationer) + typed klient
-  integrations/ Google Calendar / Todoist / Shopify klienter
+  integrations/ Google Calendar / Shopify klienter
 ```
 
 ## 1. Installer afhængigheder
@@ -49,20 +49,16 @@ npm install
    ```
    Følg linket, godkend adgang, og indsæt den udskrevne `GOOGLE_REFRESH_TOKEN` i `.env`.
 
-## 5. Todoist
-
-Opret et API-token under **Settings -> Integrations -> Developer** i Todoist, og sæt `TODOIST_API_TOKEN`.
-
-## 6. Shopify
+## 5. Shopify
 
 Opret en custom app i din butiks admin (**Settings -> Apps -> Develop apps**), giv den `read_orders`-scope, og sæt `SHOPIFY_STORE_DOMAIN` + `SHOPIFY_ADMIN_API_TOKEN`.
 
-## 7. Tale (STT/TTS)
+## 6. Tale (STT/TTS)
 
 - **Tale ind**: kræver `OPENAI_API_KEY` (Whisper).
 - **Tale ud**: sæt `TTS_PROVIDER` til `openai` (samme nøgle, stemme via `OPENAI_TTS_VOICE`) eller `elevenlabs` (kræver `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID`).
 
-## 8. Udfyld `.env`
+## 7. Udfyld `.env`
 
 ```bash
 cp .env.example .env
@@ -70,15 +66,15 @@ cp .env.example .env
 
 Udfyld alle værdier beskrevet ovenfor. `apps/bot` og `apps/dashboard` læser fra denne fil via `dotenv` / Next.js' indbyggede env-håndtering – kopiér evt. relevante `NEXT_PUBLIC_*` værdier til `apps/dashboard/.env.local` også.
 
-## 9. Kør botten
+## 8. Kør botten
 
 ```bash
 npm run bot:dev
 ```
 
-Skriv eller indtal en besked til botten i Telegram – den bliver automatisk til en opgave. Brug `/help` for alle kommandoer, og `/sync` for at hente data fra Google Kalender, Todoist og Shopify med det samme (kører også automatisk hvert 15. minut).
+Skriv eller indtal en besked til botten i Telegram – den bliver automatisk til en opgave. Brug `/help` for alle kommandoer, og `/sync` for at hente data fra Google Kalender og Shopify med det samme (kører også automatisk hvert 15. minut).
 
-## 10. Kør dashboardet
+## 9. Kør dashboardet
 
 ```bash
 npm run dashboard:dev

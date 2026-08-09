@@ -91,15 +91,6 @@ export function IconPlug(props: IconProps) {
   );
 }
 
-export function IconUser(props: IconProps) {
-  return (
-    <svg {...common} {...props}>
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M4.5 20c1.2-4 4-6 7.5-6s6.3 2 7.5 6" />
-    </svg>
-  );
-}
-
 export function IconCopy(props: IconProps) {
   return (
     <svg {...common} {...props}>

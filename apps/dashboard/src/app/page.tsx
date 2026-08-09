@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
-import { CalendarPanel, DraftsPanel, ProfilePanel, StatusPanel, TasksPanel, WellbeingPanel } from "@/components/panels";
+import { CalendarPanel, DraftsPanel, StatusPanel, TasksPanel, WellbeingPanel } from "@/components/panels";
 import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
 import { NewsPanel } from "@/components/NewsPanel";
@@ -41,7 +41,6 @@ export default function DashboardPage() {
     userId ?? null,
     { column: "source" },
   );
-  const factsLive = useLiveTable<"user_facts", Tables["user_facts"]["Row"]>("user_facts", userId ?? null, { column: "created_at" });
 
   async function handleToggleDone(id: string, done: boolean) {
     await getSupabaseClient()
@@ -52,10 +51,6 @@ export default function DashboardPage() {
 
   async function handleDeleteDraft(id: string) {
     await getSupabaseClient().from("drafts").delete().eq("id", id);
-  }
-
-  async function handleDeleteFact(id: string) {
-    await getSupabaseClient().from("user_facts").delete().eq("id", id);
   }
 
   if (!userId) return null;
@@ -81,7 +76,6 @@ export default function DashboardPage() {
           <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
           <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
           <WellbeingPanel entries={wellbeingLive.rows} isLoading={wellbeingLive.isLoading} flash={wellbeingLive.flash} />
-          <ProfilePanel facts={factsLive.rows} isLoading={factsLive.isLoading} flash={factsLive.flash} onDelete={handleDeleteFact} />
           <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
         </div>
         <aside className="sidebar">

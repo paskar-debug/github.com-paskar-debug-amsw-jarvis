@@ -271,7 +271,11 @@ export function DraftsPanel({ drafts, isLoading, flash, onDelete }: LiveProps & 
         <Skeleton lines={2} />
       ) : (
         <>
-          {recent.length === 0 && <p className="empty">Ingen udkast endnu.</p>}
+          {recent.length === 0 && (
+            <p className="empty">
+              Ingen udkast endnu. Bed botten om et udkast, en analyse, en opsummering eller research om et emne i Telegram – det dukker op her, klar til at kopiere.
+            </p>
+          )}
           {recent.map((draft) => (
             <DraftCard draft={draft} onDelete={onDelete} key={draft.id} />
           ))}

@@ -99,13 +99,12 @@ body::before {
 }
 
 .brand-text {
+  font-family: var(--font-display), var(--font-inter), sans-serif;
   font-size: 1.7rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--text);
-  text-shadow: 0 0 24px rgba(0, 194, 255, 0.45);
-  padding-bottom: 0.2rem;
-  border-bottom: 2px solid var(--text);
 }
 
 .live-pill {

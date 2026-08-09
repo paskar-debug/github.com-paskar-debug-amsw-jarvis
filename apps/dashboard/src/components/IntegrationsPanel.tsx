@@ -74,7 +74,7 @@ function Skeleton({ lines = 3 }: { lines?: number }) {
 export function IntegrationsPanel({ states, isLoading, flash }: { states: SyncRow[]; isLoading?: boolean; flash?: boolean }) {
   return (
     <section className={["panel", flash && "panel-flash"].filter(Boolean).join(" ")}>
-      <PanelHeader icon={<IconPlug />} title="Integrationer" />
+      <PanelHeader icon={<IconPlug />} title="Integrationer" subtitle="Status og forbrug for tjenesterne systemet er bygget på" />
       {isLoading ? (
         <Skeleton lines={5} />
       ) : (

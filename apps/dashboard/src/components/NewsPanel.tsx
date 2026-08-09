@@ -30,7 +30,7 @@ export function NewsPanel({ source, label }: { source: "dr" | "tv2"; label: stri
 
   return (
     <section className="panel">
-      <PanelHeader icon={<IconNews />} title={label} />
+      <PanelHeader icon={<IconNews />} title={label} subtitle="Seneste overskrifter, opdateres automatisk" />
       {failed && <p className="empty">Kunne ikke hente nyheder.</p>}
       {!failed && !items && <p className="empty">Henter...</p>}
       {items?.length === 0 && <p className="empty">Ingen nyheder lige nu.</p>}

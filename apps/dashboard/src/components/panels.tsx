@@ -89,7 +89,7 @@ export function CalendarPanel({ events, isLoading, flash }: LiveProps & { events
   const upcoming = events.filter((e) => new Date(e.ends_at).getTime() >= Date.now());
   return (
     <section className={panelClass(flash && "panel-flash")}>
-      <PanelHeader icon={<IconCalendar />} title="Kalender" />
+      <PanelHeader icon={<IconCalendar />} title="Kalender" subtitle="Kommende aftaler fra Google Kalender og botten" />
       {isLoading ? (
         <Skeleton lines={3} />
       ) : (
@@ -131,7 +131,7 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
   const latest = [...latestByArea.values()];
   return (
     <section className={panelClass(flash && "panel-flash")}>
-      <PanelHeader icon={<IconPulse />} title="AMSW Shopify status" />
+      <PanelHeader icon={<IconPulse />} title="AMSW Shopify status" subtitle="Ordrer, omsætning og status hentet automatisk fra Shopify" />
       {isLoading ? (
         <Skeleton lines={4} />
       ) : (
@@ -215,7 +215,7 @@ export function WellbeingPanel({ entries, isLoading, flash }: LiveProps & { entr
   const recent = [...entries].reverse().slice(0, 7);
   return (
     <section className={panelClass(flash && "panel-flash")}>
-      <PanelHeader icon={<IconHeart />} title="Velvære" />
+      <PanelHeader icon={<IconHeart />} title="Velvære" subtitle="Humør, energi og søvn du logger via Telegram" />
       {isLoading ? (
         <Skeleton lines={2} />
       ) : (

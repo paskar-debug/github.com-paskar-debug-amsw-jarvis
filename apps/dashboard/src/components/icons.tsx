@@ -91,6 +91,15 @@ export function IconPlug(props: IconProps) {
   );
 }
 
+export function IconRing(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function IconCopy(props: IconProps) {
   return (
     <svg {...common} {...props}>

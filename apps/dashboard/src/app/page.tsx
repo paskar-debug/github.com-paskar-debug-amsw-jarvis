@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
-import { CalendarPanel, DraftsPanel, StatusPanel, TasksPanel, WellbeingPanel } from "@/components/panels";
+import { CalendarPanel, DraftsPanel, StatusPanel, TasksPanel, WellbeingPanel, WhoopPanel } from "@/components/panels";
 import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
 import { NewsPanel } from "@/components/NewsPanel";
@@ -75,12 +75,8 @@ export default function DashboardPage() {
           <TasksPanel tasks={tasksLive.rows} isLoading={tasksLive.isLoading} flash={tasksLive.flash} onToggleDone={handleToggleDone} />
           <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
           <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
-          <WellbeingPanel
-            entries={wellbeingLive.rows}
-            statuses={statusesLive.rows}
-            isLoading={wellbeingLive.isLoading}
-            flash={wellbeingLive.flash}
-          />
+          <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
+          <WellbeingPanel entries={wellbeingLive.rows} isLoading={wellbeingLive.isLoading} flash={wellbeingLive.flash} />
           <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
         </div>
         <aside className="sidebar">

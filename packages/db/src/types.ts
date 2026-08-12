@@ -106,7 +106,7 @@ export interface Database {
       integration_sync_state: {
         Row: {
           owner_id: string;
-          source: "google_calendar" | "shopify" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram";
+          source: "google_calendar" | "shopify" | "whoop" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram";
           category: "integration" | "infrastructure";
           last_synced_at: string | null;
           cursor: string | null;
@@ -117,7 +117,7 @@ export interface Database {
         };
         Insert: Partial<Database["public"]["Tables"]["integration_sync_state"]["Row"]> & {
           owner_id: string;
-          source: "google_calendar" | "shopify" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram";
+          source: "google_calendar" | "shopify" | "whoop" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram";
         };
         Update: Partial<Database["public"]["Tables"]["integration_sync_state"]["Row"]>;
         Relationships: [];
@@ -151,6 +151,19 @@ export interface Database {
           fact: string;
         };
         Update: Partial<Database["public"]["Tables"]["user_facts"]["Row"]>;
+        Relationships: [];
+      };
+      whoop_auth: {
+        Row: {
+          owner_id: string;
+          refresh_token: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["whoop_auth"]["Row"]> & {
+          owner_id: string;
+          refresh_token: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["whoop_auth"]["Row"]>;
         Relationships: [];
       };
     };

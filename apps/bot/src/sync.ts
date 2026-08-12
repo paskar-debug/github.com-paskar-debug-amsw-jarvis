@@ -1,4 +1,4 @@
-import { syncGoogleCalendar, syncShopify, type ShopifySummary } from "@amsw/integrations";
+import { syncGoogleCalendar, syncShopify, syncWhoop, type ShopifySummary, type WhoopSummary } from "@amsw/integrations";
 import { env } from "./env.js";
 import { supabase } from "./supabase.js";
 import { recordFailure, recordSuccess } from "./statusStore.js";
@@ -6,6 +6,7 @@ import { recordFailure, recordSuccess } from "./statusStore.js";
 export interface SyncSummary {
   googleCalendar?: number;
   shopify?: ShopifySummary;
+  whoop?: WhoopSummary;
   errors: string[];
 }
 
@@ -31,6 +32,17 @@ export async function syncAll(): Promise<SyncSummary> {
       const message = (err as Error).message;
       summary.errors.push(`Shopify: ${message}`);
       await recordFailure("shopify", "integration", message);
+    }
+  }
+
+  if (env.whoop.clientId && env.whoop.clientSecret) {
+    try {
+      summary.whoop = await syncWhoop(supabase, env.ownerId, env.whoop);
+      await recordSuccess("whoop", "integration");
+    } catch (err) {
+      const message = (err as Error).message;
+      summary.errors.push(`Whoop: ${message}`);
+      await recordFailure("whoop", "integration", message);
     }
   }
 

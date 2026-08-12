@@ -75,7 +75,12 @@ export default function DashboardPage() {
           <TasksPanel tasks={tasksLive.rows} isLoading={tasksLive.isLoading} flash={tasksLive.flash} onToggleDone={handleToggleDone} />
           <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
           <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
-          <WellbeingPanel entries={wellbeingLive.rows} isLoading={wellbeingLive.isLoading} flash={wellbeingLive.flash} />
+          <WellbeingPanel
+            entries={wellbeingLive.rows}
+            statuses={statusesLive.rows}
+            isLoading={wellbeingLive.isLoading}
+            flash={wellbeingLive.flash}
+          />
           <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
         </div>
         <aside className="sidebar">

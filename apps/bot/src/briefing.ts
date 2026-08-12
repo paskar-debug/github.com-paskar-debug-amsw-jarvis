@@ -30,6 +30,7 @@ export interface BriefingData {
 const SOURCE_LABELS: Record<string, string> = {
   google_calendar: "Google Kalender",
   shopify: "Shopify",
+  whoop: "Whoop",
   supabase: "Supabase",
   vercel: "Vercel",
   railway: "Railway",

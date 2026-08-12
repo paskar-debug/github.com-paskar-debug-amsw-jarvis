@@ -422,6 +422,12 @@ body::before {
   margin-top: 0.7rem;
 }
 
+.whoop-stats {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
 .stat {
   display: flex;
   flex-direction: column;

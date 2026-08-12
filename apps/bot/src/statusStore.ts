@@ -2,12 +2,13 @@ import { env } from "./env.js";
 import { supabase } from "./supabase.js";
 import { notifyOwner } from "./notify.js";
 
-export type StatusSource = "google_calendar" | "shopify" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram";
+export type StatusSource = "google_calendar" | "shopify" | "whoop" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram";
 export type StatusCategory = "integration" | "infrastructure";
 
 const LABELS: Record<StatusSource, string> = {
   google_calendar: "Google Kalender",
   shopify: "Shopify",
+  whoop: "Whoop",
   supabase: "Supabase",
   vercel: "Vercel",
   railway: "Railway",

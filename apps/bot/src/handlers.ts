@@ -241,6 +241,7 @@ export async function runSync(): Promise<string> {
   const lines: string[] = [];
   if (summary.googleCalendar !== undefined) lines.push(`Google Kalender: ${summary.googleCalendar} begivenheder`);
   if (summary.shopify) lines.push(`Shopify: ${summary.shopify.ordersToday} ordrer, ${summary.shopify.revenueToday} i omsætning i dag`);
+  if (summary.whoop) lines.push(`Whoop: recovery ${summary.whoop.recoveryScore ?? "?"}%, søvn ${summary.whoop.sleepDurationHours ?? "?"}t`);
   if (summary.errors.length > 0) lines.push(`Fejl: ${summary.errors.join("; ")}`);
   if (lines.length === 0) lines.push("Ingen integrationer er konfigureret endnu (se .env.example).");
   return lines.join("\n");

@@ -41,6 +41,10 @@ export const env = {
     adminApiToken: process.env.SHOPIFY_ADMIN_API_TOKEN ?? "",
     apiVersion: process.env.SHOPIFY_API_VERSION ?? "2024-10",
   },
+  whoop: {
+    clientId: process.env.WHOOP_CLIENT_ID ?? "",
+    clientSecret: process.env.WHOOP_CLIENT_SECRET ?? "",
+  },
 
   // Status/plan for platformene selv (Supabase/Vercel/Railway/OpenAI/Anthropic),
   // adskilt fra forretnings-integrationerne ovenfor.

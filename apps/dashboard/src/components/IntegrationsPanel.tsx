@@ -9,6 +9,7 @@ type SyncRow = Database["public"]["Tables"]["integration_sync_state"]["Row"];
 const BUSINESS_SOURCES: { key: SyncRow["source"]; label: string }[] = [
   { key: "google_calendar", label: "Google Kalender" },
   { key: "shopify", label: "Shopify" },
+  { key: "whoop", label: "Whoop" },
 ];
 
 const INFRA_SOURCES: { key: SyncRow["source"]; label: string }[] = [

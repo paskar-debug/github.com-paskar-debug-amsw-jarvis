@@ -211,8 +211,26 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
   );
 }
 
-export function WellbeingPanel({ entries, isLoading, flash }: LiveProps & { entries: WellbeingRow[] }) {
+interface WhoopMetrics {
+  recoveryScore?: number | null;
+  restingHeartRate?: number | null;
+  sleepPerformancePercentage?: number | null;
+  sleepDurationHours?: number | null;
+  strain?: number | null;
+}
+
+export function WellbeingPanel({
+  entries,
+  statuses,
+  isLoading,
+  flash,
+}: LiveProps & { entries: WellbeingRow[]; statuses: StatusRow[] }) {
   const recent = [...entries].reverse().slice(0, 7);
+  const latestWhoop = [...statuses]
+    .filter((s) => s.area === "whoop")
+    .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())[0];
+  const whoopMetrics = latestWhoop?.metrics as WhoopMetrics | undefined;
+
   return (
     <section className={panelClass(flash && "panel-flash")}>
       <PanelHeader icon={<IconHeart />} title="Velvære" subtitle="Humør, energi og søvn du logger via Telegram" />
@@ -220,6 +238,34 @@ export function WellbeingPanel({ entries, isLoading, flash }: LiveProps & { entr
         <Skeleton lines={2} />
       ) : (
         <>
+          {whoopMetrics && (
+            <div className="status-stats whoop-stats">
+              {typeof whoopMetrics.recoveryScore === "number" && (
+                <div className="stat">
+                  <span className="stat-value">{whoopMetrics.recoveryScore}%</span>
+                  <span className="stat-label">whoop recovery</span>
+                </div>
+              )}
+              {typeof whoopMetrics.sleepPerformancePercentage === "number" && (
+                <div className="stat">
+                  <span className="stat-value">{whoopMetrics.sleepPerformancePercentage}%</span>
+                  <span className="stat-label">søvnkvalitet</span>
+                </div>
+              )}
+              {typeof whoopMetrics.sleepDurationHours === "number" && (
+                <div className="stat">
+                  <span className="stat-value">{whoopMetrics.sleepDurationHours}t</span>
+                  <span className="stat-label">søvn (whoop)</span>
+                </div>
+              )}
+              {typeof whoopMetrics.strain === "number" && (
+                <div className="stat">
+                  <span className="stat-value">{whoopMetrics.strain.toFixed(1)}</span>
+                  <span className="stat-label">strain</span>
+                </div>
+              )}
+            </div>
+          )}
           {recent.length === 0 && <p className="empty">Ingen registreringer endnu.</p>}
           {recent.map((entry) => (
             <div className="item" key={entry.id}>

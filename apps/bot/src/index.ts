@@ -77,7 +77,7 @@ bot.command("help", (ctx) =>
       "/husk <tekst> - gem et fakta om dig selv (fx navne, præferencer), som botten bruger som kontekst i udkast",
       "/status <område> <green|yellow|red> [note] - sæt AMSW-status",
       "/velvaere <humør 1-5> <energi 1-5> [søvntimer] [note] - log velvære",
-      "/sync - hent nyt fra Google Kalender og Shopify",
+      "/sync - hent nyt fra Google Kalender, Shopify og Whoop",
       "Hver morgen kl. 07:00 får du automatisk en briefing med dagens aftaler, åbne opgaver og status.",
       "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave, en kalenderaftale, en sletning af en aftale, et fakta der skal huskes, eller et udkast/analyse du beder om at få skrevet med det samme, alt efter indholdet.",
     ].join("\n"),

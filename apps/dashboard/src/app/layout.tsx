@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const bebasNeue = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--font-display" });
 
 export const metadata: Metadata = {
-  title: "AMSW Jarvis",
+  title: "Paskar's Kontor",
   description: "Live dashboard for opgaver, kalender, AMSW-status og Whoop",
 };
 

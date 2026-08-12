@@ -123,6 +123,7 @@ interface ShopifyMetrics {
 export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { statuses: StatusRow[] }) {
   const latestByArea = new Map<string, StatusRow>();
   for (const status of statuses) {
+    if (status.area !== "shopify") continue;
     const existing = latestByArea.get(status.area);
     if (!existing || new Date(status.recorded_at) > new Date(existing.recorded_at)) {
       latestByArea.set(status.area, status);

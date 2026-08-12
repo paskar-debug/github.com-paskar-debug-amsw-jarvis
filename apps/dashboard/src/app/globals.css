@@ -17,6 +17,8 @@
   --green: #2fe08a;
   --yellow: #ffc542;
   --red: #ff5c5c;
+
+  --whoop-sleep: #8fb4d9;
 }
 
 * {
@@ -427,20 +429,24 @@ body::before {
   flex-wrap: wrap;
 }
 
-.whoop-hero {
+.whoop-rings {
   display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.whoop-ring-item {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 1.1rem;
-  padding: 0.9rem 1rem;
-  border-radius: 4px 18px 4px 18px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
+  gap: 0.6rem;
+  flex: 1;
 }
 
 .whoop-ring {
   position: relative;
-  width: 88px;
-  height: 88px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
   flex-shrink: 0;
   display: flex;
@@ -448,14 +454,16 @@ body::before {
   justify-content: center;
 }
 
-.whoop-hero-green .whoop-ring { background: conic-gradient(var(--green) 0deg, var(--green) calc(var(--whoop-pct, 360deg)), rgba(255, 255, 255, 0.08) 0); }
-.whoop-hero-yellow .whoop-ring { background: conic-gradient(var(--yellow) 0deg, var(--yellow) calc(var(--whoop-pct, 360deg)), rgba(255, 255, 255, 0.08) 0); }
-.whoop-hero-red .whoop-ring { background: conic-gradient(var(--red) 0deg, var(--red) calc(var(--whoop-pct, 360deg)), rgba(255, 255, 255, 0.08) 0); }
+.whoop-ring-sleep { background: conic-gradient(var(--whoop-sleep) 0deg, var(--whoop-sleep) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0); }
+.whoop-ring-strain { background: conic-gradient(var(--brand-bright) 0deg, var(--brand-bright) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0); }
+.whoop-ring-green { background: conic-gradient(var(--green) 0deg, var(--green) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0); }
+.whoop-ring-yellow { background: conic-gradient(var(--yellow) 0deg, var(--yellow) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0); }
+.whoop-ring-red { background: conic-gradient(var(--red) 0deg, var(--red) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0); }
 
 .whoop-ring::before {
   content: "";
   position: absolute;
-  inset: 8px;
+  inset: 7px;
   border-radius: 50%;
   background: #0b0f16;
 }
@@ -464,19 +472,12 @@ body::before {
   position: relative;
   z-index: 1;
   font-family: var(--font-display), var(--font-inter), sans-serif;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   font-weight: 400;
   color: var(--text);
 }
 
-.whoop-hero-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 0;
-}
-
-.whoop-hero-label {
+.whoop-ring-label {
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -484,17 +485,18 @@ body::before {
   color: var(--muted);
 }
 
-.whoop-hero-green .whoop-hero-label { color: var(--green); }
-.whoop-hero-yellow .whoop-hero-label { color: var(--yellow); }
-.whoop-hero-red .whoop-hero-label { color: var(--red); }
-
-.whoop-hero-message {
-  margin: 0;
-  font-size: 0.92rem;
+.whoop-message {
+  margin: 1rem 0 0;
+  font-size: 0.88rem;
   font-weight: 600;
-  color: var(--text);
   line-height: 1.35;
+  padding-left: 0.7rem;
+  border-left: 3px solid var(--muted);
 }
+
+.whoop-message-green { border-left-color: var(--green); }
+.whoop-message-yellow { border-left-color: var(--yellow); }
+.whoop-message-red { border-left-color: var(--red); }
 
 .stat {
   display: flex;

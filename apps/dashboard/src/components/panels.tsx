@@ -258,13 +258,18 @@ function whoopState(score: number | null | undefined): "green" | "yellow" | "red
   return "green";
 }
 
+const WHOOP_STRAIN_MAX = 21;
+
+function ringStyle(pct: number): React.CSSProperties {
+  return { "--whoop-pct": `${Math.max(0, Math.min(100, pct)) * 3.6}deg` } as React.CSSProperties;
+}
+
 export function WhoopPanel({ statuses, isLoading, flash }: LiveProps & { statuses: StatusRow[] }) {
   const latest = [...statuses]
     .filter((s) => s.area === "whoop")
     .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())[0];
   const metrics = latest?.metrics as WhoopMetrics | undefined;
-  const score = metrics?.recoveryScore ?? null;
-  const state = whoopState(score);
+  const state = whoopState(metrics?.recoveryScore);
 
   return (
     <section className={panelClass(flash && "panel-flash")}>
@@ -275,41 +280,46 @@ export function WhoopPanel({ statuses, isLoading, flash }: LiveProps & { statuse
         <p className="empty">Ingen Whoop-data endnu.</p>
       ) : (
         <>
-          <div className={`whoop-hero whoop-hero-${state}`}>
-            <div className="whoop-ring" style={{ "--whoop-pct": `${(score ?? 0) * 3.6}deg` } as React.CSSProperties}>
-              <span className="whoop-ring-value">{score !== null ? `${score}%` : "–"}</span>
+          <div className="whoop-rings">
+            <div className="whoop-ring-item">
+              <div className="whoop-ring whoop-ring-sleep" style={ringStyle(metrics.sleepPerformancePercentage ?? 0)}>
+                <span className="whoop-ring-value">{metrics.sleepPerformancePercentage ?? "–"}%</span>
+              </div>
+              <span className="whoop-ring-label">Søvn</span>
             </div>
-            <div className="whoop-hero-text">
-              <span className="whoop-hero-label">Recovery</span>
-              <p className="whoop-hero-message">{WHOOP_MESSAGES[state]}</p>
+            <div className="whoop-ring-item">
+              <div className={`whoop-ring whoop-ring-${state}`} style={ringStyle(metrics.recoveryScore ?? 0)}>
+                <span className="whoop-ring-value">{metrics.recoveryScore ?? "–"}%</span>
+              </div>
+              <span className="whoop-ring-label">Recovery</span>
+            </div>
+            <div className="whoop-ring-item">
+              <div
+                className="whoop-ring whoop-ring-strain"
+                style={ringStyle(((metrics.strain ?? 0) / WHOOP_STRAIN_MAX) * 100)}
+              >
+                <span className="whoop-ring-value">{typeof metrics.strain === "number" ? metrics.strain.toFixed(1) : "–"}</span>
+              </div>
+              <span className="whoop-ring-label">Strain</span>
             </div>
           </div>
-          <div className="status-stats whoop-stats">
-            {typeof metrics.sleepPerformancePercentage === "number" && (
-              <div className="stat">
-                <span className="stat-value">{metrics.sleepPerformancePercentage}%</span>
-                <span className="stat-label">søvnkvalitet</span>
-              </div>
-            )}
-            {typeof metrics.sleepDurationHours === "number" && (
-              <div className="stat">
-                <span className="stat-value">{metrics.sleepDurationHours}t</span>
-                <span className="stat-label">søvn</span>
-              </div>
-            )}
-            {typeof metrics.strain === "number" && (
-              <div className="stat">
-                <span className="stat-value">{metrics.strain.toFixed(1)}</span>
-                <span className="stat-label">strain</span>
-              </div>
-            )}
-            {typeof metrics.restingHeartRate === "number" && (
-              <div className="stat">
-                <span className="stat-value">{metrics.restingHeartRate}</span>
-                <span className="stat-label">hvilepuls</span>
-              </div>
-            )}
-          </div>
+          <p className={`whoop-message whoop-message-${state}`}>{WHOOP_MESSAGES[state]}</p>
+          {(typeof metrics.sleepDurationHours === "number" || typeof metrics.restingHeartRate === "number") && (
+            <div className="status-stats whoop-stats">
+              {typeof metrics.sleepDurationHours === "number" && (
+                <div className="stat">
+                  <span className="stat-value">{metrics.sleepDurationHours}t</span>
+                  <span className="stat-label">søvn i alt</span>
+                </div>
+              )}
+              {typeof metrics.restingHeartRate === "number" && (
+                <div className="stat">
+                  <span className="stat-value">{metrics.restingHeartRate}</span>
+                  <span className="stat-label">hvilepuls</span>
+                </div>
+              )}
+            </div>
+          )}
           <div className="meta">Sidst opdateret: {formatDate(latest.recorded_at)}</div>
         </>
       )}

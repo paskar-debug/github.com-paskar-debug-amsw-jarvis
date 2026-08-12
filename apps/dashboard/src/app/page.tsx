@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
-import { CalendarPanel, DraftsPanel, StatusPanel, TasksPanel, WellbeingPanel, WhoopPanel } from "@/components/panels";
+import { CalendarPanel, DraftsPanel, StatusPanel, TasksPanel, WhoopPanel } from "@/components/panels";
 import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
 import { NewsPanel } from "@/components/NewsPanel";
@@ -34,7 +34,6 @@ export default function DashboardPage() {
   const tasksLive = useLiveTable<"tasks", Tables["tasks"]["Row"]>("tasks", userId ?? null, { column: "created_at", ascending: false });
   const eventsLive = useLiveTable<"calendar_events", Tables["calendar_events"]["Row"]>("calendar_events", userId ?? null, { column: "starts_at" });
   const statusesLive = useLiveTable<"amsw_status", Tables["amsw_status"]["Row"]>("amsw_status", userId ?? null, { column: "recorded_at", ascending: false });
-  const wellbeingLive = useLiveTable<"wellbeing_entries", Tables["wellbeing_entries"]["Row"]>("wellbeing_entries", userId ?? null, { column: "recorded_at" });
   const draftsLive = useLiveTable<"drafts", Tables["drafts"]["Row"]>("drafts", userId ?? null, { column: "created_at" });
   const integrationsLive = useLiveTable<"integration_sync_state", Tables["integration_sync_state"]["Row"]>(
     "integration_sync_state",
@@ -84,7 +83,6 @@ export default function DashboardPage() {
             <div className="section-label">Sundhed</div>
             <div className="grid">
               <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
-              <WellbeingPanel entries={wellbeingLive.rows} isLoading={wellbeingLive.isLoading} flash={wellbeingLive.flash} />
             </div>
           </div>
 

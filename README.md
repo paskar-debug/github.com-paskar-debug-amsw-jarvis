@@ -2,9 +2,9 @@
 
 Personligt Jarvis-system:
 
-- **Telegram-bot** (`apps/bot`) – tag imod tekst og talebeskeder, opret opgaver/status/mål/velvære, og svar med talebeskeder (OpenAI TTS eller ElevenLabs).
-- **Supabase** (`packages/db`) – central database for opgaver, kalender, AMSW-status, mål og velvære, med Row Level Security scoped til dig som bruger.
-- **Integrationer** (`packages/integrations`) – henter data ind fra Google Kalender og Shopify.
+- **Telegram-bot** (`apps/bot`) – tag imod tekst og talebeskeder, opret opgaver/status, husk fakta om dig selv, og svar med talebeskeder (OpenAI TTS eller ElevenLabs).
+- **Supabase** (`packages/db`) – central database for opgaver, kalender, AMSW-status og fakta om dig selv, med Row Level Security scoped til dig som bruger.
+- **Integrationer** (`packages/integrations`) – henter data ind fra Google Kalender, Shopify og Whoop.
 - **Infrastruktur-status** (`packages/integrations/src/infraStatus.ts`) – tjekker plan/forbrug/sundhed for Supabase, Vercel, Railway, OpenAI og Anthropic hver 6. time.
 - **Dashboard** (`apps/dashboard`) – Next.js-app der opdaterer sig selv live via Supabase Realtime.
 
@@ -90,7 +90,7 @@ Skriv eller indtal en besked til botten i Telegram – den bliver automatisk til
 npm run dashboard:dev
 ```
 
-Åbn `http://localhost:3000`, log ind med magic link (samme email som din Supabase-bruger), og se opgaver, kalender, AMSW-status, mål og velvære opdatere sig selv live.
+Åbn `http://localhost:3000`, log ind med magic link (samme email som din Supabase-bruger), og se opgaver, kalender, AMSW-status og Whoop-data opdatere sig selv live.
 
 ## Deployment
 

@@ -7,7 +7,7 @@ const bebasNeue = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--f
 
 export const metadata: Metadata = {
   title: "AMSW Jarvis",
-  description: "Live dashboard for opgaver, kalender, AMSW-status, mål og velvære",
+  description: "Live dashboard for opgaver, kalender, AMSW-status og Whoop",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

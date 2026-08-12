@@ -3,7 +3,7 @@ import type { AmswState } from "@amsw/core";
 import { env } from "./env.js";
 import { transcribeVoice } from "./stt.js";
 import { synthesizeSpeech, type TtsConfig } from "./tts.js";
-import { createTask, handleFreeformMessage, logWellbeing, runSync, saveFact, setStatus } from "./handlers.js";
+import { createTask, handleFreeformMessage, runSync, saveFact, setStatus } from "./handlers.js";
 import { syncAll } from "./sync.js";
 import { checkInfra } from "./infraSync.js";
 import { sendDailyBriefing } from "./briefing.js";
@@ -76,7 +76,6 @@ bot.command("help", (ctx) =>
       "/opgave <tekst> - opret opgave",
       "/husk <tekst> - gem et fakta om dig selv (fx navne, præferencer), som botten bruger som kontekst i udkast",
       "/status <område> <green|yellow|red> [note] - sæt AMSW-status",
-      "/velvaere <humør 1-5> <energi 1-5> [søvntimer] [note] - log velvære",
       "/sync - hent nyt fra Google Kalender, Shopify og Whoop",
       "Hver morgen kl. 07:00 får du automatisk en briefing med dagens aftaler, åbne opgaver og status.",
       "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave, en kalenderaftale, en sletning af en aftale, et fakta der skal huskes, eller et udkast/analyse du beder om at få skrevet med det samme, alt efter indholdet.",
@@ -101,18 +100,6 @@ bot.command("status", async (ctx) => {
   const state = rawState ? STATE_ALIASES[rawState.toLowerCase()] : undefined;
   if (!area || !state) return ctx.reply("Brug: /status <område> <green|yellow|red> [note]");
   await replyText(ctx, await setStatus(area, state, noteParts.join(" ") || undefined), false);
-});
-
-bot.command("velvaere", async (ctx) => {
-  const parts = ctx.match.trim().split(/\s+/);
-  const mood = Number(parts[0]);
-  const energy = Number(parts[1]);
-  const sleepHours = parts[2] !== undefined && !Number.isNaN(Number(parts[2])) ? Number(parts[2]) : undefined;
-  const note = parts.slice(sleepHours !== undefined ? 3 : 2).join(" ") || undefined;
-  if (!mood || !energy || mood < 1 || mood > 5 || energy < 1 || energy > 5) {
-    return ctx.reply("Brug: /velvaere <humør 1-5> <energi 1-5> [søvntimer] [note]");
-  }
-  await replyText(ctx, await logWellbeing(mood, energy, sleepHours, note), false);
 });
 
 bot.command("sync", async (ctx) => {

@@ -43,14 +43,6 @@ export function IconPulse(props: IconProps) {
   );
 }
 
-export function IconHeart(props: IconProps) {
-  return (
-    <svg {...common} {...props}>
-      <path d="M12 20s-7-4.35-9.5-8.8C.8 7.9 2.6 4.5 6 4.5c2 0 3.3 1.1 4 2.2.7-1.1 2-2.2 4-2.2 3.4 0 5.2 3.4 3.5 6.7C19 15.65 12 20 12 20Z" />
-    </svg>
-  );
-}
-
 export function IconDraft(props: IconProps) {
   return (
     <svg {...common} {...props}>

@@ -84,25 +84,6 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["goals"]["Row"]>;
         Relationships: [];
       };
-      wellbeing_entries: {
-        Row: {
-          id: string;
-          owner_id: string;
-          mood: number;
-          energy: number;
-          sleep_hours: number | null;
-          note: string | null;
-          recorded_at: string;
-          created_at: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["wellbeing_entries"]["Row"]> & {
-          owner_id: string;
-          mood: number;
-          energy: number;
-        };
-        Update: Partial<Database["public"]["Tables"]["wellbeing_entries"]["Row"]>;
-        Relationships: [];
-      };
       integration_sync_state: {
         Row: {
           owner_id: string;

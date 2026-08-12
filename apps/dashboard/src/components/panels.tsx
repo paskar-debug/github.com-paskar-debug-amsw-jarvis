@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import type { Database } from "@amsw/db";
-import { IconCalendar, IconCopy, IconDraft, IconHeart, IconPulse, IconRing, IconTasks } from "./icons";
+import { IconCalendar, IconCopy, IconDraft, IconPulse, IconRing, IconTasks } from "./icons";
 import { Sparkline } from "./Sparkline";
 
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
 type CalendarRow = Database["public"]["Tables"]["calendar_events"]["Row"];
 type StatusRow = Database["public"]["Tables"]["amsw_status"]["Row"];
-type WellbeingRow = Database["public"]["Tables"]["wellbeing_entries"]["Row"];
 type DraftRow = Database["public"]["Tables"]["drafts"]["Row"];
 
 interface LiveProps {
@@ -206,31 +205,6 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
               </div>
             );
           })}
-        </>
-      )}
-    </section>
-  );
-}
-
-export function WellbeingPanel({ entries, isLoading, flash }: LiveProps & { entries: WellbeingRow[] }) {
-  const recent = [...entries].reverse().slice(0, 7);
-  return (
-    <section className={panelClass(flash && "panel-flash")}>
-      <PanelHeader icon={<IconHeart />} title="Velvære" subtitle="Humør, energi og søvn du logger via Telegram" />
-      {isLoading ? (
-        <Skeleton lines={2} />
-      ) : (
-        <>
-          {recent.length === 0 && <p className="empty">Ingen registreringer endnu.</p>}
-          {recent.map((entry) => (
-            <div className="item" key={entry.id}>
-              Humør {entry.mood}/5 · Energi {entry.energy}/5
-              <div className="meta">
-                {entry.sleep_hours ? `${entry.sleep_hours}t søvn · ` : ""}
-                {formatDate(entry.recorded_at)}
-              </div>
-            </div>
-          ))}
         </>
       )}
     </section>

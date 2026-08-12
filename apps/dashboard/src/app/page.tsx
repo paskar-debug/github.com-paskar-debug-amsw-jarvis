@@ -69,15 +69,40 @@ export default function DashboardPage() {
         </span>
       </div>
       <div className="page-layout">
-        <div className="grid">
+        <div className="main-column">
           <QuotePanel />
-          <StatusPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
-          <TasksPanel tasks={tasksLive.rows} isLoading={tasksLive.isLoading} flash={tasksLive.flash} onToggleDone={handleToggleDone} />
-          <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
-          <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
-          <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
-          <WellbeingPanel entries={wellbeingLive.rows} isLoading={wellbeingLive.isLoading} flash={wellbeingLive.flash} />
+
+          <div className="section">
+            <div className="section-label">I dag</div>
+            <div className="grid">
+              <TasksPanel tasks={tasksLive.rows} isLoading={tasksLive.isLoading} flash={tasksLive.flash} onToggleDone={handleToggleDone} />
+              <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
+            </div>
+          </div>
+
+          <div className="section">
+            <div className="section-label">Sundhed</div>
+            <div className="grid">
+              <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
+              <WellbeingPanel entries={wellbeingLive.rows} isLoading={wellbeingLive.isLoading} flash={wellbeingLive.flash} />
+            </div>
+          </div>
+
+          <div className="section">
+            <div className="section-label">Forretning</div>
+            <div className="grid">
+              <StatusPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
+            </div>
+          </div>
+
           <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
+
+          <div className="section section-system">
+            <div className="section-label">System</div>
+            <div className="grid">
+              <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
+            </div>
+          </div>
         </div>
         <aside className="sidebar">
           <NewsPanel source="dr" label="DR Nyheder" />

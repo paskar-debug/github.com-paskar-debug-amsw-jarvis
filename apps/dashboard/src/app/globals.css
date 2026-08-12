@@ -171,6 +171,33 @@ body::before {
   gap: 1.25rem;
 }
 
+.main-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+.section-label {
+  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-size: 0.95rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-system {
+  opacity: 0.85;
+}
+
+.section-system .section-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;

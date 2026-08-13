@@ -134,6 +134,22 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["user_facts"]["Row"]>;
         Relationships: [];
       };
+      assistant_messages: {
+        Row: {
+          id: string;
+          owner_id: string;
+          role: "user" | "assistant";
+          content: string;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["assistant_messages"]["Row"]> & {
+          owner_id: string;
+          role: "user" | "assistant";
+          content: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["assistant_messages"]["Row"]>;
+        Relationships: [];
+      };
       whoop_auth: {
         Row: {
           owner_id: string;

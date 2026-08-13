@@ -1,4 +1,5 @@
 import { buildAssistantContext, createCalendarEvent, createTask, saveFact, type FactCategory } from "./tools.ts";
+import { loadRecentHistory, saveHistoryTurn } from "./history.ts";
 
 function copenhagenNowDescription(): string {
   return new Intl.DateTimeFormat("da-DK", {
@@ -113,13 +114,15 @@ Nu er det: ${copenhagenNowDescription()} (tidszone Europe/Copenhagen).
 
 Kontekst om brugeren: ${context || "Ingen kontekst tilgængelig endnu."}`;
 
-  const messages: unknown[] = [{ role: "user", content: message }];
+  const history = await loadRecentHistory().catch(() => []);
+  const messages: unknown[] = [...history.map((h) => ({ role: h.role, content: h.content })), { role: "user", content: message }];
   const first = await callClaude(system, messages);
 
   const toolUse = first.content.find((b) => b.type === "tool_use");
   if (!toolUse || !toolUse.name || !toolUse.id) {
-    const text = extractText(first.content);
-    return text || "Jeg er ikke sikker på hvordan jeg skal svare på det.";
+    const text = extractText(first.content) || "Jeg er ikke sikker på hvordan jeg skal svare på det.";
+    await Promise.all([saveHistoryTurn("user", message), saveHistoryTurn("assistant", text)]);
+    return text;
   }
 
   const toolResult = await executeTool(toolUse.name, toolUse.input ?? {}).catch((err) => `Fejl: ${(err as Error).message}`);
@@ -131,5 +134,7 @@ Kontekst om brugeren: ${context || "Ingen kontekst tilgængelig endnu."}`;
   });
 
   const second = await callClaude(system, messages);
-  return extractText(second.content) || toolResult;
+  const reply = extractText(second.content) || toolResult;
+  await Promise.all([saveHistoryTurn("user", message), saveHistoryTurn("assistant", reply)]);
+  return reply;
 }

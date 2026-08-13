@@ -2,19 +2,16 @@ import { Bot, InputFile, type Context } from "grammy";
 import type { AmswState } from "@amsw/core";
 import { env } from "./env.js";
 import { transcribeVoice } from "./stt.js";
-import { synthesizeSpeech, type TtsConfig } from "./tts.js";
+import { synthesizeSpeech } from "./tts.js";
+import { ttsConfig } from "./ttsConfig.js";
 import { createTask, handleFreeformMessage, runSync, saveFact, setStatus } from "./handlers.js";
 import { syncAll } from "./sync.js";
 import { checkInfra } from "./infraSync.js";
 import { sendDailyBriefing } from "./briefing.js";
 import { scheduleDaily } from "./scheduler.js";
+import { startAssistantServer } from "./server.js";
 
 const bot = new Bot(env.telegramBotToken);
-
-const ttsConfig: TtsConfig =
-  env.ttsProvider === "elevenlabs"
-    ? { provider: "elevenlabs", apiKey: env.elevenLabsApiKey, voiceId: env.elevenLabsVoiceId }
-    : { provider: "openai", apiKey: env.openaiApiKey, voice: env.openaiTtsVoice };
 
 // Personligt system: kun ejeren må tale med botten.
 bot.use(async (ctx, next) => {
@@ -140,6 +137,8 @@ setInterval(() => {
 checkInfra().catch((err) => console.error("Infrastruktur-tjek fejlede:", err));
 
 scheduleDaily(7, 0, "Europe/Copenhagen", sendDailyBriefing);
+
+startAssistantServer();
 
 bot.start();
 console.log("AMSW Jarvis-bot kører.");

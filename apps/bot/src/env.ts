@@ -46,6 +46,10 @@ export const env = {
     clientSecret: process.env.WHOOP_CLIENT_SECRET ?? "",
   },
 
+  // Shared secret the dashboard's server-side API routes use to reach this
+  // bot's HTTP assistant endpoints (chat/transcribe/speak) - never sent to the browser.
+  assistantApiKey: process.env.ASSISTANT_API_KEY ?? "",
+
   // Status/plan for platformene selv (Supabase/Vercel/Railway/OpenAI/Anthropic),
   // adskilt fra forretnings-integrationerne ovenfor.
   infra: {

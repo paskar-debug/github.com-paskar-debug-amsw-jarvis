@@ -1,0 +1,138 @@
+import { env } from "./env.js";
+import { createCalendarEvent, createTask, saveFact, buildAssistantContext } from "./handlers.js";
+import type { FactCategory } from "./classify.js";
+
+function copenhagenNowDescription(): string {
+  return new Intl.DateTimeFormat("da-DK", {
+    timeZone: "Europe/Copenhagen",
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "shortOffset",
+  }).format(new Date());
+}
+
+const TOOLS = [
+  {
+    name: "create_task",
+    description: "Opret en opgave for brugeren.",
+    input_schema: {
+      type: "object",
+      properties: { title: { type: "string" } },
+      required: ["title"],
+    },
+  },
+  {
+    name: "create_event",
+    description: "Opret en ny kalenderaftale med et konkret tidspunkt.",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string" },
+        starts_at: { type: "string", description: "ISO 8601 med tidszone-offset, fx 2026-08-14T14:00:00+02:00" },
+        ends_at: { type: "string", description: "ISO 8601 med tidszone-offset" },
+      },
+      required: ["title", "starts_at", "ends_at"],
+    },
+  },
+  {
+    name: "save_fact",
+    description: "Gem et varigt fakta om brugeren (navne, relationer, forretningsinfo, præferencer for hvordan du skal opføre dig).",
+    input_schema: {
+      type: "object",
+      properties: {
+        fact: { type: "string" },
+        category: { type: "string", enum: ["familie", "forretning", "praeference", "andet"] },
+      },
+      required: ["fact", "category"],
+    },
+  },
+];
+
+interface ContentBlock {
+  type: string;
+  text?: string;
+  id?: string;
+  name?: string;
+  input?: Record<string, unknown>;
+}
+
+async function callClaude(system: string, messages: unknown[]): Promise<{ content: ContentBlock[]; stop_reason: string }> {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": env.anthropicApiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-5",
+      max_tokens: 1200,
+      system,
+      messages,
+      tools: TOOLS,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Claude-assistent fejlede: ${response.status} ${await response.text()}`);
+  }
+  return response.json() as Promise<{ content: ContentBlock[]; stop_reason: string }>;
+}
+
+async function executeTool(name: string, input: Record<string, unknown>): Promise<string> {
+  if (name === "create_task") {
+    return createTask(String(input.title));
+  }
+  if (name === "create_event") {
+    return createCalendarEvent(String(input.title), String(input.starts_at), String(input.ends_at));
+  }
+  if (name === "save_fact") {
+    return saveFact(String(input.fact), (input.category as FactCategory) ?? "andet");
+  }
+  return "Ukendt værktøj.";
+}
+
+export function extractText(content: ContentBlock[]): string {
+  return content
+    .filter((b) => b.type === "text" && b.text)
+    .map((b) => b.text)
+    .join("\n")
+    .trim();
+}
+
+/** Conversational assistant for the dashboard chat widget: answers questions directly using live
+ *  context, and can take action (create_task/create_event/save_fact) via tool-use, unlike the
+ *  Telegram bot's message classifier which always forces a message into exactly one bucket. */
+export async function answerAssistantMessage(message: string): Promise<string> {
+  if (!env.anthropicApiKey) throw new Error("ANTHROPIC_API_KEY mangler.");
+
+  const context = await buildAssistantContext().catch(() => "");
+  const system = `Du er en personlig assistent for brugeren, tilgængelig via deres dashboard-chat. Svar hjælpsomt, kortfattet og direkte på spørgsmål ved hjælp af den kontekst du får nedenfor - gæt aldrig på tal du kan slå op i konteksten. Du kan også handle for brugeren ved at bruge et af de tilgængelige værktøjer (opret opgave, opret kalenderaftale, gem et fakta), hvis beskeden beder om det. Svar altid på dansk, i almindelig prosa uden overskrifter/markdown, som i en samtale.
+
+Nu er det: ${copenhagenNowDescription()} (tidszone Europe/Copenhagen).
+
+Kontekst om brugeren: ${context || "Ingen kontekst tilgængelig endnu."}`;
+
+  const messages: unknown[] = [{ role: "user", content: message }];
+  const first = await callClaude(system, messages);
+
+  const toolUse = first.content.find((b) => b.type === "tool_use");
+  if (!toolUse || !toolUse.name || !toolUse.id) {
+    const text = extractText(first.content);
+    return text || "Jeg er ikke sikker på hvordan jeg skal svare på det.";
+  }
+
+  const toolResult = await executeTool(toolUse.name, toolUse.input ?? {}).catch((err) => `Fejl: ${(err as Error).message}`);
+
+  messages.push({ role: "assistant", content: first.content });
+  messages.push({
+    role: "user",
+    content: [{ type: "tool_result", tool_use_id: toolUse.id, content: toolResult }],
+  });
+
+  const second = await callClaude(system, messages);
+  return extractText(second.content) || toolResult;
+}

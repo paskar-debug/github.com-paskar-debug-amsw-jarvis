@@ -147,19 +147,21 @@ export async function deleteCalendarEvent(query: string): Promise<string> {
   return `Aftale slettet: "${matches[0].title}"`;
 }
 
-/** Short plain-text summary of known facts + open tasks + upcoming events, given to Sonnet as background for draft generation.
- *  Best-effort: if this fails, the draft still gets generated, just without situational context. */
-async function buildDraftContext(): Promise<string> {
-  const [factsRes, tasksRes, eventsRes] = await Promise.all([
+/** Short plain-text summary of known facts + open tasks + upcoming events + latest business/health status,
+ *  given to Sonnet as background for draft generation and assistant chat. Best-effort: if this fails,
+ *  the caller still proceeds, just without situational context. */
+export async function buildAssistantContext(): Promise<string> {
+  const [factsRes, tasksRes, eventsRes, statusRes] = await Promise.all([
     supabase.from("user_facts").select("fact").eq("owner_id", env.ownerId).order("created_at", { ascending: false }).limit(20),
-    supabase.from("tasks").select("title").eq("owner_id", env.ownerId).neq("status", "done").neq("status", "cancelled").limit(10),
+    supabase.from("tasks").select("title, priority, due_at").eq("owner_id", env.ownerId).neq("status", "done").neq("status", "cancelled").limit(20),
     supabase
       .from("calendar_events")
       .select("title, starts_at")
       .eq("owner_id", env.ownerId)
       .gte("starts_at", new Date().toISOString())
       .order("starts_at")
-      .limit(5),
+      .limit(10),
+    supabase.from("amsw_status").select("area, note, recorded_at").eq("owner_id", env.ownerId).order("recorded_at", { ascending: false }).limit(10),
   ]);
 
   const parts: string[] = [];
@@ -167,7 +169,9 @@ async function buildDraftContext(): Promise<string> {
     parts.push(`Om brugeren: ${factsRes.data.map((f) => f.fact).join(". ")}.`);
   }
   if (tasksRes.data && tasksRes.data.length > 0) {
-    parts.push(`Åbne opgaver: ${tasksRes.data.map((t) => t.title).join(", ")}.`);
+    parts.push(`Åbne opgaver (${tasksRes.data.length} i alt): ${tasksRes.data.map((t) => `${t.title} [${t.priority}]`).join(", ")}.`);
+  } else {
+    parts.push("Ingen åbne opgaver lige nu.");
   }
   if (eventsRes.data && eventsRes.data.length > 0) {
     const events = eventsRes.data.map((e) => {
@@ -175,6 +179,12 @@ async function buildDraftContext(): Promise<string> {
       return `${e.title} (${when})`;
     });
     parts.push(`Kommende aftaler: ${events.join(", ")}.`);
+  }
+  if (statusRes.data && statusRes.data.length > 0) {
+    const latestByArea = new Map<string, { note: string | null }>();
+    for (const s of statusRes.data) if (!latestByArea.has(s.area)) latestByArea.set(s.area, s);
+    const statusLines = [...latestByArea.entries()].map(([area, s]) => `${area}: ${s.note ?? "ingen note"}`);
+    parts.push(`Seneste status: ${statusLines.join(", ")}.`);
   }
   return parts.join(" ");
 }
@@ -196,7 +206,7 @@ export async function handleFreeformMessage(text: string): Promise<string> {
       return deleteCalendarEvent(result.query);
     }
     if (result.kind === "draft") {
-      const context = await buildDraftContext().catch(() => "");
+      const context = await buildAssistantContext().catch(() => "");
       const content = await generateDraft(text, env.anthropicApiKey, context);
       const { error } = await supabase.from("drafts").insert({ owner_id: env.ownerId, request: text, content });
       if (error) console.error("Kunne ikke gemme udkast i databasen:", error);

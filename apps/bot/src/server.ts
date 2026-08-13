@@ -1,6 +1,6 @@
 import http from "node:http";
 import { env } from "./env.js";
-import { handleFreeformMessage } from "./handlers.js";
+import { answerAssistantMessage } from "./assistant.js";
 import { transcribeVoice } from "./stt.js";
 import { synthesizeSpeech } from "./tts.js";
 import { ttsConfig } from "./ttsConfig.js";
@@ -45,7 +45,7 @@ export function startAssistantServer(): void {
       if (req.method === "POST" && req.url === "/assistant/chat") {
         const body = JSON.parse((await readBody(req)).toString("utf8")) as { message?: string };
         if (!body.message) return sendJson(res, 400, { error: "Mangler 'message'." });
-        const reply = await handleFreeformMessage(body.message);
+        const reply = await answerAssistantMessage(body.message);
         return sendJson(res, 200, { reply });
       }
 

@@ -48,6 +48,8 @@ function Skeleton({ lines = 3 }: { lines?: number }) {
   );
 }
 
+const TASKS_VISIBLE_LIMIT = 6;
+
 export function TasksPanel({
   tasks,
   isLoading,
@@ -58,6 +60,8 @@ export function TasksPanel({
   onToggleDone: (id: string, done: boolean) => void;
 }) {
   const open = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
+  const visible = open.slice(0, TASKS_VISIBLE_LIMIT);
+  const remaining = open.length - visible.length;
   return (
     <section className={panelClass(flash && "panel-flash")}>
       <PanelHeader icon={<IconTasks />} title="Opgaver" subtitle="Huskesedler du sender via tekst eller tale i Telegram" />
@@ -66,7 +70,7 @@ export function TasksPanel({
       ) : (
         <>
           {open.length === 0 && <p className="empty">Ingen åbne opgaver.</p>}
-          {open.map((task) => (
+          {visible.map((task) => (
             <label className="item item-checkable" key={task.id}>
               <input type="checkbox" onChange={() => onToggleDone(task.id, true)} />
               <div>
@@ -78,14 +82,19 @@ export function TasksPanel({
               </div>
             </label>
           ))}
+          {remaining > 0 && <p className="empty">+{remaining} flere opgaver.</p>}
         </>
       )}
     </section>
   );
 }
 
+const CALENDAR_VISIBLE_LIMIT = 5;
+
 export function CalendarPanel({ events, isLoading, flash }: LiveProps & { events: CalendarRow[] }) {
   const upcoming = events.filter((e) => new Date(e.ends_at).getTime() >= Date.now());
+  const visible = upcoming.slice(0, CALENDAR_VISIBLE_LIMIT);
+  const remaining = upcoming.length - visible.length;
   return (
     <section className={panelClass(flash && "panel-flash")}>
       <PanelHeader icon={<IconCalendar />} title="Kalender" subtitle="Kommende aftaler fra Google Kalender og botten" />
@@ -94,7 +103,7 @@ export function CalendarPanel({ events, isLoading, flash }: LiveProps & { events
       ) : (
         <>
           {upcoming.length === 0 && <p className="empty">Ingen kommende begivenheder.</p>}
-          {upcoming.map((event) => (
+          {visible.map((event) => (
             <div className="item" key={event.id}>
               {event.title}
               <div className="meta">
@@ -103,6 +112,7 @@ export function CalendarPanel({ events, isLoading, flash }: LiveProps & { events
               </div>
             </div>
           ))}
+          {remaining > 0 && <p className="empty">+{remaining} flere i kalenderen.</p>}
         </>
       )}
     </section>

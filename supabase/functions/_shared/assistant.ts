@@ -1,6 +1,4 @@
-import { env } from "./env.js";
-import { createCalendarEvent, createTask, saveFact, buildAssistantContext } from "./handlers.js";
-import type { FactCategory } from "./classify.js";
+import { buildAssistantContext, createCalendarEvent, createTask, saveFact, type FactCategory } from "./tools.ts";
 
 function copenhagenNowDescription(): string {
   return new Intl.DateTimeFormat("da-DK", {
@@ -64,7 +62,7 @@ async function callClaude(system: string, messages: unknown[]): Promise<{ conten
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
-      "x-api-key": env.anthropicApiKey,
+      "x-api-key": Deno.env.get("ANTHROPIC_API_KEY") ?? "",
       "anthropic-version": "2023-06-01",
       "content-type": "application/json",
     },
@@ -104,10 +102,9 @@ export function extractText(content: ContentBlock[]): string {
 }
 
 /** Conversational assistant for the dashboard chat widget: answers questions directly using live
- *  context, and can take action (create_task/create_event/save_fact) via tool-use, unlike the
- *  Telegram bot's message classifier which always forces a message into exactly one bucket. */
+ *  context, and can take action (create_task/create_event/save_fact) via tool-use. */
 export async function answerAssistantMessage(message: string): Promise<string> {
-  if (!env.anthropicApiKey) throw new Error("ANTHROPIC_API_KEY mangler.");
+  if (!Deno.env.get("ANTHROPIC_API_KEY")) throw new Error("ANTHROPIC_API_KEY mangler.");
 
   const context = await buildAssistantContext().catch(() => "");
   const system = `Du er en personlig assistent for brugeren, tilgængelig via deres dashboard-chat. Svar hjælpsomt, kortfattet og direkte på spørgsmål ved hjælp af den kontekst du får nedenfor - gæt aldrig på tal du kan slå op i konteksten. Du kan også handle for brugeren ved at bruge et af de tilgængelige værktøjer (opret opgave, opret kalenderaftale, gem et fakta), hvis beskeden beder om det. Svar altid på dansk, i almindelig prosa uden overskrifter/markdown, som i en samtale.

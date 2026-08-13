@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyRequest } from "@/lib/verifyRequest";
+import { getBearerToken, verifyRequest } from "@/lib/verifyRequest";
 
 export async function POST(req: NextRequest) {
   if (!(await verifyRequest(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -7,13 +7,9 @@ export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => null)) as { text?: string; voice?: string } | null;
   if (!body?.text) return NextResponse.json({ error: "Mangler tekst." }, { status: 400 });
 
-  const botUrl = process.env.BOT_ASSISTANT_URL;
-  const apiKey = process.env.ASSISTANT_API_KEY;
-  if (!botUrl || !apiKey) return NextResponse.json({ error: "Assistenten er ikke konfigureret." }, { status: 503 });
-
-  const res = await fetch(`${botUrl}/assistant/speak`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/assistant-speak`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${getBearerToken(req)}`, "Content-Type": "application/json" },
     body: JSON.stringify({ text: body.text, voice: body.voice }),
   });
   if (!res.ok) return NextResponse.json({ error: await res.text() }, { status: 502 });

@@ -9,7 +9,6 @@ import { syncAll } from "./sync.js";
 import { checkInfra } from "./infraSync.js";
 import { sendDailyBriefing } from "./briefing.js";
 import { scheduleDaily } from "./scheduler.js";
-import { startAssistantServer } from "./server.js";
 
 const bot = new Bot(env.telegramBotToken);
 
@@ -137,8 +136,6 @@ setInterval(() => {
 checkInfra().catch((err) => console.error("Infrastruktur-tjek fejlede:", err));
 
 scheduleDaily(7, 0, "Europe/Copenhagen", sendDailyBriefing);
-
-startAssistantServer();
 
 bot.start();
 console.log("AMSW Jarvis-bot kører.");

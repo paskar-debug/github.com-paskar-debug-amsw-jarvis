@@ -4,7 +4,7 @@ import { verifyRequest } from "@/lib/verifyRequest";
 export async function POST(req: NextRequest) {
   if (!(await verifyRequest(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = (await req.json().catch(() => null)) as { text?: string } | null;
+  const body = (await req.json().catch(() => null)) as { text?: string; voice?: string } | null;
   if (!body?.text) return NextResponse.json({ error: "Mangler tekst." }, { status: 400 });
 
   const botUrl = process.env.BOT_ASSISTANT_URL;
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   const res = await fetch(`${botUrl}/assistant/speak`, {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ text: body.text }),
+    body: JSON.stringify({ text: body.text, voice: body.voice }),
   });
   if (!res.ok) return NextResponse.json({ error: await res.text() }, { status: 502 });
 

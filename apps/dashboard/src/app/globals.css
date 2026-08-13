@@ -870,6 +870,101 @@ body::before {
   color: var(--text);
 }
 
+.assistant-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.assistant-header-actions .assistant-icon-button {
+  width: 28px;
+  height: 28px;
+}
+
+.assistant-header-actions .assistant-icon-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.assistant-settings {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.assistant-voice-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.assistant-voice-toggle svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.assistant-voice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.assistant-voice-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 6px;
+  padding: 0.15rem 0.3rem 0.15rem 0;
+}
+
+.assistant-voice-row-active {
+  background: var(--accent-soft);
+}
+
+.assistant-voice-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  flex: 1;
+  text-align: left;
+}
+
+.assistant-voice-row-active .assistant-voice-name {
+  color: var(--brand-bright);
+}
+
+.assistant-voice-name svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.assistant-voice-preview {
+  width: 26px;
+  height: 26px;
+}
+
+.assistant-voice-preview svg {
+  width: 12px;
+  height: 12px;
+}
+
 .assistant-messages {
   flex: 1;
   overflow-y: auto;

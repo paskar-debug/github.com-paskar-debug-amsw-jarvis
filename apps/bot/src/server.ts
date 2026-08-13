@@ -59,9 +59,10 @@ export function startAssistantServer(): void {
       }
 
       if (req.method === "POST" && req.url === "/assistant/speak") {
-        const body = JSON.parse((await readBody(req)).toString("utf8")) as { text?: string };
+        const body = JSON.parse((await readBody(req)).toString("utf8")) as { text?: string; voice?: string };
         if (!body.text) return sendJson(res, 400, { error: "Mangler 'text'." });
-        const { audio, format } = await synthesizeSpeech(body.text, ttsConfig);
+        const config = body.voice && ttsConfig.provider === "openai" ? { ...ttsConfig, voice: body.voice } : ttsConfig;
+        const { audio, format } = await synthesizeSpeech(body.text, config);
         res.writeHead(200, { "Content-Type": format === "ogg" ? "audio/ogg" : "audio/mpeg" });
         res.end(audio);
         return;

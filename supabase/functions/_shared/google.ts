@@ -1,11 +1,21 @@
-interface GoogleConfig {
+export interface GoogleConfig {
   clientId: string;
   clientSecret: string;
   refreshToken: string;
   calendarId: string;
 }
 
-async function getAccessToken(config: GoogleConfig): Promise<string> {
+/** Reads the shared Google OAuth secrets (same client + refresh token used for Calendar). */
+export function googleConfigFromEnv(): GoogleConfig {
+  return {
+    clientId: Deno.env.get("GOOGLE_CLIENT_ID") ?? "",
+    clientSecret: Deno.env.get("GOOGLE_CLIENT_SECRET") ?? "",
+    refreshToken: Deno.env.get("GOOGLE_REFRESH_TOKEN") ?? "",
+    calendarId: Deno.env.get("GOOGLE_CALENDAR_ID") ?? "primary",
+  };
+}
+
+export async function getAccessToken(config: GoogleConfig): Promise<string> {
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },

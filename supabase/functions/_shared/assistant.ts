@@ -1,4 +1,4 @@
-import { buildAssistantContext, createCalendarEvent, createTask, saveFact, type FactCategory } from "./tools.ts";
+import { buildAssistantContext, createCalendarEvent, createTask, saveFact, searchEmail, type FactCategory } from "./tools.ts";
 import { loadRecentHistory, saveHistoryTurn } from "./history.ts";
 
 function copenhagenNowDescription(): string {
@@ -49,6 +49,15 @@ const TOOLS = [
       required: ["fact", "category"],
     },
   },
+  {
+    name: "search_email",
+    description: "Søg i brugerens Gmail efter relevante mails. Brug almindelig Gmail-søgesyntaks (fx 'from:shopify', 'faktura', 'subject:ordre'). Returnerer afsender/emne/dato/uddrag for de bedste match, ikke hele mailen.",
+    input_schema: {
+      type: "object",
+      properties: { query: { type: "string" } },
+      required: ["query"],
+    },
+  },
 ];
 
 interface ContentBlock {
@@ -90,6 +99,9 @@ async function executeTool(name: string, input: Record<string, unknown>): Promis
   }
   if (name === "save_fact") {
     return saveFact(String(input.fact), (input.category as FactCategory) ?? "andet");
+  }
+  if (name === "search_email") {
+    return searchEmail(String(input.query));
   }
   return "Ukendt værktøj.";
 }

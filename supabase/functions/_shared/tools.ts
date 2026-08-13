@@ -1,5 +1,6 @@
 import { OWNER_ID, serviceClient } from "./db.ts";
 import { createGoogleCalendarEvent } from "./google.ts";
+import { searchGmail } from "./gmail.ts";
 
 export type FactCategory = "familie" | "forretning" | "praeference" | "andet";
 
@@ -58,6 +59,10 @@ export async function createCalendarEvent(title: string, startsAt: string, endsA
   });
   const suffix = source === "manual" ? " (kunne ikke skrives til Google Kalender, kun gemt lokalt)" : "";
   return `Aftale oprettet: "${title}" – ${when}${suffix}`;
+}
+
+export async function searchEmail(query: string): Promise<string> {
+  return searchGmail(query);
 }
 
 /** Short plain-text summary of known facts + open tasks + upcoming events + latest business/health

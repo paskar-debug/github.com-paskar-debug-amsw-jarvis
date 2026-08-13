@@ -1,5 +1,6 @@
 import { Bot, InputFile, type Context } from "grammy";
 import type { AmswState } from "@amsw/core";
+import { discardDraft, sendDraft } from "@amsw/integrations";
 import { env } from "./env.js";
 import { transcribeVoice } from "./stt.js";
 import { synthesizeSpeech } from "./tts.js";
@@ -8,7 +9,7 @@ import { createTask, handleFreeformMessage, runSync, saveFact, setStatus } from 
 import { syncAll } from "./sync.js";
 import { checkInfra } from "./infraSync.js";
 import { sendDailyBriefing } from "./briefing.js";
-import { checkRecentActivity, runProactiveCheck } from "./notice.js";
+import { checkRecentActivity, formatTriageOutcome, runProactiveCheck } from "./notice.js";
 import { scheduleDaily } from "./scheduler.js";
 
 const bot = new Bot(env.telegramBotToken);
@@ -108,8 +109,33 @@ bot.command("sync", async (ctx) => {
 
 bot.command("tjek", async (ctx) => {
   await ctx.reply("Tjekker seneste aktivitet...");
-  const result = await checkRecentActivity();
-  await replyText(ctx, result.flag && result.message ? result.message : "Ingen ting at bemærke lige nu.", false);
+  const { result, drafts } = await checkRecentActivity();
+  if (!result.flag || !result.message) {
+    await ctx.reply("Ingen ting at bemærke lige nu.");
+    return;
+  }
+  const { text, replyMarkup } = formatTriageOutcome(result, drafts);
+  await ctx.reply(text, replyMarkup ? { reply_markup: replyMarkup } : undefined);
+});
+
+bot.on("callback_query:data", async (ctx) => {
+  const [action, draftId] = ctx.callbackQuery.data.split(":");
+  if (!draftId || (action !== "send_draft" && action !== "discard_draft")) {
+    await ctx.answerCallbackQuery();
+    return;
+  }
+  try {
+    if (action === "send_draft") {
+      await sendDraft(env.google, draftId);
+      await ctx.answerCallbackQuery({ text: "Sendt!" });
+    } else {
+      await discardDraft(env.google, draftId);
+      await ctx.answerCallbackQuery({ text: "Udkast slettet." });
+    }
+    await ctx.editMessageReplyMarkup(undefined);
+  } catch (err) {
+    await ctx.answerCallbackQuery({ text: `Fejlede: ${(err as Error).message}`, show_alert: true });
+  }
 });
 
 bot.on("message:text", async (ctx) => {

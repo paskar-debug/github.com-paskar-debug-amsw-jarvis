@@ -11,6 +11,7 @@ import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
 import { NewsPanel } from "@/components/NewsPanel";
 import { IntegrationsPanel } from "@/components/IntegrationsPanel";
+import { AssistantWidget } from "@/components/AssistantWidget";
 
 type Tables = Database["public"]["Tables"];
 
@@ -107,6 +108,7 @@ export default function DashboardPage() {
           <NewsPanel source="tv2" label="TV2 Nyheder" />
         </aside>
       </div>
+      <AssistantWidget />
     </div>
   );
 }

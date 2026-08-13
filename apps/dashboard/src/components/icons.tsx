@@ -92,6 +92,49 @@ export function IconRing(props: IconProps) {
   );
 }
 
+export function IconChat(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M4 5.5h16v11H9l-4 3.5v-3.5H4z" />
+    </svg>
+  );
+}
+
+export function IconMic(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0" />
+      <path d="M12 17.5v3" />
+    </svg>
+  );
+}
+
+export function IconSend(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="m4 12 16-7-6 16-2.5-7L4 12Z" />
+    </svg>
+  );
+}
+
+export function IconVolume(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M4 9v6h4l5 4V5L8 9H4Z" />
+      <path d="M16.5 8.5a5 5 0 0 1 0 7" />
+    </svg>
+  );
+}
+
+export function IconClose(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M5 5l14 14M19 5 5 19" />
+    </svg>
+  );
+}
+
 export function IconCopy(props: IconProps) {
   return (
     <svg {...common} {...props}>

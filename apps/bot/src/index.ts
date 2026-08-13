@@ -8,6 +8,7 @@ import { createTask, handleFreeformMessage, runSync, saveFact, setStatus } from 
 import { syncAll } from "./sync.js";
 import { checkInfra } from "./infraSync.js";
 import { sendDailyBriefing } from "./briefing.js";
+import { checkRecentActivity, runProactiveCheck } from "./notice.js";
 import { scheduleDaily } from "./scheduler.js";
 
 const bot = new Bot(env.telegramBotToken);
@@ -73,7 +74,9 @@ bot.command("help", (ctx) =>
       "/husk <tekst> - gem et fakta om dig selv (fx navne, præferencer), som botten bruger som kontekst i udkast",
       "/status <område> <green|yellow|red> [note] - sæt AMSW-status",
       "/sync - hent nyt fra Google Kalender, Shopify og Whoop",
+      "/tjek - tjek selv med det samme for noget der kræver din opmærksomhed (mails, status, fejl)",
       "Hver morgen kl. 07:00 får du automatisk en briefing med dagens aftaler, åbne opgaver og status.",
+      "Kl. 12:00 og 18:00 tjekker botten selv for noget der kræver din opmærksomhed, og skriver kun til dig hvis den finder noget.",
       "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave, en kalenderaftale, en sletning af en aftale, et fakta der skal huskes, eller et udkast/analyse du beder om at få skrevet med det samme, alt efter indholdet.",
     ].join("\n"),
   ),
@@ -101,6 +104,12 @@ bot.command("status", async (ctx) => {
 bot.command("sync", async (ctx) => {
   await ctx.reply("Synkroniserer...");
   await replyText(ctx, await runSync(), false);
+});
+
+bot.command("tjek", async (ctx) => {
+  await ctx.reply("Tjekker seneste aktivitet...");
+  const result = await checkRecentActivity();
+  await replyText(ctx, result.flag && result.message ? result.message : "Ingen ting at bemærke lige nu.", false);
 });
 
 bot.on("message:text", async (ctx) => {
@@ -136,6 +145,8 @@ setInterval(() => {
 checkInfra().catch((err) => console.error("Infrastruktur-tjek fejlede:", err));
 
 scheduleDaily(7, 0, "Europe/Copenhagen", sendDailyBriefing);
+scheduleDaily(12, 0, "Europe/Copenhagen", runProactiveCheck);
+scheduleDaily(18, 0, "Europe/Copenhagen", runProactiveCheck);
 
 bot.start();
 console.log("AMSW Jarvis-bot kører.");

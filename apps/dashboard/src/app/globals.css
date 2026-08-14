@@ -573,7 +573,12 @@ body::before {
   justify-content: center;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #0a0e14;
+  color: #fff;
+}
+
+.integration-avatar-logo {
+  width: 15px;
+  height: 15px;
 }
 
 .integration-tile-body {

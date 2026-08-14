@@ -3,36 +3,37 @@
 import type { Database } from "@amsw/db";
 import { PanelHeader } from "./panels";
 import { IconPlug } from "./icons";
+import { LogoAnthropic, LogoGoogleCalendar, LogoOpenAI, LogoRailway, LogoShopify, LogoSupabase, LogoTelegram, LogoVercel } from "./logos";
 
 type SyncRow = Database["public"]["Tables"]["integration_sync_state"]["Row"];
 
 interface SourceMeta {
   key: SyncRow["source"];
   label: string;
-  letter: string;
+  logo: React.ComponentType<{ className?: string }>;
   color: string;
 }
 
 const BUSINESS_SOURCES: SourceMeta[] = [
-  { key: "google_calendar", label: "Google Kalender", letter: "G", color: "#4A90D9" },
-  { key: "shopify", label: "Shopify", letter: "S", color: "#95BF47" },
-  { key: "whoop", label: "Whoop", letter: "W", color: "#FF4D6D" },
+  { key: "google_calendar", label: "Google Kalender", logo: LogoGoogleCalendar, color: "#4285F4" },
+  { key: "shopify", label: "Shopify", logo: LogoShopify, color: "#95BF47" },
 ];
 
 const INFRA_SOURCES: SourceMeta[] = [
-  { key: "telegram", label: "Telegram", letter: "T", color: "#29B6F6" },
-  { key: "supabase", label: "Supabase", letter: "S", color: "#2DBE7E" },
-  { key: "vercel", label: "Vercel", letter: "V", color: "#EDEDED" },
-  { key: "railway", label: "Railway", letter: "R", color: "#C084FC" },
-  { key: "openai", label: "OpenAI", letter: "O", color: "#74AA9C" },
-  { key: "anthropic", label: "Anthropic", letter: "A", color: "#D97757" },
+  { key: "telegram", label: "Telegram", logo: LogoTelegram, color: "#29A9EA" },
+  { key: "supabase", label: "Supabase", logo: LogoSupabase, color: "#3ECF8E" },
+  { key: "vercel", label: "Vercel", logo: LogoVercel, color: "#000000" },
+  { key: "railway", label: "Railway", logo: LogoRailway, color: "#9757F5" },
+  { key: "openai", label: "OpenAI", logo: LogoOpenAI, color: "#10A37F" },
+  { key: "anthropic", label: "Anthropic", logo: LogoAnthropic, color: "#D97757" },
 ];
 
-// Tools we depend on but can't check programmatically (no API, runs locally on your device) -
-// listed for completeness, not live health.
+// No source (real API) or public brand mark available - shown for completeness, not live health.
 const MANUAL_TOOLS: { label: string; letter: string; color: string; note: string }[] = [
   { label: "Wispr Flow", letter: "W", color: "#94A3B8", note: "Diktering på din enhed – ingen API, tjek selv i appen hvis noget virker mærkeligt" },
 ];
+
+const WHOOP_META = { key: "whoop" as const, label: "Whoop", letter: "W", color: "#FF4D6D" };
 
 function formatDate(iso: string | null) {
   if (!iso) return null;
@@ -51,11 +52,31 @@ function planLine(state: SyncRow | undefined): string | null {
   return parts.length > 0 ? parts.join(" · ") : null;
 }
 
-function Avatar({ letter, color }: { letter: string; color: string }) {
+function LogoAvatar({ Logo, color }: { Logo: React.ComponentType<{ className?: string }>; color: string }) {
+  return (
+    <span className="integration-avatar" style={{ background: color }}>
+      <Logo className="integration-avatar-logo" />
+    </span>
+  );
+}
+
+function LetterAvatar({ letter, color }: { letter: string; color: string }) {
   return (
     <span className="integration-avatar" style={{ background: color }}>
       {letter}
     </span>
+  );
+}
+
+function TileBody({ label, status, statusLabel, detail }: { label: string; status: string; statusLabel: string; detail: string }) {
+  return (
+    <div className="integration-tile-body">
+      <div className="integration-tile-top">
+        <span className="integration-tile-name">{label}</span>
+        <span className={`status-pill ${status}`}>{statusLabel}</span>
+      </div>
+      <div className="meta">{detail}</div>
+    </div>
   );
 }
 
@@ -64,25 +85,26 @@ function StatusTile({ meta, state }: { meta: SourceMeta; state: SyncRow | undefi
   const status = !state ? "yellow" : hasError ? "red" : "green";
   const statusLabel = !state ? "Ikke sat op" : hasError ? "Fejl" : "OK";
   const plan = planLine(state);
+  const detail = hasError && state?.last_error ? state.last_error : plan ? plan : state?.last_synced_at ? `Sidst tjekket: ${formatDate(state.last_synced_at)}` : "Aldrig tjekket endnu";
 
   return (
     <div className="integration-tile">
-      <Avatar letter={meta.letter} color={meta.color} />
-      <div className="integration-tile-body">
-        <div className="integration-tile-top">
-          <span className="integration-tile-name">{meta.label}</span>
-          <span className={`status-pill ${status}`}>{statusLabel}</span>
-        </div>
-        <div className="meta">
-          {hasError && state?.last_error
-            ? state.last_error
-            : plan
-              ? plan
-              : state?.last_synced_at
-                ? `Sidst tjekket: ${formatDate(state.last_synced_at)}`
-                : "Aldrig tjekket endnu"}
-        </div>
-      </div>
+      <LogoAvatar Logo={meta.logo} color={meta.color} />
+      <TileBody label={meta.label} status={status} statusLabel={statusLabel} detail={detail} />
+    </div>
+  );
+}
+
+function WhoopTile({ state }: { state: SyncRow | undefined }) {
+  const hasError = Boolean(state?.last_error);
+  const status = !state ? "yellow" : hasError ? "red" : "green";
+  const statusLabel = !state ? "Ikke sat op" : hasError ? "Fejl" : "OK";
+  const detail = hasError && state?.last_error ? state.last_error : state?.last_synced_at ? `Sidst tjekket: ${formatDate(state.last_synced_at)}` : "Aldrig tjekket endnu";
+
+  return (
+    <div className="integration-tile">
+      <LetterAvatar letter={WHOOP_META.letter} color={WHOOP_META.color} />
+      <TileBody label={WHOOP_META.label} status={status} statusLabel={statusLabel} detail={detail} />
     </div>
   );
 }
@@ -90,7 +112,7 @@ function StatusTile({ meta, state }: { meta: SourceMeta; state: SyncRow | undefi
 function ManualToolTile({ label, letter, color, note }: { label: string; letter: string; color: string; note: string }) {
   return (
     <div className="integration-tile">
-      <Avatar letter={letter} color={color} />
+      <LetterAvatar letter={letter} color={color} />
       <div className="integration-tile-body">
         <div className="integration-tile-top">
           <span className="integration-tile-name">{label}</span>
@@ -125,6 +147,7 @@ export function IntegrationsPanel({ states, isLoading, flash }: { states: SyncRo
             {BUSINESS_SOURCES.map((meta) => (
               <StatusTile meta={meta} state={states.find((s) => s.source === meta.key)} key={meta.key} />
             ))}
+            <WhoopTile state={states.find((s) => s.source === WHOOP_META.key)} />
           </div>
           <div className="integrations-group-label">Infrastruktur</div>
           <div className="integration-grid">

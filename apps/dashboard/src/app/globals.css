@@ -408,6 +408,66 @@ body::before {
   opacity: 0.75;
 }
 
+.weather-now {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.4rem 0 1rem;
+}
+
+.weather-now-icon svg {
+  width: 44px;
+  height: 44px;
+  color: var(--brand-bright);
+}
+
+.weather-now-temp {
+  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.weather-days {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.9rem;
+}
+
+.weather-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.weather-day-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.weather-day-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text);
+}
+
+.weather-day-temp {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.weather-day-min {
+  color: var(--muted);
+  font-weight: 400;
+}
+
 .calendar-item {
   display: flex;
   align-items: center;

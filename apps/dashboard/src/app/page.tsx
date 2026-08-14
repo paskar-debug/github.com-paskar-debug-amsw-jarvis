@@ -10,6 +10,7 @@ import { CalendarPanel, DraftsPanel, StatusPanel, TasksPanel, WhoopPanel } from 
 import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
 import { NewsPanel } from "@/components/NewsPanel";
+import { WeatherPanel } from "@/components/WeatherPanel";
 import { IntegrationsPanel } from "@/components/IntegrationsPanel";
 import { AssistantWidget } from "@/components/AssistantWidget";
 
@@ -77,6 +78,7 @@ export default function DashboardPage() {
             <div className="grid">
               <TasksPanel tasks={tasksLive.rows} isLoading={tasksLive.isLoading} flash={tasksLive.flash} onToggleDone={handleToggleDone} />
               <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
+              <WeatherPanel />
             </div>
           </div>
 

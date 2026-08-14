@@ -161,6 +161,69 @@ export function IconCheck(props: IconProps) {
   );
 }
 
+export function IconSun(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
+    </svg>
+  );
+}
+
+export function IconCloudSun(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <circle cx="7" cy="6.5" r="2.2" />
+      <path d="M7 2.3v1.3M7 11v-.4M2.3 6.5h1.3M12.4 6.5h-1M3.6 3.1l.9.9M10.5 3.1l-.9.9" />
+      <path d="M8 20h8a4 4 0 0 0 .5-7.98A5.5 5.5 0 0 0 6.1 13.6 3.5 3.5 0 0 0 8 20Z" />
+    </svg>
+  );
+}
+
+export function IconCloud(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M7 18h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 6.6 11.6 3.5 3.5 0 0 0 7 18Z" />
+    </svg>
+  );
+}
+
+export function IconFog(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M6 9h9a3.5 3.5 0 0 0 .3-6.98A5 5 0 0 0 6 6" />
+      <path d="M3 14h18M3 18h18" />
+    </svg>
+  );
+}
+
+export function IconRain(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M7 15h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 6.6 8.6 3.5 3.5 0 0 0 7 15Z" />
+      <path d="M8 19l-1 2M12 19l-1 2M16 19l-1 2" />
+    </svg>
+  );
+}
+
+export function IconSnow(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M7 14h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 6.6 7.6 3.5 3.5 0 0 0 7 14Z" />
+      <path d="M9 18v3M9 18l-1.5 1M9 18l1.5 1M15 18v3M15 18l-1.5 1M15 18l1.5 1" />
+    </svg>
+  );
+}
+
+export function IconStorm(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M7 13h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 6.6 6.6 3.5 3.5 0 0 0 7 13Z" />
+      <path d="M13 15l-3 5h3l-2 4" />
+    </svg>
+  );
+}
+
 export function IconCopy(props: IconProps) {
   return (
     <svg {...common} {...props}>

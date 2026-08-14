@@ -8,6 +8,7 @@ interface NewsItem {
   title: string;
   link: string;
   pubDate: string;
+  image: string | null;
 }
 
 function formatTime(pubDate: string) {
@@ -36,8 +37,14 @@ export function NewsPanel({ source, label }: { source: "dr" | "tv2"; label: stri
       {items?.length === 0 && <p className="empty">Ingen nyheder lige nu.</p>}
       {items?.map((item) => (
         <a className="item news-item" href={item.link} target="_blank" rel="noreferrer" key={item.link}>
-          {item.title}
-          <div className="meta">{formatTime(item.pubDate)}</div>
+          {item.image && (
+            // eslint-disable-next-line @next/next/no-img-element -- external, unpredictable domains per source
+            <img className="news-thumb" src={item.image} alt="" loading="lazy" />
+          )}
+          <div className="news-item-body">
+            {item.title}
+            <div className="meta">{formatTime(item.pubDate)}</div>
+          </div>
         </a>
       ))}
     </section>

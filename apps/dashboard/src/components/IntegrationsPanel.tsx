@@ -6,25 +6,32 @@ import { IconPlug } from "./icons";
 
 type SyncRow = Database["public"]["Tables"]["integration_sync_state"]["Row"];
 
-const BUSINESS_SOURCES: { key: SyncRow["source"]; label: string }[] = [
-  { key: "google_calendar", label: "Google Kalender" },
-  { key: "shopify", label: "Shopify" },
-  { key: "whoop", label: "Whoop" },
+interface SourceMeta {
+  key: SyncRow["source"];
+  label: string;
+  letter: string;
+  color: string;
+}
+
+const BUSINESS_SOURCES: SourceMeta[] = [
+  { key: "google_calendar", label: "Google Kalender", letter: "G", color: "#4A90D9" },
+  { key: "shopify", label: "Shopify", letter: "S", color: "#95BF47" },
+  { key: "whoop", label: "Whoop", letter: "W", color: "#FF4D6D" },
 ];
 
-const INFRA_SOURCES: { key: SyncRow["source"]; label: string }[] = [
-  { key: "telegram", label: "Telegram" },
-  { key: "supabase", label: "Supabase" },
-  { key: "vercel", label: "Vercel" },
-  { key: "railway", label: "Railway" },
-  { key: "openai", label: "OpenAI" },
-  { key: "anthropic", label: "Anthropic" },
+const INFRA_SOURCES: SourceMeta[] = [
+  { key: "telegram", label: "Telegram", letter: "T", color: "#29B6F6" },
+  { key: "supabase", label: "Supabase", letter: "S", color: "#2DBE7E" },
+  { key: "vercel", label: "Vercel", letter: "V", color: "#EDEDED" },
+  { key: "railway", label: "Railway", letter: "R", color: "#C084FC" },
+  { key: "openai", label: "OpenAI", letter: "O", color: "#74AA9C" },
+  { key: "anthropic", label: "Anthropic", letter: "A", color: "#D97757" },
 ];
 
 // Tools we depend on but can't check programmatically (no API, runs locally on your device) -
 // listed for completeness, not live health.
-const MANUAL_TOOLS: { label: string; note: string }[] = [
-  { label: "Wispr Flow", note: "Diktering på din enhed – ingen API, tjek selv i appen hvis noget virker mærkeligt" },
+const MANUAL_TOOLS: { label: string; letter: string; color: string; note: string }[] = [
+  { label: "Wispr Flow", letter: "W", color: "#94A3B8", note: "Diktering på din enhed – ingen API, tjek selv i appen hvis noget virker mærkeligt" },
 ];
 
 function formatDate(iso: string | null) {
@@ -44,41 +51,53 @@ function planLine(state: SyncRow | undefined): string | null {
   return parts.length > 0 ? parts.join(" · ") : null;
 }
 
-function StatusRow({ label, state }: { label: string; state: SyncRow | undefined }) {
+function Avatar({ letter, color }: { letter: string; color: string }) {
+  return (
+    <span className="integration-avatar" style={{ background: color }}>
+      {letter}
+    </span>
+  );
+}
+
+function StatusTile({ meta, state }: { meta: SourceMeta; state: SyncRow | undefined }) {
   const hasError = Boolean(state?.last_error);
   const status = !state ? "yellow" : hasError ? "red" : "green";
   const statusLabel = !state ? "Ikke sat op" : hasError ? "Fejl" : "OK";
   const plan = planLine(state);
 
   return (
-    <div className="item status-item">
-      <div className="status-item-top">
-        <span className="status-name">
-          <span className={`badge ${status}`} />
-          {label}
-        </span>
-        <span className={`status-pill ${status}`}>{statusLabel}</span>
-      </div>
-      <div className="meta">
-        {plan ? `${plan} · ` : ""}
-        {state?.last_synced_at ? `Sidst tjekket: ${formatDate(state.last_synced_at)}` : "Aldrig tjekket endnu"}
-        {hasError && state?.last_error ? ` · ${state.last_error}` : ""}
+    <div className="integration-tile">
+      <Avatar letter={meta.letter} color={meta.color} />
+      <div className="integration-tile-body">
+        <div className="integration-tile-top">
+          <span className="integration-tile-name">{meta.label}</span>
+          <span className={`status-pill ${status}`}>{statusLabel}</span>
+        </div>
+        <div className="meta">
+          {hasError && state?.last_error
+            ? state.last_error
+            : plan
+              ? plan
+              : state?.last_synced_at
+                ? `Sidst tjekket: ${formatDate(state.last_synced_at)}`
+                : "Aldrig tjekket endnu"}
+        </div>
       </div>
     </div>
   );
 }
 
-function ManualToolRow({ label, note }: { label: string; note: string }) {
+function ManualToolTile({ label, letter, color, note }: { label: string; letter: string; color: string; note: string }) {
   return (
-    <div className="item status-item">
-      <div className="status-item-top">
-        <span className="status-name">
-          <span className="badge gray" />
-          {label}
-        </span>
-        <span className="status-pill gray">Ikke overvåget</span>
+    <div className="integration-tile">
+      <Avatar letter={letter} color={color} />
+      <div className="integration-tile-body">
+        <div className="integration-tile-top">
+          <span className="integration-tile-name">{label}</span>
+          <span className="status-pill gray">Ikke overvåget</span>
+        </div>
+        <div className="meta">{note}</div>
       </div>
-      <div className="meta">{note}</div>
     </div>
   );
 }
@@ -102,17 +121,23 @@ export function IntegrationsPanel({ states, isLoading, flash }: { states: SyncRo
       ) : (
         <>
           <div className="integrations-group-label">Forretning</div>
-          {BUSINESS_SOURCES.map(({ key, label }) => (
-            <StatusRow label={label} state={states.find((s) => s.source === key)} key={key} />
-          ))}
+          <div className="integration-grid">
+            {BUSINESS_SOURCES.map((meta) => (
+              <StatusTile meta={meta} state={states.find((s) => s.source === meta.key)} key={meta.key} />
+            ))}
+          </div>
           <div className="integrations-group-label">Infrastruktur</div>
-          {INFRA_SOURCES.map(({ key, label }) => (
-            <StatusRow label={label} state={states.find((s) => s.source === key)} key={key} />
-          ))}
+          <div className="integration-grid">
+            {INFRA_SOURCES.map((meta) => (
+              <StatusTile meta={meta} state={states.find((s) => s.source === meta.key)} key={meta.key} />
+            ))}
+          </div>
           <div className="integrations-group-label">Eksternt værktøj</div>
-          {MANUAL_TOOLS.map(({ label, note }) => (
-            <ManualToolRow label={label} note={note} key={label} />
-          ))}
+          <div className="integration-grid">
+            {MANUAL_TOOLS.map((tool) => (
+              <ManualToolTile {...tool} key={tool.label} />
+            ))}
+          </div>
         </>
       )}
     </section>

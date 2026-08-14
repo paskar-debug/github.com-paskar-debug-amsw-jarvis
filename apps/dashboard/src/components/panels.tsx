@@ -20,6 +20,18 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleString("da-DK", { dateStyle: "short", timeStyle: "short" });
 }
 
+function formatDayBadge(iso: string): { day: string; month: string } {
+  const d = new Date(iso);
+  return {
+    day: d.toLocaleDateString("da-DK", { day: "2-digit" }),
+    month: d.toLocaleDateString("da-DK", { month: "short" }).replace(".", "").toUpperCase(),
+  };
+}
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
+}
+
 function panelClass(...extra: (string | false | undefined)[]) {
   return ["panel", ...extra].filter(Boolean).join(" ");
 }
@@ -103,15 +115,24 @@ export function CalendarPanel({ events, isLoading, flash }: LiveProps & { events
       ) : (
         <>
           {upcoming.length === 0 && <p className="empty">Ingen kommende begivenheder.</p>}
-          {visible.map((event) => (
-            <div className="item" key={event.id}>
-              {event.title}
-              <div className="meta">
-                {formatDate(event.starts_at)}
-                {event.location ? ` · ${event.location}` : ""}
+          {visible.map((event) => {
+            const { day, month } = formatDayBadge(event.starts_at);
+            return (
+              <div className="item calendar-item" key={event.id}>
+                <div className="date-badge">
+                  <span className="date-badge-day">{day}</span>
+                  <span className="date-badge-month">{month}</span>
+                </div>
+                <div className="calendar-item-body">
+                  {event.title}
+                  <div className="meta">
+                    {formatTime(event.starts_at)}
+                    {event.location ? ` · ${event.location}` : ""}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {remaining > 0 && <p className="empty">+{remaining} flere i kalenderen.</p>}
         </>
       )}

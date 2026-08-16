@@ -1,6 +1,6 @@
 "use client";
 
-type IconProps = { className?: string };
+type IconProps = { className?: string; style?: React.CSSProperties };
 
 const common = {
   width: 18,

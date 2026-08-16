@@ -57,22 +57,36 @@ function weatherKind(code: number): "sun" | "partly" | "cloud" | "fog" | "rain" 
   return "cloud";
 }
 
-function WeatherIcon({ code, className }: { code: number; className?: string }) {
+const WEATHER_COLORS: Record<ReturnType<typeof weatherKind>, string> = {
+  sun: "#fbbf24",
+  partly: "#38bdf8",
+  cloud: "#94a3b8",
+  fog: "#94a3b8",
+  rain: "#3b82f6",
+  snow: "#7dd3fc",
+  storm: "#a855f7",
+};
+
+function weatherColor(code: number): string {
+  return WEATHER_COLORS[weatherKind(code)];
+}
+
+function WeatherIcon({ code, className, style }: { code: number; className?: string; style?: React.CSSProperties }) {
   switch (weatherKind(code)) {
     case "sun":
-      return <IconSun className={className} />;
+      return <IconSun className={className} style={style} />;
     case "partly":
-      return <IconCloudSun className={className} />;
+      return <IconCloudSun className={className} style={style} />;
     case "fog":
-      return <IconFog className={className} />;
+      return <IconFog className={className} style={style} />;
     case "rain":
-      return <IconRain className={className} />;
+      return <IconRain className={className} style={style} />;
     case "snow":
-      return <IconSnow className={className} />;
+      return <IconSnow className={className} style={style} />;
     case "storm":
-      return <IconStorm className={className} />;
+      return <IconStorm className={className} style={style} />;
     default:
-      return <IconCloud className={className} />;
+      return <IconCloud className={className} style={style} />;
   }
 }
 
@@ -100,11 +114,13 @@ export function WeatherPanel() {
       {data && (
         <>
           <div className="weather-now">
-            <span className="weather-now-icon">
+            <span className="weather-now-icon" style={{ "--weather-glow": weatherColor(data.current.weather_code) } as React.CSSProperties}>
               <WeatherIcon code={data.current.weather_code} />
             </span>
             <div>
-              <div className="weather-now-temp">{Math.round(data.current.temperature_2m)}°</div>
+              <div className="weather-now-temp" style={{ "--weather-glow": weatherColor(data.current.weather_code) } as React.CSSProperties}>
+                {Math.round(data.current.temperature_2m)}°
+              </div>
               <div className="meta">
                 Føles som {Math.round(data.current.apparent_temperature)}° · {WEATHER_LABELS[data.current.weather_code] ?? "Ukendt vejr"}
               </div>
@@ -114,7 +130,11 @@ export function WeatherPanel() {
             {data.daily.time.map((iso, i) => (
               <div className="weather-day" key={iso}>
                 <span className="weather-day-label">{dayLabel(iso, i)}</span>
-                <WeatherIcon code={data.daily.weather_code[i]} className="weather-day-icon" />
+                <WeatherIcon
+                  code={data.daily.weather_code[i]}
+                  className="weather-day-icon"
+                  style={{ color: weatherColor(data.daily.weather_code[i]) }}
+                />
                 <span className="weather-day-temp">
                   {Math.round(data.daily.temperature_2m_max[i])}°
                   <span className="weather-day-min"> {Math.round(data.daily.temperature_2m_min[i])}°</span>

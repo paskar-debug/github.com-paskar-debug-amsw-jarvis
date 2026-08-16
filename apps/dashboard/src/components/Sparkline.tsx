@@ -8,8 +8,8 @@ interface SparklinePoint {
 }
 
 const WIDTH = 220;
-const HEIGHT = 48;
-const PADDING = 4;
+const HEIGHT = 92;
+const PADDING = 6;
 
 export function Sparkline({
   points,
@@ -45,20 +45,36 @@ export function Sparkline({
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} width="100%" height={HEIGHT} preserveAspectRatio="none" role="img" aria-label={ariaLabel}>
         <defs>
           <linearGradient id="sparkline-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--brand-bright)" stopOpacity="0.35" />
+            <stop offset="0%" stopColor="var(--brand-bright)" stopOpacity="0.55" />
+            <stop offset="55%" stopColor="var(--brand-bright)" stopOpacity="0.18" />
             <stop offset="100%" stopColor="var(--brand-bright)" stopOpacity="0" />
           </linearGradient>
+          <filter id="sparkline-glow" x="-20%" y="-60%" width="140%" height="220%">
+            <feGaussianBlur stdDeviation="3.2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
         <path d={areaPath} fill="url(#sparkline-fill)" stroke="none" />
-        <path d={linePath} fill="none" stroke="var(--brand-bright)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d={linePath}
+          fill="none"
+          stroke="var(--brand-bright)"
+          strokeWidth="2.25"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          filter="url(#sparkline-glow)"
+        />
         {coords.map((c, i) => (
           <circle
             key={`dot-${i}`}
             cx={c.x}
             cy={c.y}
-            r={hoverIndex === i ? 3.5 : 2}
+            r={hoverIndex === i ? 4 : 2.25}
             fill={hoverIndex === i ? "var(--brand-bright)" : "var(--text)"}
-            opacity={hoverIndex === i ? 1 : 0.45}
+            opacity={hoverIndex === i ? 1 : 0.5}
           />
         ))}
         {coords.map((c, i) => (

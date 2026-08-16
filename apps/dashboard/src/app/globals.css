@@ -18,7 +18,8 @@
   --yellow: #ffc542;
   --red: #ff5c5c;
 
-  --whoop-sleep: #8fb4d9;
+  --whoop-sleep: #38bdf8;
+  --whoop-purple: #a855f7;
 }
 
 * {
@@ -661,11 +662,26 @@ body::before {
   justify-content: center;
 }
 
-.whoop-ring-sleep { background: conic-gradient(var(--whoop-sleep) 0deg, var(--whoop-sleep) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0); }
-.whoop-ring-strain { background: conic-gradient(var(--brand-bright) 0deg, var(--brand-bright) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0); }
-.whoop-ring-green { background: conic-gradient(var(--green) 0deg, var(--green) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0); }
-.whoop-ring-yellow { background: conic-gradient(var(--yellow) 0deg, var(--yellow) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0); }
-.whoop-ring-red { background: conic-gradient(var(--red) 0deg, var(--red) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0); }
+.whoop-ring-sleep {
+  background: conic-gradient(var(--whoop-sleep) 0deg, var(--whoop-sleep) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0);
+  box-shadow: 0 0 22px -4px var(--whoop-sleep);
+}
+.whoop-ring-strain {
+  background: conic-gradient(var(--whoop-purple) 0deg, var(--whoop-purple) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0);
+  box-shadow: 0 0 22px -4px var(--whoop-purple);
+}
+.whoop-ring-green {
+  background: conic-gradient(var(--green) 0deg, var(--green) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0);
+  box-shadow: 0 0 22px -4px var(--green);
+}
+.whoop-ring-yellow {
+  background: conic-gradient(var(--yellow) 0deg, var(--yellow) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0);
+  box-shadow: 0 0 22px -4px var(--yellow);
+}
+.whoop-ring-red {
+  background: conic-gradient(var(--red) 0deg, var(--red) calc(var(--whoop-pct, 0deg)), rgba(255, 255, 255, 0.08) 0);
+  box-shadow: 0 0 22px -4px var(--red);
+}
 
 .whoop-ring::before {
   content: "";

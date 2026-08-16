@@ -83,36 +83,47 @@ async function runTriageLoop(context: string): Promise<{ result: FlagResult; dra
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const response = await callClaude(messages);
-    const toolUse = response.content.find((b) => b.type === "tool_use");
-    if (!toolUse || !toolUse.name || !toolUse.id) {
+    const toolUses = response.content.filter((b) => b.type === "tool_use" && b.name && b.id);
+
+    if (toolUses.length === 0) {
       return { result: { flag: false, message: null }, drafts };
     }
 
-    if (toolUse.name === "flag_review") {
-      const input = (toolUse.input ?? {}) as Partial<FlagResult>;
-      return { result: { flag: input.flag ?? false, message: input.message ?? null }, drafts };
-    }
-
-    if (toolUse.name === "draft_reply") {
-      const input = (toolUse.input ?? {}) as { message_id?: string; body?: string };
-      let toolResultText: string;
-      if (input.message_id && input.body) {
-        try {
-          const draftId = await createDraftReply(env.google, input.message_id, input.body);
-          drafts.push({ draftId, body: input.body });
-          toolResultText = `Udkast oprettet (id: ${draftId}). Nævn i din afsluttende besked at der ligger et udkast klar til godkendelse.`;
-        } catch (err) {
-          toolResultText = `Kunne ikke oprette udkast: ${(err as Error).message}`;
+    // A single turn can contain several parallel tool_use blocks (e.g. more than one draft_reply,
+    // or a draft_reply alongside flag_review) - every one needs a matching tool_result, or the API
+    // rejects the whole request as malformed.
+    let finalResult: FlagResult | null = null;
+    const toolResults = await Promise.all(
+      toolUses.map(async (toolUse) => {
+        if (toolUse.name === "flag_review") {
+          const input = (toolUse.input ?? {}) as Partial<FlagResult>;
+          finalResult = { flag: input.flag ?? false, message: input.message ?? null };
+          return { type: "tool_result" as const, tool_use_id: toolUse.id as string, content: "Registreret." };
         }
-      } else {
-        toolResultText = "Mangler message_id eller body.";
-      }
-      messages.push({ role: "assistant", content: response.content });
-      messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: toolUse.id, content: toolResultText }] });
-      continue;
-    }
+        if (toolUse.name === "draft_reply") {
+          const input = (toolUse.input ?? {}) as { message_id?: string; body?: string };
+          let toolResultText: string;
+          if (input.message_id && input.body) {
+            try {
+              const draftId = await createDraftReply(env.google, input.message_id, input.body);
+              drafts.push({ draftId, body: input.body });
+              toolResultText = `Udkast oprettet (id: ${draftId}). Nævn i din afsluttende besked at der ligger et udkast klar til godkendelse.`;
+            } catch (err) {
+              toolResultText = `Kunne ikke oprette udkast: ${(err as Error).message}`;
+            }
+          } else {
+            toolResultText = "Mangler message_id eller body.";
+          }
+          return { type: "tool_result" as const, tool_use_id: toolUse.id as string, content: toolResultText };
+        }
+        return { type: "tool_result" as const, tool_use_id: toolUse.id as string, content: "Ukendt værktøj." };
+      }),
+    );
 
-    return { result: { flag: false, message: null }, drafts };
+    if (finalResult) return { result: finalResult, drafts };
+
+    messages.push({ role: "assistant", content: response.content });
+    messages.push({ role: "user", content: toolResults });
   }
   return { result: { flag: false, message: null }, drafts };
 }

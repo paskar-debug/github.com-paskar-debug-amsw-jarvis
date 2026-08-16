@@ -114,13 +114,16 @@ export function extractText(content: ContentBlock[]): string {
     .trim();
 }
 
+const MAX_TOOL_ROUNDS = 4;
+
 /** Conversational assistant for the dashboard chat widget: answers questions directly using live
- *  context, and can take action (create_task/create_event/save_fact) via tool-use. */
+ *  context, and can take action (create_task/create_event/save_fact/search_email) via tool-use -
+ *  possibly several tools across several rounds (e.g. search_email then create_task from a result). */
 export async function answerAssistantMessage(message: string): Promise<string> {
   if (!Deno.env.get("ANTHROPIC_API_KEY")) throw new Error("ANTHROPIC_API_KEY mangler.");
 
   const context = await buildAssistantContext().catch(() => "");
-  const system = `Du er en personlig assistent for brugeren, tilgængelig via deres dashboard-chat. Svar hjælpsomt, kortfattet og direkte på spørgsmål ved hjælp af den kontekst du får nedenfor - gæt aldrig på tal du kan slå op i konteksten. Du kan også handle for brugeren ved at bruge et af de tilgængelige værktøjer (opret opgave, opret kalenderaftale, gem et fakta), hvis beskeden beder om det. Svar altid på dansk, i almindelig prosa uden overskrifter/markdown, som i en samtale.
+  const system = `Du er en personlig assistent for brugeren, tilgængelig via deres dashboard-chat. Svar hjælpsomt, kortfattet og direkte på spørgsmål ved hjælp af den kontekst du får nedenfor - gæt aldrig på tal du kan slå op i konteksten eller finde via søg_email. Du kan også handle for brugeren ved at bruge et af de tilgængelige værktøjer (opret opgave, opret kalenderaftale, gem et fakta, søg i mail), hvis beskeden beder om det. Svar altid på dansk, i almindelig prosa uden overskrifter/markdown, som i en samtale.
 
 Nu er det: ${copenhagenNowDescription()} (tidszone Europe/Copenhagen).
 
@@ -128,25 +131,35 @@ Kontekst om brugeren: ${context || "Ingen kontekst tilgængelig endnu."}`;
 
   const history = await loadRecentHistory().catch(() => []);
   const messages: unknown[] = [...history.map((h) => ({ role: h.role, content: h.content })), { role: "user", content: message }];
-  const first = await callClaude(system, messages);
 
-  const toolUse = first.content.find((b) => b.type === "tool_use");
-  if (!toolUse || !toolUse.name || !toolUse.id) {
-    const text = extractText(first.content) || "Jeg er ikke sikker på hvordan jeg skal svare på det.";
-    await Promise.all([saveHistoryTurn("user", message), saveHistoryTurn("assistant", text)]);
-    return text;
+  for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+    const response = await callClaude(system, messages);
+    const toolUses = response.content.filter((b) => b.type === "tool_use" && b.name && b.id);
+
+    if (toolUses.length === 0) {
+      const text = extractText(response.content) || "Jeg er ikke sikker på hvordan jeg skal svare på det.";
+      await Promise.all([saveHistoryTurn("user", message), saveHistoryTurn("assistant", text)]);
+      return text;
+    }
+
+    // A single turn can contain several parallel tool_use blocks - every one needs a matching
+    // tool_result in the next message, or the API rejects the whole request as malformed.
+    const toolResults = await Promise.all(
+      toolUses.map(async (toolUse) => {
+        const result = await executeTool(toolUse.name!, toolUse.input ?? {}).catch((err) => `Fejl: ${(err as Error).message}`);
+        return { type: "tool_result" as const, tool_use_id: toolUse.id as string, content: result };
+      }),
+    );
+
+    messages.push({ role: "assistant", content: response.content });
+    messages.push({ role: "user", content: toolResults });
+
+    if (round === MAX_TOOL_ROUNDS - 1) {
+      const fallback = toolResults.map((r) => r.content).join("\n");
+      await Promise.all([saveHistoryTurn("user", message), saveHistoryTurn("assistant", fallback)]);
+      return fallback;
+    }
   }
 
-  const toolResult = await executeTool(toolUse.name, toolUse.input ?? {}).catch((err) => `Fejl: ${(err as Error).message}`);
-
-  messages.push({ role: "assistant", content: first.content });
-  messages.push({
-    role: "user",
-    content: [{ type: "tool_result", tool_use_id: toolUse.id, content: toolResult }],
-  });
-
-  const second = await callClaude(system, messages);
-  const reply = extractText(second.content) || toolResult;
-  await Promise.all([saveHistoryTurn("user", message), saveHistoryTurn("assistant", reply)]);
-  return reply;
+  throw new Error("Uventet: værktøjs-løkken sluttede uden svar.");
 }

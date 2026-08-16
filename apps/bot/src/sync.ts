@@ -10,7 +10,23 @@ export interface SyncSummary {
   errors: string[];
 }
 
+// Whoop's refresh token is single-use and rotates on every call - two overlapping syncs (a manual
+// /sync landing mid-interval, or two processes briefly alive during a redeploy) can race, and the
+// loser is left holding an already-invalidated token. Serializing calls within this process closes
+// the common case; it can't prevent a race across two separate processes.
+let inFlight: Promise<SyncSummary> | null = null;
+
 export async function syncAll(): Promise<SyncSummary> {
+  if (inFlight) return inFlight;
+  inFlight = runSync();
+  try {
+    return await inFlight;
+  } finally {
+    inFlight = null;
+  }
+}
+
+async function runSync(): Promise<SyncSummary> {
   const summary: SyncSummary = { errors: [] };
 
   if (env.google.refreshToken && env.google.clientId) {

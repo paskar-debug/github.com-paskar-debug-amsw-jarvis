@@ -647,7 +647,8 @@ body::before {
 
 .status-stats {
   display: flex;
-  gap: 1.75rem;
+  flex-wrap: wrap;
+  gap: 1.1rem 1.75rem;
   margin-top: 0.7rem;
 }
 

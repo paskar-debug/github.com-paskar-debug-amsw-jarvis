@@ -8,6 +8,19 @@ const bebasNeue = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--f
 export const metadata: Metadata = {
   title: "Paskar's Kontor",
   description: "Live dashboard for opgaver, kalender, AMSW-status og Whoop",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Kontor",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
+};
+
+export const viewport = {
+  themeColor: "#05070a",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

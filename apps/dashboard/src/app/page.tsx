@@ -83,15 +83,9 @@ export default function DashboardPage() {
           </div>
 
           <div className="section">
-            <div className="section-label">Sundhed</div>
+            <div className="section-label">Overblik</div>
             <div className="grid">
               <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
-            </div>
-          </div>
-
-          <div className="section">
-            <div className="section-label">Forretning</div>
-            <div className="grid">
               <StatusPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
             </div>
           </div>

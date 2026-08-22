@@ -13,6 +13,7 @@ import { NewsPanel } from "@/components/NewsPanel";
 import { WeatherPanel } from "@/components/WeatherPanel";
 import { IntegrationsPanel } from "@/components/IntegrationsPanel";
 import { AssistantWidget } from "@/components/AssistantWidget";
+import { IconLogout } from "@/components/icons";
 
 type Tables = Database["public"]["Tables"];
 
@@ -54,6 +55,10 @@ export default function DashboardPage() {
     await getSupabaseClient().from("drafts").delete().eq("id", id);
   }
 
+  async function handleLogout() {
+    await getSupabaseClient().auth.signOut();
+  }
+
   if (!userId) return null;
 
   return (
@@ -64,10 +69,15 @@ export default function DashboardPage() {
           <span className="brand-text">askar&apos;s kontor</span>
         </div>
         <Clock />
-        <span className="live-pill">
-          <span className="live-dot" />
-          Live
-        </span>
+        <div className="page-header-right">
+          <span className="live-pill">
+            <span className="live-dot" />
+            Live
+          </span>
+          <button type="button" className="logout-button" onClick={handleLogout} aria-label="Log ud">
+            <IconLogout />
+          </button>
+        </div>
       </div>
       <div className="page-layout">
         <div className="main-column">

@@ -927,6 +927,64 @@ body::before {
   flex-shrink: 0;
 }
 
+.goal-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.goal-summary-icon {
+  width: 15px;
+  height: 15px;
+  color: #ffc542;
+  flex-shrink: 0;
+}
+
+.goal-progress-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.goal-won-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #04120c;
+  background: var(--green);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(47, 224, 138, 0.5);
+}
+
+.goal-won-badge svg {
+  width: 13px;
+  height: 13px;
+}
+
+.goal-item-won {
+  background: linear-gradient(90deg, rgba(47, 224, 138, 0.08), transparent 60%);
+  margin: 0 -0.6rem;
+  padding-left: 0.6rem;
+  padding-right: 0.6rem;
+  border-radius: 6px;
+}
+
+.goal-item-won .goal-title {
+  color: var(--muted);
+}
+
 .panel-wide {
   grid-column: 1 / -1;
 }

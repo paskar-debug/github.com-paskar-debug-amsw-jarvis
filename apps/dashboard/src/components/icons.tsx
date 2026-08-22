@@ -244,6 +244,19 @@ export function IconTarget(props: IconProps) {
   );
 }
 
+export function IconTrophy(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" />
+      <path d="M7 5H4a3 3 0 0 0 3 5" />
+      <path d="M17 5h3a3 3 0 0 1-3 5" />
+      <path d="M12 14v3" />
+      <path d="M9 20h6" />
+      <path d="M9.5 17h5l.5 3H9l.5-3Z" />
+    </svg>
+  );
+}
+
 export function IconCopy(props: IconProps) {
   return (
     <svg {...common} {...props}>

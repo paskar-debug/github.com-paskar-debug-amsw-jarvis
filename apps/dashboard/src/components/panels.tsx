@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Database } from "@amsw/db";
-import { IconCalendar, IconClose, IconCopy, IconDraft, IconPulse, IconRing, IconTarget, IconTasks } from "./icons";
+import { IconCalendar, IconClose, IconCopy, IconDraft, IconPulse, IconRing, IconTarget, IconTasks, IconTrophy } from "./icons";
 import { Sparkline } from "./Sparkline";
 
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
@@ -261,6 +261,7 @@ export function GoalsPanel({
   const visible = [...goals]
     .filter((g) => g.status !== "cancelled")
     .sort((a, b) => (a.target_date ?? "9999").localeCompare(b.target_date ?? "9999"));
+  const wonCount = visible.filter((g) => g.status === "done").length;
 
   return (
     <section className={panelClass(flash && "panel-flash")}>
@@ -269,37 +270,51 @@ export function GoalsPanel({
         <Skeleton lines={3} />
       ) : (
         <>
+          {visible.length > 0 && (
+            <div className="goal-summary">
+              <IconTrophy className="goal-summary-icon" />
+              {wonCount} af {visible.length} mål nået
+            </div>
+          )}
           {visible.length === 0 && <p className="empty">Ingen mål endnu.</p>}
-          {visible.map((goal) => (
-            <label className="goal-item" key={goal.id}>
-              <input
-                type="checkbox"
-                checked={goal.status === "done"}
-                disabled={goal.status === "done"}
-                onChange={() => onToggleDone(goal.id)}
-              />
-              <div className="goal-item-body">
-                <div className="goal-item-top">
-                  <span className="goal-title">
-                    {goal.category && <span className="goal-category">{goal.category}</span>}
-                    {goal.title}
-                  </span>
-                  {goal.status !== "active" && (
-                    <span className={`status-pill ${goal.status === "done" ? "green" : "yellow"}`}>
-                      {GOAL_STATUS_LABELS[goal.status] ?? goal.status}
+          {visible.map((goal) => {
+            const done = goal.status === "done";
+            return (
+              <label className={`goal-item${done ? " goal-item-won" : ""}`} key={goal.id}>
+                <input type="checkbox" checked={done} disabled={done} onChange={() => onToggleDone(goal.id)} />
+                <div className="goal-item-body">
+                  <div className="goal-item-top">
+                    <span className="goal-title">
+                      {goal.category && <span className="goal-category">{goal.category}</span>}
+                      {goal.title}
                     </span>
+                    {done ? (
+                      <span className="goal-won-badge">
+                        <IconTrophy /> Nået!
+                      </span>
+                    ) : (
+                      <span className="goal-progress-value">{goal.progress}%</span>
+                    )}
+                  </div>
+                  {!done && (
+                    <div className="progress-bar">
+                      <div style={{ width: `${goal.progress}%` }} />
+                    </div>
+                  )}
+                  {(goal.status === "paused" || goal.target_date) && (
+                    <div className="meta">
+                      {goal.status === "paused" && (
+                        <span className={`status-pill yellow`} style={{ marginRight: "0.5rem" }}>
+                          {GOAL_STATUS_LABELS.paused}
+                        </span>
+                      )}
+                      {goal.target_date ? `mål: ${new Date(goal.target_date).toLocaleDateString("da-DK", { dateStyle: "medium" })}` : ""}
+                    </div>
                   )}
                 </div>
-                <div className="progress-bar">
-                  <div style={{ width: `${goal.progress}%` }} />
-                </div>
-                <div className="meta">
-                  {goal.progress}%{" "}
-                  {goal.target_date ? `· mål: ${new Date(goal.target_date).toLocaleDateString("da-DK", { dateStyle: "medium" })}` : ""}
-                </div>
-              </div>
-            </label>
-          ))}
+              </label>
+            );
+          })}
         </>
       )}
     </section>

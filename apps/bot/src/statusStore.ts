@@ -2,7 +2,7 @@ import { env } from "./env.js";
 import { supabase } from "./supabase.js";
 import { notifyOwner } from "./notify.js";
 
-export type StatusSource = "google_calendar" | "shopify" | "whoop" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram";
+export type StatusSource = "google_calendar" | "shopify" | "whoop" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram" | "todoist";
 export type StatusCategory = "integration" | "infrastructure";
 
 const LABELS: Record<StatusSource, string> = {
@@ -15,6 +15,7 @@ const LABELS: Record<StatusSource, string> = {
   openai: "OpenAI",
   anthropic: "Anthropic",
   telegram: "Telegram",
+  todoist: "Todoist",
 };
 
 async function getPreviousError(source: StatusSource): Promise<string | null> {

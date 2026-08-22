@@ -36,6 +36,9 @@ export const env = {
     refreshToken: process.env.GOOGLE_REFRESH_TOKEN ?? "",
     calendarId: process.env.GOOGLE_CALENDAR_ID ?? "primary",
   },
+  todoist: {
+    apiToken: process.env.TODOIST_API_TOKEN ?? "",
+  },
   shopify: {
     storeDomain: process.env.SHOPIFY_STORE_DOMAIN ?? "",
     adminApiToken: process.env.SHOPIFY_ADMIN_API_TOKEN ?? "",

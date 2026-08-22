@@ -70,7 +70,7 @@ export function TasksPanel({
   onDelete,
 }: LiveProps & {
   tasks: TaskRow[];
-  onToggleDone: (id: string, done: boolean) => void;
+  onToggleDone: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
   const open = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
@@ -87,7 +87,7 @@ export function TasksPanel({
           {visible.map((task) => (
             <div className="item item-checkable" key={task.id}>
               <label className="task-label">
-                <input type="checkbox" onChange={() => onToggleDone(task.id, true)} />
+                <input type="checkbox" onChange={() => onToggleDone(task.id)} />
                 <div>
                   {task.title}
                   <div className="meta">

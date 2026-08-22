@@ -1,5 +1,5 @@
 import type { AmswState } from "@amsw/core";
-import { createGoogleCalendarEvent, deleteGoogleCalendarEvent } from "@amsw/integrations";
+import { createGoogleCalendarEvent, createTodoistTask, deleteGoogleCalendarEvent, deleteTodoistTask } from "@amsw/integrations";
 import { env } from "./env.js";
 import { supabase } from "./supabase.js";
 import { syncAll } from "./sync.js";
@@ -7,6 +7,24 @@ import { classifyMessage, type FactCategory } from "./classify.js";
 import { generateDraft } from "./draft.js";
 
 export async function createTask(title: string): Promise<string> {
+  // Todoist is the source of truth for tasks when it's configured - created there first so it
+  // shows up in the Todoist app too, then mirrored locally for the dashboard to display.
+  if (env.todoist.apiToken) {
+    try {
+      const todoistTask = await createTodoistTask(env.todoist, title);
+      const { error } = await supabase.from("tasks").insert({
+        owner_id: env.ownerId,
+        title,
+        source: "todoist",
+        external_id: todoistTask.id,
+      });
+      if (error) throw error;
+      return `Opgave oprettet: "${title}"`;
+    } catch (err) {
+      console.error("Kunne ikke oprette opgave i Todoist, gemmer kun lokalt:", err);
+    }
+  }
+
   const { error } = await supabase.from("tasks").insert({
     owner_id: env.ownerId,
     title,
@@ -172,7 +190,7 @@ export async function deleteTask(query: string): Promise<string> {
 
   const { data: matches, error: searchError } = await supabase
     .from("tasks")
-    .select("id, title")
+    .select("id, title, source, external_id")
     .eq("owner_id", env.ownerId)
     .neq("status", "done")
     .neq("status", "cancelled")
@@ -187,9 +205,18 @@ export async function deleteTask(query: string): Promise<string> {
     return `Fandt flere opgaver der matcher "${query}" – vær mere specifik:\n${matches.map((m) => `- ${m.title}`).join("\n")}`;
   }
 
-  const { error } = await supabase.from("tasks").delete().eq("id", matches[0].id);
+  const match = matches[0];
+  if (match.source === "todoist" && match.external_id && env.todoist.apiToken) {
+    try {
+      await deleteTodoistTask(env.todoist, match.external_id);
+    } catch (err) {
+      console.error("Kunne ikke slette opgaven i Todoist:", err);
+    }
+  }
+
+  const { error } = await supabase.from("tasks").delete().eq("id", match.id);
   if (error) throw error;
-  return `Opgave slettet: "${matches[0].title}"`;
+  return `Opgave slettet: "${match.title}"`;
 }
 
 /** Short plain-text summary of known facts + open tasks + upcoming events + latest business/health status,
@@ -286,6 +313,7 @@ export async function runSync(): Promise<string> {
   const summary = await syncAll();
   const lines: string[] = [];
   if (summary.googleCalendar !== undefined) lines.push(`Google Kalender: ${summary.googleCalendar} begivenheder`);
+  if (summary.todoist !== undefined) lines.push(`Todoist: ${summary.todoist} opgaver`);
   if (summary.shopify) lines.push(`Shopify: ${summary.shopify.ordersToday} ordrer, ${summary.shopify.revenueToday} i omsætning i dag`);
   if (summary.whoop) lines.push(`Whoop: recovery ${summary.whoop.recoveryScore ?? "?"}%, søvn ${summary.whoop.sleepDurationHours ?? "?"}t`);
   if (summary.errors.length > 0) lines.push(`Fejl: ${summary.errors.join("; ")}`);

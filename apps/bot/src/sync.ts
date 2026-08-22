@@ -1,10 +1,11 @@
-import { syncGoogleCalendar, syncShopify, syncWhoop, type ShopifySummary, type WhoopSummary } from "@amsw/integrations";
+import { syncGoogleCalendar, syncShopify, syncTodoist, syncWhoop, type ShopifySummary, type WhoopSummary } from "@amsw/integrations";
 import { env } from "./env.js";
 import { supabase } from "./supabase.js";
 import { recordFailure, recordSuccess } from "./statusStore.js";
 
 export interface SyncSummary {
   googleCalendar?: number;
+  todoist?: number;
   shopify?: ShopifySummary;
   whoop?: WhoopSummary;
   errors: string[];
@@ -37,6 +38,17 @@ async function runSync(): Promise<SyncSummary> {
       const message = (err as Error).message;
       summary.errors.push(`Google Kalender: ${message}`);
       await recordFailure("google_calendar", "integration", message);
+    }
+  }
+
+  if (env.todoist.apiToken) {
+    try {
+      summary.todoist = await syncTodoist(supabase, env.ownerId, env.todoist);
+      await recordSuccess("todoist", "integration");
+    } catch (err) {
+      const message = (err as Error).message;
+      summary.errors.push(`Todoist: ${message}`);
+      await recordFailure("todoist", "integration", message);
     }
   }
 

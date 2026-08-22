@@ -1,11 +1,27 @@
 import { OWNER_ID, serviceClient } from "./db.ts";
 import { createGoogleCalendarEvent } from "./google.ts";
 import { searchGmail } from "./gmail.ts";
+import { createTodoistTask } from "./todoist.ts";
 
 export type FactCategory = "familie" | "forretning" | "praeference" | "andet";
 
 export async function createTask(title: string): Promise<string> {
   const supabase = serviceClient();
+  const apiToken = Deno.env.get("TODOIST_API_TOKEN");
+
+  if (apiToken) {
+    try {
+      const todoistTask = await createTodoistTask({ apiToken }, title);
+      const { error } = await supabase
+        .from("tasks")
+        .insert({ owner_id: OWNER_ID, title, source: "todoist", external_id: todoistTask.id });
+      if (error) throw error;
+      return `Opgave oprettet: "${title}"`;
+    } catch (err) {
+      console.error("Kunne ikke oprette opgave i Todoist, gemmer kun lokalt:", err);
+    }
+  }
+
   const { error } = await supabase.from("tasks").insert({ owner_id: OWNER_ID, title, source: "manual" });
   if (error) throw error;
   return `Opgave oprettet: "${title}"`;

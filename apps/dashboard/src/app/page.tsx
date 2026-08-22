@@ -44,11 +44,22 @@ export default function DashboardPage() {
     { column: "source" },
   );
 
-  async function handleToggleDone(id: string, done: boolean) {
-    await getSupabaseClient()
-      .from("tasks")
-      .update({ status: done ? "done" : "todo" })
-      .eq("id", id);
+  // Routed through /api/tasks/action (not a direct table write) because a task sourced from
+  // Todoist needs to be closed/deleted there too - otherwise the next Todoist sync just pulls
+  // the still-open task back in, silently undoing the checkbox or the delete.
+  async function callTaskAction(taskId: string, action: "complete" | "delete") {
+    const { data } = await getSupabaseClient().auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return;
+    await fetch("/api/tasks/action", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ taskId, action }),
+    });
+  }
+
+  async function handleToggleDone(id: string) {
+    await callTaskAction(id, "complete");
   }
 
   async function handleDeleteDraft(id: string) {
@@ -56,7 +67,7 @@ export default function DashboardPage() {
   }
 
   async function handleDeleteTask(id: string) {
-    await getSupabaseClient().from("tasks").delete().eq("id", id);
+    await callTaskAction(id, "delete");
   }
 
   async function handleLogout() {

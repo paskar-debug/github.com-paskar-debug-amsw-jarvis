@@ -3,7 +3,17 @@
 import type { Database } from "@amsw/db";
 import { PanelHeader } from "./panels";
 import { IconPlug } from "./icons";
-import { LogoAnthropic, LogoGoogleCalendar, LogoOpenAI, LogoRailway, LogoShopify, LogoSupabase, LogoTelegram, LogoVercel } from "./logos";
+import {
+  LogoAnthropic,
+  LogoGoogleCalendar,
+  LogoOpenAI,
+  LogoRailway,
+  LogoShopify,
+  LogoSupabase,
+  LogoTelegram,
+  LogoTodoist,
+  LogoVercel,
+} from "./logos";
 
 type SyncRow = Database["public"]["Tables"]["integration_sync_state"]["Row"];
 
@@ -16,6 +26,7 @@ interface SourceMeta {
 
 const BUSINESS_SOURCES: SourceMeta[] = [
   { key: "google_calendar", label: "Google Kalender", logo: LogoGoogleCalendar, color: "#4285F4" },
+  { key: "todoist", label: "Todoist", logo: LogoTodoist, color: "#E44332" },
   { key: "shopify", label: "Shopify", logo: LogoShopify, color: "#95BF47" },
 ];
 

@@ -50,16 +50,20 @@ npm install
    ```
    Følg linket, godkend adgang, og indsæt den udskrevne `GOOGLE_REFRESH_TOKEN` i `.env`.
 
-## 5. Shopify
+## 5. Todoist
+
+Opret et API-token under **Settings -> Integrations -> Developer** i Todoist, og sæt `TODOIST_API_TOKEN`. Når den er sat, bliver Todoist den egentlige opgaveliste: opgaver oprettet via Telegram eller assistenten oprettes direkte i Todoist, og "afkryds færdig"/slet i dashboardet lukker/sletter dem samme sted. `/sync` (og det automatiske 15-minutters-tjek) henter desuden opgaver oprettet direkte i selve Todoist-appen ind i dashboardet.
+
+## 6. Shopify
 
 Opret en custom app i din butiks admin (**Settings -> Apps -> Develop apps**), giv den `read_orders`-scope, og sæt `SHOPIFY_STORE_DOMAIN` + `SHOPIFY_ADMIN_API_TOKEN`.
 
-## 6. Tale (STT/TTS)
+## 7. Tale (STT/TTS)
 
 - **Tale ind**: kræver `OPENAI_API_KEY` (Whisper).
 - **Tale ud**: sæt `TTS_PROVIDER` til `openai` (samme nøgle, stemme via `OPENAI_TTS_VOICE`) eller `elevenlabs` (kræver `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID`).
 
-## 7. Infrastruktur-status (valgfrit)
+## 8. Infrastruktur-status (valgfrit)
 
 Viser plan/forbrug/sundhed for selve platformene i dashboardets Integrationer-boks. Uden disse tokens virker resten af systemet fint, men infrastruktur-delen af boksen viser "Ikke sat op".
 
@@ -68,7 +72,7 @@ Viser plan/forbrug/sundhed for selve platformene i dashboardets Integrationer-bo
 - **Railway**: token fra [railway.app/account/tokens](https://railway.app/account/tokens) -> `RAILWAY_API_TOKEN`.
 - **OpenAI/Anthropic**: genbruger `OPENAI_API_KEY`/`ANTHROPIC_API_KEY` ovenfor.
 
-## 8. Udfyld `.env`
+## 9. Udfyld `.env`
 
 ```bash
 cp .env.example .env
@@ -76,15 +80,15 @@ cp .env.example .env
 
 Udfyld alle værdier beskrevet ovenfor. `apps/bot` og `apps/dashboard` læser fra denne fil via `dotenv` / Next.js' indbyggede env-håndtering – kopiér evt. relevante `NEXT_PUBLIC_*` værdier til `apps/dashboard/.env.local` også.
 
-## 9. Kør botten
+## 10. Kør botten
 
 ```bash
 npm run bot:dev
 ```
 
-Skriv eller indtal en besked til botten i Telegram – den bliver automatisk til en opgave. Brug `/help` for alle kommandoer, og `/sync` for at hente data fra Google Kalender og Shopify med det samme (kører også automatisk hvert 15. minut). Infrastruktur-status tjekkes automatisk hver 6. time.
+Skriv eller indtal en besked til botten i Telegram – den bliver automatisk til en opgave. Brug `/help` for alle kommandoer, og `/sync` for at hente data fra Google Kalender, Todoist og Shopify med det samme (kører også automatisk hvert 15. minut). Infrastruktur-status tjekkes automatisk hver 6. time.
 
-## 10. Kør dashboardet
+## 11. Kør dashboardet
 
 ```bash
 npm run dashboard:dev

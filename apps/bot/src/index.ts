@@ -74,7 +74,7 @@ bot.command("help", (ctx) =>
       "/opgave <tekst> - opret opgave",
       "/husk <tekst> - gem et fakta om dig selv (fx navne, præferencer), som botten bruger som kontekst i udkast",
       "/status <område> <green|yellow|red> [note] - sæt AMSW-status",
-      "/sync - hent nyt fra Google Kalender, Shopify og Whoop",
+      "/sync - hent nyt fra Google Kalender, Todoist, Shopify og Whoop",
       "/tjek - tjek selv med det samme for noget der kræver din opmærksomhed (mails, status, fejl)",
       "Hver morgen kl. 07:00 får du automatisk en briefing med dagens aftaler, åbne opgaver og status.",
       "Kl. 12:00 og 18:00 tjekker botten selv for noget der kræver din opmærksomhed, og skriver kun til dig hvis den finder noget.",

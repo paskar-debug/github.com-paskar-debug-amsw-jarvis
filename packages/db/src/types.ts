@@ -10,7 +10,7 @@ export interface Database {
           status: "todo" | "in_progress" | "done" | "cancelled";
           priority: "p1" | "p2" | "p3" | "p4";
           due_at: string | null;
-          source: "manual" | "telegram";
+          source: "manual" | "telegram" | "todoist";
           external_id: string | null;
           created_at: string;
           updated_at: string;
@@ -87,7 +87,7 @@ export interface Database {
       integration_sync_state: {
         Row: {
           owner_id: string;
-          source: "google_calendar" | "shopify" | "whoop" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram";
+          source: "google_calendar" | "shopify" | "whoop" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram" | "todoist";
           category: "integration" | "infrastructure";
           last_synced_at: string | null;
           cursor: string | null;
@@ -98,7 +98,7 @@ export interface Database {
         };
         Insert: Partial<Database["public"]["Tables"]["integration_sync_state"]["Row"]> & {
           owner_id: string;
-          source: "google_calendar" | "shopify" | "whoop" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram";
+          source: "google_calendar" | "shopify" | "whoop" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram" | "todoist";
         };
         Update: Partial<Database["public"]["Tables"]["integration_sync_state"]["Row"]>;
         Relationships: [];

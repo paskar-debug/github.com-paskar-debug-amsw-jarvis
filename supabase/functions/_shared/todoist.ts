@@ -8,7 +8,7 @@ interface TodoistTask {
 }
 
 export async function createTodoistTask(config: TodoistConfig, content: string): Promise<TodoistTask> {
-  const response = await fetch("https://api.todoist.com/rest/v2/tasks", {
+  const response = await fetch("https://api.todoist.com/api/v1/tasks", {
     method: "POST",
     headers: { Authorization: `Bearer ${config.apiToken}`, "Content-Type": "application/json" },
     body: JSON.stringify({ content }),
@@ -22,7 +22,7 @@ export async function createTodoistTask(config: TodoistConfig, content: string):
 /** Marks a Todoist task done. Kept in sync with packages/integrations/src/todoist.ts (Node/Deno
  *  can't share a module here - this Edge Function runtime has no access to that npm workspace). */
 export async function closeTodoistTask(config: TodoistConfig, todoistTaskId: string): Promise<void> {
-  const response = await fetch(`https://api.todoist.com/rest/v2/tasks/${todoistTaskId}/close`, {
+  const response = await fetch(`https://api.todoist.com/api/v1/tasks/${todoistTaskId}/close`, {
     method: "POST",
     headers: { Authorization: `Bearer ${config.apiToken}` },
   });
@@ -32,7 +32,7 @@ export async function closeTodoistTask(config: TodoistConfig, todoistTaskId: str
 }
 
 export async function deleteTodoistTask(config: TodoistConfig, todoistTaskId: string): Promise<void> {
-  const response = await fetch(`https://api.todoist.com/rest/v2/tasks/${todoistTaskId}`, {
+  const response = await fetch(`https://api.todoist.com/api/v1/tasks/${todoistTaskId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${config.apiToken}` },
   });

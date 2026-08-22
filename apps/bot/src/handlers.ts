@@ -329,6 +329,9 @@ export async function handleFreeformMessage(text: string): Promise<string> {
     if (result.kind === "fact") {
       return saveFact(result.fact, result.category);
     }
+    if (result.kind === "goal") {
+      return createGoal(result.title, result.category ?? undefined);
+    }
     return createTask(result.title);
   } catch (err) {
     console.error("Klassificering fejlede, opretter som opgave:", err);

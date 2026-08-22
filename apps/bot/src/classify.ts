@@ -6,7 +6,8 @@ export type ClassifyResult =
   | { kind: "delete_event"; query: string }
   | { kind: "delete_task"; query: string }
   | { kind: "draft" }
-  | { kind: "fact"; fact: string; category: FactCategory };
+  | { kind: "fact"; fact: string; category: FactCategory }
+  | { kind: "goal"; title: string; category: string | null };
 
 function copenhagenNowDescription(): string {
   const formatter = new Intl.DateTimeFormat("da-DK", {
@@ -25,26 +26,28 @@ function copenhagenNowDescription(): string {
 const TOOL_SCHEMA = {
   name: "classify",
   description:
-    "Klassificerer en besked som en opgave, en ny kalenderaftale, en anmodning om at slette en aftale, en anmodning om at få udarbejdet et udkast/analyse, eller et fakta om brugeren der skal huskes.",
+    "Klassificerer en besked som en opgave, en ny kalenderaftale, en anmodning om at slette en aftale, en anmodning om at få udarbejdet et udkast/analyse, et fakta om brugeren der skal huskes, eller et strategisk mål for AMSW.",
   input_schema: {
     type: "object",
     properties: {
-      kind: { type: "string", enum: ["task", "event", "delete_event", "delete_task", "draft", "fact"] },
+      kind: { type: "string", enum: ["task", "event", "delete_event", "delete_task", "draft", "fact", "goal"] },
       title: { type: "string" },
       starts_at: { type: ["string", "null"] },
       ends_at: { type: ["string", "null"] },
       category: { type: ["string", "null"], enum: ["familie", "forretning", "praeference", "andet", null] },
+      goal_category: { type: ["string", "null"] },
     },
-    required: ["kind", "title", "starts_at", "ends_at", "category"],
+    required: ["kind", "title", "starts_at", "ends_at", "category", "goal_category"],
   },
 };
 
 interface RawClassification {
-  kind: "task" | "event" | "delete_event" | "delete_task" | "draft" | "fact";
+  kind: "task" | "event" | "delete_event" | "delete_task" | "draft" | "fact" | "goal";
   title: string;
   starts_at: string | null;
   ends_at: string | null;
   category: FactCategory | null;
+  goal_category: string | null;
 }
 
 /** Pure mapping from Claude's raw tool-call shape to our result type - the actual branching logic worth testing directly. */
@@ -63,6 +66,9 @@ export function toClassifyResult(parsed: RawClassification): ClassifyResult {
   }
   if (parsed.kind === "fact") {
     return { kind: "fact", fact: parsed.title, category: parsed.category ?? "andet" };
+  }
+  if (parsed.kind === "goal") {
+    return { kind: "goal", title: parsed.title, category: parsed.goal_category };
   }
   return { kind: "task", title: parsed.title };
 }
@@ -86,13 +92,15 @@ export async function classifyMessage(text: string, apiKey: string): Promise<Cla
 - SLET OPGAVE (delete_task): en anmodning om at slette eller fjerne en EKSISTERENDE opgave/huskeseddel (fx "slet opgaven om at ringe til Thomas", "fjern indkøbsopgaven"). Forveksl ikke med at markere en opgave som færdig - det gøres i dashboardet, ikke via besked.
 - UDKAST (draft): en anmodning om at FÅ UDARBEJDET noget skriftligt lige nu — et udkast, en analyse, en opsummering, en procedure, research/undersøgelse om noget, statistik/fakta om et emne. Kendetegn: brugeren vil have et konkret resultat leveret med det samme, ikke bare en påmindelse om selv at gøre det senere.
 - FAKTA (fact): en varig oplysning OM brugeren selv, der ikke er en handling og ikke udløber — fx navne på familie ("min kone hedder Maria"), forretningsinfo ("AMSW blev startet i 2007"), eller en præference for hvordan assistenten skal opføre sig ("giv altid korte svar", "jeg foretrækker dansk"). Kendetegn: ingen handling skal udføres, det er noget der skal huskes fremover og bruges som kontekst senere. Forveksl ikke med en opgave — "husk at ringe til Thomas i morgen" er en OPGAVE (en handling), ikke et fakta.
+- MÅL (goal): et strategisk mål eller en vision for AMSW's fremtid — salg, økonomi, eller udvidelse til udlandet, fx "mål: fordoble omsætningen i 2027" eller "vi skal åbne i Tyskland næste år". Kendetegn: en langsigtet ambition der skal spores med fremgang over tid, ikke en enkeltstående handling. Sætninger der starter med "mål" eller "vision" er næsten altid denne kategori.
 
 Nu er det: ${copenhagenNowDescription()} (tidszone Europe/Copenhagen).
 
 For event: udled starts_at og ends_at som ISO 8601-tidsstempler med tidszone-offset (fx 2026-08-10T14:00:00+02:00), ud fra relative udtryk som "i morgen", "fredag kl 14", "om en time". Er der ikke angivet en varighed, sæt ends_at til én time efter starts_at.
-For task, delete_event, delete_task, draft og fact: sæt starts_at og ends_at til null.
-title er en kort, ren version af indholdet (uden dato/tid) for task/event. For delete_event og delete_task er title en søgetekst der beskriver hvilken aftale/opgave der skal findes — genbrug ordene fra beskeden ordret, stav dem ikke om. For draft er title ligegyldig (sæt til tom streng), da hele originalbeskeden bruges direkte. For fact er title selve faktumet, kort og præcist omskrevet i tredje person hvis naturligt.
-category bruges kun for fact: "familie" (familie/relationer), "forretning" (AMSW/forretning), "praeference" (hvordan assistenten skal opføre sig), eller "andet". Sæt category til null for alle andre kinds.`,
+For task, delete_event, delete_task, draft, fact og goal: sæt starts_at og ends_at til null.
+title er en kort, ren version af indholdet (uden dato/tid) for task/event. For delete_event og delete_task er title en søgetekst der beskriver hvilken aftale/opgave der skal findes — genbrug ordene fra beskeden ordret, stav dem ikke om. For draft er title ligegyldig (sæt til tom streng), da hele originalbeskeden bruges direkte. For fact er title selve faktumet, kort og præcist omskrevet i tredje person hvis naturligt. For goal er title en kort, ren version af selve målet (uden ordet "mål:" foran).
+category bruges kun for fact: "familie" (familie/relationer), "forretning" (AMSW/forretning), "praeference" (hvordan assistenten skal opføre sig), eller "andet". Sæt category til null for alle andre kinds.
+goal_category bruges kun for goal: kort kategori-navn udledt af indholdet, fx "Salg", "Økonomi" eller "Udland". Sæt goal_category til null hvis det ikke er tydeligt, og til null for alle andre kinds.`,
       messages: [{ role: "user", content: text }],
       tools: [TOOL_SCHEMA],
       tool_choice: { type: "tool", name: "classify" },

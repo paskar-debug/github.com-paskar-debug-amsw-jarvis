@@ -80,7 +80,7 @@ bot.command("help", (ctx) =>
       "/tjek - tjek selv med det samme for noget der kræver din opmærksomhed (mails, status, fejl)",
       "Hver morgen kl. 07:00 får du automatisk en briefing med dagens aftaler, åbne opgaver og status.",
       "Kl. 12:00 og 18:00 tjekker botten selv for noget der kræver din opmærksomhed, og skriver kun til dig hvis den finder noget.",
-      "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave, en kalenderaftale, en sletning af en aftale eller opgave, et fakta der skal huskes, eller et udkast/analyse du beder om at få skrevet med det samme, alt efter indholdet.",
+      "Almindelig tekst eller en stemmebesked bliver automatisk til en opgave, en kalenderaftale, en sletning af en aftale eller opgave, et fakta der skal huskes, et mål for AMSW (start gerne med \"mål:\"), eller et udkast/analyse du beder om at få skrevet med det samme, alt efter indholdet.",
     ].join("\n"),
   ),
 );

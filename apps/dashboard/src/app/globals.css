@@ -653,9 +653,9 @@ body::before {
   color: var(--muted);
   line-height: 1.2;
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-height: 2.4em;
+  display: flex;
+  align-items: flex-end;
 }
 
 .integration-chip-avatar-wrap {

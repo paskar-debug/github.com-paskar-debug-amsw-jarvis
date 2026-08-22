@@ -7,18 +7,30 @@ import { getSupabaseClient } from "@/lib/supabaseClient";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [usePassphrase, setUsePassphrase] = useState(false);
   const [passphrase, setPassphrase] = useState("");
 
+  // Every new code invalidates whatever code was already sent (Supabase keeps only one active
+  // token per user) - an un-disabled button invited exactly that: a double-click (or an
+  // impatient second click while the first request was still in flight) silently generates a
+  // second email whose code supersedes the first, before the person reading the first email has
+  // even had a chance to use it.
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (sending) return;
     setError(null);
-    const { error } = await getSupabaseClient().auth.signInWithOtp({ email });
-    if (error) setError(error.message);
-    else setSent(true);
+    setSending(true);
+    try {
+      const { error } = await getSupabaseClient().auth.signInWithOtp({ email });
+      if (error) setError(error.message);
+      else setSent(true);
+    } finally {
+      setSending(false);
+    }
   }
 
   // Backup path for browser contexts where the email flow can't complete at all - installed
@@ -138,7 +150,9 @@ export default function LoginPage() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <button type="submit">Send login-kode</button>
+        <button type="submit" disabled={sending}>
+          {sending ? "Sender..." : "Send login-kode"}
+        </button>
         {error && <p style={{ color: "var(--red)" }}>{error}</p>}
         <button type="button" className="login-link-button" onClick={() => setUsePassphrase(true)}>
           Virker e-mail ikke her? Brug adgangskode

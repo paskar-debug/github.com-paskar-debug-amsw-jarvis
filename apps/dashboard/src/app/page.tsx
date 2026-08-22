@@ -96,10 +96,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="section section-system">
-        <div className="section-label">System</div>
-        <div className="grid">
-          <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
-        </div>
+        <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
       </div>
 
       <div className="page-layout">

@@ -625,80 +625,62 @@ body::before {
   font-weight: 600;
 }
 
-.integrations-group-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: 0.9rem 0 0.35rem;
-}
-
-.integrations-group-label:first-of-type {
-  margin-top: 0.1rem;
-}
-
-.integration-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 0.6rem;
-}
-
-.integration-tile {
+.integrations-strip {
   display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: 4px 12px 4px 12px;
-  background: rgba(255, 255, 255, 0.02);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
 }
 
-.integration-avatar {
+.integrations-strip-flash .integration-chip-avatar {
+  animation: panel-flash-glow 0.8s ease-out;
+}
+
+.integration-chip {
+  position: relative;
+  display: inline-flex;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  cursor: default;
+}
+
+.integration-chip-avatar {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: #fff;
+  transition: transform 0.15s ease;
 }
 
-.integration-avatar-logo {
+.integration-chip:hover .integration-chip-avatar {
+  transform: scale(1.12);
+}
+
+.integration-chip-logo {
   width: 15px;
   height: 15px;
 }
 
-.integration-tile-body {
-  min-width: 0;
-  flex: 1;
+.integration-chip-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--bg, #05070a);
 }
 
-.integration-tile-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
+.integration-chip-dot.green { background: var(--green); }
+.integration-chip-dot.yellow { background: var(--yellow); }
+.integration-chip-dot.red { background: var(--red); }
 
-.integration-tile-name {
-  font-size: 0.88rem;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.integration-tile .meta {
-  color: var(--muted);
-  font-size: 0.78rem;
-  margin-top: 0.15rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.skeleton-chip {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .status-pill {

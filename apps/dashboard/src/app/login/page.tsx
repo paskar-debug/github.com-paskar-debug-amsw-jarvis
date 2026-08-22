@@ -81,8 +81,8 @@ export default function LoginPage() {
         <form className="login-form" onSubmit={handleVerify}>
           <Image src="/logo-icon.png" alt="Paramasamy" width={104} height={111} priority />
           <p>
-            Tjek din indbakke ({email}) og skriv koden fra mailen herunder - virker altid, uanset om du bruger en
-            installeret app uden adresselinje eller en almindelig browser.
+            Tjek din indbakke ({email}). I en almindelig browser: klik linket i mailen - det er hurtigst og mest
+            pålideligt. I en installeret app uden adresselinje: skriv koden fra mailen herunder i stedet.
           </p>
           <input
             type="text"

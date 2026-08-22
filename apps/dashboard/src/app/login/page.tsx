@@ -52,6 +52,11 @@ export default function LoginPage() {
         refresh_token: data.refresh_token,
       });
       if (error) setError(error.message);
+    } catch (err) {
+      // A fetch-level failure (CORS, offline, DNS) throws instead of returning an { error }
+      // shape - without this, it was silently swallowed: verifying reset via finally, but
+      // nothing ever told the user why nothing happened.
+      setError(`Netværksfejl: ${(err as Error).message}`);
     } finally {
       setVerifying(false);
     }

@@ -41,6 +41,12 @@ export default function LoginPage() {
         setError(data.error ?? "Login fejlede.");
         return;
       }
+      // Repeated failed attempts in this window can leave a stale/partial session in local
+      // storage, which the client then tries to refresh (and fails) before accepting the new
+      // one. Clear it first so setSession always starts from a clean slate.
+      for (const key of Object.keys(window.localStorage)) {
+        if (key.startsWith("sb-") && key.endsWith("-auth-token")) window.localStorage.removeItem(key);
+      }
       const { error } = await getSupabaseClient().auth.setSession({
         access_token: data.access_token,
         refresh_token: data.refresh_token,

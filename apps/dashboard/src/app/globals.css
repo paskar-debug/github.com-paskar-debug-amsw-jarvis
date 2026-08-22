@@ -628,8 +628,8 @@ body::before {
 .integrations-strip {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.9rem;
+  justify-content: center;
+  gap: 1.2rem 1.5rem;
 }
 
 .integrations-strip-flash .integration-chip-avatar {
@@ -637,10 +637,30 @@ body::before {
 }
 
 .integration-chip {
-  position: relative;
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: 66px;
   flex-shrink: 0;
   cursor: default;
+  text-align: center;
+}
+
+.integration-chip-label {
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.integration-chip-avatar-wrap {
+  position: relative;
+  display: inline-flex;
 }
 
 .integration-chip-avatar {
@@ -681,6 +701,13 @@ body::before {
 .integration-chip-dot.red { background: var(--red); }
 
 .skeleton-chip {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.skeleton-chip-label {
+  width: 36px;
+  height: 8px;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.06);
 }
 

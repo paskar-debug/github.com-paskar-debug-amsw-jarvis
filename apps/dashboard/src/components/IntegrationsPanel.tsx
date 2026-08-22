@@ -73,13 +73,28 @@ function tooltipFor(label: string, state: SyncRow | undefined): string {
   return `${label} — ${statusLabel} — ${detail}`;
 }
 
-function Chip({ title, color, children, status }: { title: string; color: string; children: React.ReactNode; status: Status }) {
+function Chip({
+  label,
+  title,
+  color,
+  children,
+  status,
+}: {
+  label: string;
+  title: string;
+  color: string;
+  children: React.ReactNode;
+  status: Status;
+}) {
   return (
     <span className="integration-chip" title={title}>
-      <span className="integration-chip-avatar" style={{ background: color }}>
-        {children}
+      <span className="integration-chip-label">{label}</span>
+      <span className="integration-chip-avatar-wrap">
+        <span className="integration-chip-avatar" style={{ background: color }}>
+          {children}
+        </span>
+        <span className={`integration-chip-dot ${status}`} />
       </span>
-      <span className={`integration-chip-dot ${status}`} />
     </span>
   );
 }
@@ -87,7 +102,7 @@ function Chip({ title, color, children, status }: { title: string; color: string
 function LogoChip({ meta, state }: { meta: SourceMeta; state: SyncRow | undefined }) {
   const { status } = statusOf(state);
   return (
-    <Chip title={tooltipFor(meta.label, state)} color={meta.color} status={status}>
+    <Chip label={meta.label} title={tooltipFor(meta.label, state)} color={meta.color} status={status}>
       <meta.logo className="integration-chip-logo" />
     </Chip>
   );
@@ -96,7 +111,7 @@ function LogoChip({ meta, state }: { meta: SourceMeta; state: SyncRow | undefine
 function WhoopChip({ state }: { state: SyncRow | undefined }) {
   const { status } = statusOf(state);
   return (
-    <Chip title={tooltipFor(WHOOP_META.label, state)} color={WHOOP_META.color} status={status}>
+    <Chip label={WHOOP_META.label} title={tooltipFor(WHOOP_META.label, state)} color={WHOOP_META.color} status={status}>
       {WHOOP_META.letter}
     </Chip>
   );
@@ -104,7 +119,7 @@ function WhoopChip({ state }: { state: SyncRow | undefined }) {
 
 function ManualToolChip({ label, letter, color, note }: { label: string; letter: string; color: string; note: string }) {
   return (
-    <Chip title={`${label} — Ikke overvåget — ${note}`} color={color} status="yellow">
+    <Chip label={label} title={`${label} — Ikke overvåget — ${note}`} color={color} status="yellow">
       {letter}
     </Chip>
   );
@@ -114,7 +129,10 @@ function Skeleton() {
   return (
     <div className="integrations-strip" aria-hidden="true">
       {Array.from({ length: 8 }).map((_, i) => (
-        <span className="integration-chip-avatar skeleton-chip" key={i} />
+        <span className="integration-chip" key={i}>
+          <span className="skeleton-chip-label" />
+          <span className="integration-chip-avatar skeleton-chip" />
+        </span>
       ))}
     </div>
   );

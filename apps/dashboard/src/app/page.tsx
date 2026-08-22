@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
-import { CalendarPanel, DraftsPanel, StatusPanel, TasksPanel, WhoopPanel } from "@/components/panels";
+import { CalendarPanel, DraftsPanel, GoalsPanel, StatusPanel, TasksPanel, WhoopPanel } from "@/components/panels";
 import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
 import { NewsPanel } from "@/components/NewsPanel";
@@ -43,6 +43,7 @@ export default function DashboardPage() {
     userId ?? null,
     { column: "source" },
   );
+  const goalsLive = useLiveTable<"goals", Tables["goals"]["Row"]>("goals", userId ?? null, { column: "target_date" });
 
   // Routed through /api/tasks/action (not a direct table write) because a task sourced from
   // Todoist needs to be closed/deleted there too - otherwise the next Todoist sync just pulls
@@ -123,6 +124,7 @@ export default function DashboardPage() {
             <div className="grid">
               <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
               <StatusPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
+              <GoalsPanel goals={goalsLive.rows} isLoading={goalsLive.isLoading} flash={goalsLive.flash} />
             </div>
           </div>
 

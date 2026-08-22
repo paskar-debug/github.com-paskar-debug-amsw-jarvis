@@ -40,6 +40,43 @@ export async function saveFact(fact: string, category: FactCategory = "andet"): 
   return `Noteret: "${fact}"`;
 }
 
+export async function createGoal(title: string, category?: string, targetDate?: string): Promise<string> {
+  const { error } = await supabase.from("goals").insert({
+    owner_id: env.ownerId,
+    title,
+    category: category || null,
+    target_date: targetDate || null,
+  });
+  if (error) throw error;
+  return `Mål oprettet: "${title}"${category ? ` (${category})` : ""}`;
+}
+
+export async function updateGoalProgress(query: string, progress: number): Promise<string> {
+  const words = significantWords(query);
+  const orFilter = words.map((w) => `title.ilike.%${w}%`).join(",");
+
+  const { data: matches, error: searchError } = await supabase
+    .from("goals")
+    .select("id, title")
+    .eq("owner_id", env.ownerId)
+    .neq("status", "cancelled")
+    .or(orFilter);
+  if (searchError) throw searchError;
+
+  if (!matches || matches.length === 0) {
+    return `Fandt ingen mål der matcher "${query}".`;
+  }
+  if (matches.length > 1) {
+    return `Fandt flere mål der matcher "${query}" – vær mere specifik:\n${matches.map((m) => `- ${m.title}`).join("\n")}`;
+  }
+
+  const clamped = Math.max(0, Math.min(100, progress));
+  const status = clamped >= 100 ? "done" : "active";
+  const { error } = await supabase.from("goals").update({ progress: clamped, status }).eq("id", matches[0].id);
+  if (error) throw error;
+  return `Mål opdateret: "${matches[0].title}" – ${clamped}%${status === "done" ? " (nået!)" : ""}`;
+}
+
 export async function createCalendarEvent(title: string, startsAt: string, endsAt: string): Promise<string> {
   let externalId: string | null = null;
   let source: "manual" | "google" = "manual";
@@ -80,6 +117,8 @@ const SEARCH_STOPWORDS = new Set([
   "aftalen",
   "opgave",
   "opgaven",
+  "mål",
+  "målet",
   "med",
   "og",
   "til",

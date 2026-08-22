@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import type { Database } from "@amsw/db";
-import { IconCalendar, IconClose, IconCopy, IconDraft, IconPulse, IconRing, IconTasks } from "./icons";
+import { IconCalendar, IconClose, IconCopy, IconDraft, IconPulse, IconRing, IconTarget, IconTasks } from "./icons";
 import { Sparkline } from "./Sparkline";
 
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
 type CalendarRow = Database["public"]["Tables"]["calendar_events"]["Row"];
 type StatusRow = Database["public"]["Tables"]["amsw_status"]["Row"];
 type DraftRow = Database["public"]["Tables"]["drafts"]["Row"];
+type GoalRow = Database["public"]["Tables"]["goals"]["Row"];
 
 interface LiveProps {
   isLoading?: boolean;
@@ -243,6 +244,48 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
               </div>
             );
           })}
+        </>
+      )}
+    </section>
+  );
+}
+
+const GOAL_STATUS_LABELS: Record<string, string> = { done: "Nået", paused: "Pause", cancelled: "Annulleret" };
+
+export function GoalsPanel({ goals, isLoading, flash }: LiveProps & { goals: GoalRow[] }) {
+  const visible = [...goals]
+    .filter((g) => g.status !== "cancelled")
+    .sort((a, b) => (a.target_date ?? "9999").localeCompare(b.target_date ?? "9999"));
+
+  return (
+    <section className={panelClass(flash && "panel-flash")}>
+      <PanelHeader icon={<IconTarget />} title="Mål" subtitle="AMSW's vision - salg, økonomi og udvidelse til udlandet" />
+      {isLoading ? (
+        <Skeleton lines={3} />
+      ) : (
+        <>
+          {visible.length === 0 && <p className="empty">Ingen mål endnu.</p>}
+          {visible.map((goal) => (
+            <div className="goal-item" key={goal.id}>
+              <div className="goal-item-top">
+                <span className="goal-title">
+                  {goal.category && <span className="goal-category">{goal.category}</span>}
+                  {goal.title}
+                </span>
+                {goal.status !== "active" && (
+                  <span className={`status-pill ${goal.status === "done" ? "green" : "yellow"}`}>
+                    {GOAL_STATUS_LABELS[goal.status] ?? goal.status}
+                  </span>
+                )}
+              </div>
+              <div className="progress-bar">
+                <div style={{ width: `${goal.progress}%` }} />
+              </div>
+              <div className="meta">
+                {goal.progress}% {goal.target_date ? `· mål: ${new Date(goal.target_date).toLocaleDateString("da-DK", { dateStyle: "medium" })}` : ""}
+              </div>
+            </div>
+          ))}
         </>
       )}
     </section>

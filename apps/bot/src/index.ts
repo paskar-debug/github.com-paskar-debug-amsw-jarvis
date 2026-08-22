@@ -5,7 +5,7 @@ import { env } from "./env.js";
 import { transcribeVoice } from "./stt.js";
 import { synthesizeSpeech } from "./tts.js";
 import { ttsConfig } from "./ttsConfig.js";
-import { createTask, handleFreeformMessage, runSync, saveFact, setStatus } from "./handlers.js";
+import { createGoal, createTask, handleFreeformMessage, runSync, saveFact, setStatus, updateGoalProgress } from "./handlers.js";
 import { syncAll } from "./sync.js";
 import { checkInfra } from "./infraSync.js";
 import { sendDailyBriefing } from "./briefing.js";
@@ -74,6 +74,8 @@ bot.command("help", (ctx) =>
       "/opgave <tekst> - opret opgave",
       "/husk <tekst> - gem et fakta om dig selv (fx navne, præferencer), som botten bruger som kontekst i udkast",
       "/status <område> <green|yellow|red> [note] - sæt AMSW-status",
+      "/maal <kategori> | <titel> [| YYYY-MM-DD] - opret et mål for AMSW's fremtid (fx salg, økonomi, udland)",
+      "/maal_fremgang <tekst der matcher målet> <0-100> - opdater fremgang på et mål i procent",
       "/sync - hent nyt fra Google Kalender, Todoist, Shopify og Whoop",
       "/tjek - tjek selv med det samme for noget der kræver din opmærksomhed (mails, status, fejl)",
       "Hver morgen kl. 07:00 får du automatisk en briefing med dagens aftaler, åbne opgaver og status.",
@@ -93,6 +95,22 @@ bot.command("husk", async (ctx) => {
   const fact = ctx.match.trim();
   if (!fact) return ctx.reply("Brug: /husk <tekst>");
   await replyText(ctx, await saveFact(fact), false);
+});
+
+bot.command("maal", async (ctx) => {
+  const raw = ctx.match.trim();
+  const [category, title, targetDate] = raw.split("|").map((s) => s.trim());
+  if (!title) return ctx.reply("Brug: /maal <kategori> | <titel> [| YYYY-MM-DD]");
+  await replyText(ctx, await createGoal(title, category || undefined, targetDate || undefined), false);
+});
+
+bot.command("maal_fremgang", async (ctx) => {
+  const raw = ctx.match.trim();
+  const lastSpace = raw.lastIndexOf(" ");
+  const query = lastSpace === -1 ? "" : raw.slice(0, lastSpace).trim();
+  const progress = Number(raw.slice(lastSpace + 1));
+  if (!query || Number.isNaN(progress)) return ctx.reply("Brug: /maal_fremgang <tekst der matcher målet> <0-100>");
+  await replyText(ctx, await updateGoalProgress(query, progress), false);
 });
 
 bot.command("status", async (ctx) => {

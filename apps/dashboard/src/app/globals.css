@@ -943,6 +943,21 @@ body::before {
   margin: 0;
 }
 
+.login-link-button {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  margin-top: -0.3rem;
+}
+
+.login-link-button:hover {
+  color: var(--brand-bright);
+}
+
 .login-form {
   max-width: 380px;
   margin: 5rem auto;

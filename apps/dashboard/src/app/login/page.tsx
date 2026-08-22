@@ -10,6 +10,8 @@ export default function LoginPage() {
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [usePassphrase, setUsePassphrase] = useState(false);
+  const [passphrase, setPassphrase] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -17,6 +19,36 @@ export default function LoginPage() {
     const { error } = await getSupabaseClient().auth.signInWithOtp({ email });
     if (error) setError(error.message);
     else setSent(true);
+  }
+
+  // Backup path for browser contexts where the email flow can't complete at all - installed
+  // "Add to Dock"/Home Screen web app windows use storage isolated from regular Safari, so a
+  // session established there never appears here, and there's no address bar for an email link
+  // to land back in this exact window either. Gated by a secret only the owner has, since the
+  // email round-trip is precisely the thing that doesn't work in this context.
+  async function handlePassphrase(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setVerifying(true);
+    try {
+      const res = await fetch("https://dqqseqhzqleqbabvuyni.supabase.co/functions/v1/owner-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret: passphrase }),
+      });
+      const data = (await res.json()) as { access_token?: string; refresh_token?: string; error?: string };
+      if (!res.ok || !data.access_token || !data.refresh_token) {
+        setError(data.error ?? "Login fejlede.");
+        return;
+      }
+      const { error } = await getSupabaseClient().auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      });
+      if (error) setError(error.message);
+    } finally {
+      setVerifying(false);
+    }
   }
 
   async function handleVerify(e: React.FormEvent) {
@@ -59,6 +91,31 @@ export default function LoginPage() {
     );
   }
 
+  if (usePassphrase) {
+    return (
+      <div className="page">
+        <form className="login-form" onSubmit={handlePassphrase}>
+          <Image src="/logo-icon.png" alt="Paramasamy" width={104} height={111} priority />
+          <input
+            type="password"
+            placeholder="Adgangskode"
+            value={passphrase}
+            onChange={(e) => setPassphrase(e.target.value)}
+            autoFocus
+            required
+          />
+          <button type="submit" disabled={verifying}>
+            {verifying ? "Logger ind..." : "Log ind"}
+          </button>
+          {error && <p style={{ color: "var(--red)" }}>{error}</p>}
+          <button type="button" className="login-link-button" onClick={() => setUsePassphrase(false)}>
+            Brug e-mail i stedet
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="page">
       <form className="login-form" onSubmit={handleSubmit}>
@@ -72,6 +129,9 @@ export default function LoginPage() {
         />
         <button type="submit">Send login-kode</button>
         {error && <p style={{ color: "var(--red)" }}>{error}</p>}
+        <button type="button" className="login-link-button" onClick={() => setUsePassphrase(true)}>
+          Virker e-mail ikke her? Brug adgangskode
+        </button>
       </form>
     </div>
   );

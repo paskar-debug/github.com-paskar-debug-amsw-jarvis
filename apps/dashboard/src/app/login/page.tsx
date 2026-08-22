@@ -101,7 +101,11 @@ export default function LoginPage() {
             inputMode="numeric"
             placeholder="Login-kode"
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            // Safari's one-time-code AutoFill (and copy/paste from Mail) can carry invisible
+            // whitespace or non-breaking characters that look identical to the eye but don't
+            // match the code Supabase has on file - strip everything but digits so what's
+            // submitted always matches what's displayed.
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
             autoFocus
             required
           />

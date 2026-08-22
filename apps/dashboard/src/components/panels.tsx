@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Database } from "@amsw/db";
-import { IconCalendar, IconCopy, IconDraft, IconPulse, IconRing, IconTasks } from "./icons";
+import { IconCalendar, IconClose, IconCopy, IconDraft, IconPulse, IconRing, IconTasks } from "./icons";
 import { Sparkline } from "./Sparkline";
 
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
@@ -67,9 +67,11 @@ export function TasksPanel({
   isLoading,
   flash,
   onToggleDone,
+  onDelete,
 }: LiveProps & {
   tasks: TaskRow[];
   onToggleDone: (id: string, done: boolean) => void;
+  onDelete: (id: string) => void;
 }) {
   const open = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
   const visible = open.slice(0, TASKS_VISIBLE_LIMIT);
@@ -83,16 +85,21 @@ export function TasksPanel({
         <>
           {open.length === 0 && <p className="empty">Ingen åbne opgaver.</p>}
           {visible.map((task) => (
-            <label className="item item-checkable" key={task.id}>
-              <input type="checkbox" onChange={() => onToggleDone(task.id, true)} />
-              <div>
-                {task.title}
-                <div className="meta">
-                  {task.priority.toUpperCase()} · {task.source}
-                  {task.due_at ? ` · ${formatDate(task.due_at)}` : ""}
+            <div className="item item-checkable" key={task.id}>
+              <label className="task-label">
+                <input type="checkbox" onChange={() => onToggleDone(task.id, true)} />
+                <div>
+                  {task.title}
+                  <div className="meta">
+                    {task.priority.toUpperCase()} · {task.source}
+                    {task.due_at ? ` · ${formatDate(task.due_at)}` : ""}
+                  </div>
                 </div>
-              </div>
-            </label>
+              </label>
+              <button type="button" className="task-delete-button" onClick={() => onDelete(task.id)} aria-label="Slet opgave">
+                <IconClose />
+              </button>
+            </div>
           ))}
           {remaining > 0 && <p className="empty">+{remaining} flere opgaver.</p>}
         </>

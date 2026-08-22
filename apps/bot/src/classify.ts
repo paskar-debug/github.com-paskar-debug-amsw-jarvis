@@ -4,6 +4,7 @@ export type ClassifyResult =
   | { kind: "task"; title: string }
   | { kind: "event"; title: string; startsAt: string; endsAt: string }
   | { kind: "delete_event"; query: string }
+  | { kind: "delete_task"; query: string }
   | { kind: "draft" }
   | { kind: "fact"; fact: string; category: FactCategory };
 
@@ -28,7 +29,7 @@ const TOOL_SCHEMA = {
   input_schema: {
     type: "object",
     properties: {
-      kind: { type: "string", enum: ["task", "event", "delete_event", "draft", "fact"] },
+      kind: { type: "string", enum: ["task", "event", "delete_event", "delete_task", "draft", "fact"] },
       title: { type: "string" },
       starts_at: { type: ["string", "null"] },
       ends_at: { type: ["string", "null"] },
@@ -39,7 +40,7 @@ const TOOL_SCHEMA = {
 };
 
 interface RawClassification {
-  kind: "task" | "event" | "delete_event" | "draft" | "fact";
+  kind: "task" | "event" | "delete_event" | "delete_task" | "draft" | "fact";
   title: string;
   starts_at: string | null;
   ends_at: string | null;
@@ -53,6 +54,9 @@ export function toClassifyResult(parsed: RawClassification): ClassifyResult {
   }
   if (parsed.kind === "delete_event") {
     return { kind: "delete_event", query: parsed.title };
+  }
+  if (parsed.kind === "delete_task") {
+    return { kind: "delete_task", query: parsed.title };
   }
   if (parsed.kind === "draft") {
     return { kind: "draft" };
@@ -78,15 +82,16 @@ export async function classifyMessage(text: string, apiKey: string): Promise<Cla
       system: `Du klassificerer beskeder til en personlig assistent som én af:
 - OPGAVE (task): noget der skal gøres af brugeren selv senere, uden fast tidspunkt. Kort huskeseddel-agtig ting.
 - KALENDERAFTALE (event): en ny aftale med en konkret dato og/eller klokkeslæt, fx et møde.
-- SLET AFTALE (delete_event): en anmodning om at slette, aflyse eller annullere en EKSISTERENDE aftale (fx "aflys mødet med Lars", "slet tandlægeaftalen").
+- SLET AFTALE (delete_event): en anmodning om at slette, aflyse eller annullere en EKSISTERENDE kalenderaftale (fx "aflys mødet med Lars", "slet tandlægeaftalen").
+- SLET OPGAVE (delete_task): en anmodning om at slette eller fjerne en EKSISTERENDE opgave/huskeseddel (fx "slet opgaven om at ringe til Thomas", "fjern indkøbsopgaven"). Forveksl ikke med at markere en opgave som færdig - det gøres i dashboardet, ikke via besked.
 - UDKAST (draft): en anmodning om at FÅ UDARBEJDET noget skriftligt lige nu — et udkast, en analyse, en opsummering, en procedure, research/undersøgelse om noget, statistik/fakta om et emne. Kendetegn: brugeren vil have et konkret resultat leveret med det samme, ikke bare en påmindelse om selv at gøre det senere.
 - FAKTA (fact): en varig oplysning OM brugeren selv, der ikke er en handling og ikke udløber — fx navne på familie ("min kone hedder Maria"), forretningsinfo ("AMSW blev startet i 2007"), eller en præference for hvordan assistenten skal opføre sig ("giv altid korte svar", "jeg foretrækker dansk"). Kendetegn: ingen handling skal udføres, det er noget der skal huskes fremover og bruges som kontekst senere. Forveksl ikke med en opgave — "husk at ringe til Thomas i morgen" er en OPGAVE (en handling), ikke et fakta.
 
 Nu er det: ${copenhagenNowDescription()} (tidszone Europe/Copenhagen).
 
 For event: udled starts_at og ends_at som ISO 8601-tidsstempler med tidszone-offset (fx 2026-08-10T14:00:00+02:00), ud fra relative udtryk som "i morgen", "fredag kl 14", "om en time". Er der ikke angivet en varighed, sæt ends_at til én time efter starts_at.
-For task, delete_event, draft og fact: sæt starts_at og ends_at til null.
-title er en kort, ren version af indholdet (uden dato/tid) for task/event. For delete_event er title en søgetekst der beskriver hvilken aftale der skal findes — genbrug ordene fra beskeden ordret, stav dem ikke om. For draft er title ligegyldig (sæt til tom streng), da hele originalbeskeden bruges direkte. For fact er title selve faktumet, kort og præcist omskrevet i tredje person hvis naturligt.
+For task, delete_event, delete_task, draft og fact: sæt starts_at og ends_at til null.
+title er en kort, ren version af indholdet (uden dato/tid) for task/event. For delete_event og delete_task er title en søgetekst der beskriver hvilken aftale/opgave der skal findes — genbrug ordene fra beskeden ordret, stav dem ikke om. For draft er title ligegyldig (sæt til tom streng), da hele originalbeskeden bruges direkte. For fact er title selve faktumet, kort og præcist omskrevet i tredje person hvis naturligt.
 category bruges kun for fact: "familie" (familie/relationer), "forretning" (AMSW/forretning), "praeference" (hvordan assistenten skal opføre sig), eller "andet". Sæt category til null for alle andre kinds.`,
       messages: [{ role: "user", content: text }],
       tools: [TOOL_SCHEMA],

@@ -54,7 +54,26 @@ export async function createCalendarEvent(title: string, startsAt: string, endsA
   return `Aftale oprettet: "${title}" – ${when}${suffix}`;
 }
 
-const SEARCH_STOPWORDS = new Set(["møde", "møder", "mødet", "aftale", "aftalen", "med", "og", "til", "den", "det", "min", "mit", "hos", "på", "af", "for"]);
+const SEARCH_STOPWORDS = new Set([
+  "møde",
+  "møder",
+  "mødet",
+  "aftale",
+  "aftalen",
+  "opgave",
+  "opgaven",
+  "med",
+  "og",
+  "til",
+  "den",
+  "det",
+  "min",
+  "mit",
+  "hos",
+  "på",
+  "af",
+  "for",
+]);
 
 function significantWords(query: string): string[] {
   const words = query
@@ -147,6 +166,32 @@ export async function deleteCalendarEvent(query: string): Promise<string> {
   return `Aftale slettet: "${matches[0].title}"`;
 }
 
+export async function deleteTask(query: string): Promise<string> {
+  const words = significantWords(query);
+  const orFilter = words.map((w) => `title.ilike.%${w}%`).join(",");
+
+  const { data: matches, error: searchError } = await supabase
+    .from("tasks")
+    .select("id, title")
+    .eq("owner_id", env.ownerId)
+    .neq("status", "done")
+    .neq("status", "cancelled")
+    .or(orFilter);
+  if (searchError) throw searchError;
+
+  if (!matches || matches.length === 0) {
+    return `Fandt ingen åben opgave der matcher "${query}".`;
+  }
+
+  if (matches.length > 1) {
+    return `Fandt flere opgaver der matcher "${query}" – vær mere specifik:\n${matches.map((m) => `- ${m.title}`).join("\n")}`;
+  }
+
+  const { error } = await supabase.from("tasks").delete().eq("id", matches[0].id);
+  if (error) throw error;
+  return `Opgave slettet: "${matches[0].title}"`;
+}
+
 /** Short plain-text summary of known facts + open tasks + upcoming events + latest business/health status,
  *  given to Sonnet as background for draft generation and assistant chat. Best-effort: if this fails,
  *  the caller still proceeds, just without situational context. */
@@ -204,6 +249,9 @@ export async function handleFreeformMessage(text: string): Promise<string> {
     }
     if (result.kind === "delete_event") {
       return deleteCalendarEvent(result.query);
+    }
+    if (result.kind === "delete_task") {
+      return deleteTask(result.query);
     }
     if (result.kind === "draft") {
       const context = await buildAssistantContext().catch(() => "");

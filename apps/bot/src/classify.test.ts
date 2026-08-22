@@ -42,6 +42,15 @@ describe("toClassifyResult", () => {
     });
   });
 
+  it("maps a delete_task classification, using title as the search query", () => {
+    expect(
+      toClassifyResult({ kind: "delete_task", title: "indkøbsopgaven", starts_at: null, ends_at: null, category: null }),
+    ).toEqual({
+      kind: "delete_task",
+      query: "indkøbsopgaven",
+    });
+  });
+
   it("maps a draft classification", () => {
     expect(toClassifyResult({ kind: "draft", title: "", starts_at: null, ends_at: null, category: null })).toEqual({ kind: "draft" });
   });

@@ -55,6 +55,10 @@ export default function DashboardPage() {
     await getSupabaseClient().from("drafts").delete().eq("id", id);
   }
 
+  async function handleDeleteTask(id: string) {
+    await getSupabaseClient().from("tasks").delete().eq("id", id);
+  }
+
   async function handleLogout() {
     await getSupabaseClient().auth.signOut();
   }
@@ -86,7 +90,13 @@ export default function DashboardPage() {
           <div className="section">
             <div className="section-label">I dag</div>
             <div className="grid">
-              <TasksPanel tasks={tasksLive.rows} isLoading={tasksLive.isLoading} flash={tasksLive.flash} onToggleDone={handleToggleDone} />
+              <TasksPanel
+                tasks={tasksLive.rows}
+                isLoading={tasksLive.isLoading}
+                flash={tasksLive.flash}
+                onToggleDone={handleToggleDone}
+                onDelete={handleDeleteTask}
+              />
               <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
               <WeatherPanel />
             </div>

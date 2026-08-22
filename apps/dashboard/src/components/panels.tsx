@@ -252,7 +252,12 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
 
 const GOAL_STATUS_LABELS: Record<string, string> = { done: "Nået", paused: "Pause", cancelled: "Annulleret" };
 
-export function GoalsPanel({ goals, isLoading, flash }: LiveProps & { goals: GoalRow[] }) {
+export function GoalsPanel({
+  goals,
+  isLoading,
+  flash,
+  onToggleDone,
+}: LiveProps & { goals: GoalRow[]; onToggleDone: (id: string) => void }) {
   const visible = [...goals]
     .filter((g) => g.status !== "cancelled")
     .sort((a, b) => (a.target_date ?? "9999").localeCompare(b.target_date ?? "9999"));
@@ -266,25 +271,34 @@ export function GoalsPanel({ goals, isLoading, flash }: LiveProps & { goals: Goa
         <>
           {visible.length === 0 && <p className="empty">Ingen mål endnu.</p>}
           {visible.map((goal) => (
-            <div className="goal-item" key={goal.id}>
-              <div className="goal-item-top">
-                <span className="goal-title">
-                  {goal.category && <span className="goal-category">{goal.category}</span>}
-                  {goal.title}
-                </span>
-                {goal.status !== "active" && (
-                  <span className={`status-pill ${goal.status === "done" ? "green" : "yellow"}`}>
-                    {GOAL_STATUS_LABELS[goal.status] ?? goal.status}
+            <label className="goal-item" key={goal.id}>
+              <input
+                type="checkbox"
+                checked={goal.status === "done"}
+                disabled={goal.status === "done"}
+                onChange={() => onToggleDone(goal.id)}
+              />
+              <div className="goal-item-body">
+                <div className="goal-item-top">
+                  <span className="goal-title">
+                    {goal.category && <span className="goal-category">{goal.category}</span>}
+                    {goal.title}
                   </span>
-                )}
+                  {goal.status !== "active" && (
+                    <span className={`status-pill ${goal.status === "done" ? "green" : "yellow"}`}>
+                      {GOAL_STATUS_LABELS[goal.status] ?? goal.status}
+                    </span>
+                  )}
+                </div>
+                <div className="progress-bar">
+                  <div style={{ width: `${goal.progress}%` }} />
+                </div>
+                <div className="meta">
+                  {goal.progress}%{" "}
+                  {goal.target_date ? `· mål: ${new Date(goal.target_date).toLocaleDateString("da-DK", { dateStyle: "medium" })}` : ""}
+                </div>
               </div>
-              <div className="progress-bar">
-                <div style={{ width: `${goal.progress}%` }} />
-              </div>
-              <div className="meta">
-                {goal.progress}% {goal.target_date ? `· mål: ${new Date(goal.target_date).toLocaleDateString("da-DK", { dateStyle: "medium" })}` : ""}
-              </div>
-            </div>
+            </label>
           ))}
         </>
       )}

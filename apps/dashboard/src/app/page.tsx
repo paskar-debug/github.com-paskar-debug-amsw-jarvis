@@ -63,6 +63,10 @@ export default function DashboardPage() {
     await callTaskAction(id, "complete");
   }
 
+  async function handleToggleGoalDone(id: string) {
+    await getSupabaseClient().from("goals").update({ status: "done", progress: 100 }).eq("id", id);
+  }
+
   async function handleDeleteDraft(id: string) {
     await getSupabaseClient().from("drafts").delete().eq("id", id);
   }
@@ -124,7 +128,12 @@ export default function DashboardPage() {
             <div className="grid">
               <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
               <StatusPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
-              <GoalsPanel goals={goalsLive.rows} isLoading={goalsLive.isLoading} flash={goalsLive.flash} />
+              <GoalsPanel
+                goals={goalsLive.rows}
+                isLoading={goalsLive.isLoading}
+                flash={goalsLive.flash}
+                onToggleDone={handleToggleGoalDone}
+              />
             </div>
           </div>
 

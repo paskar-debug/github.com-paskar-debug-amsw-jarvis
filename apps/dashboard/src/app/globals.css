@@ -865,8 +865,12 @@ body::before {
 }
 
 .goal-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
   padding: 0.65rem 0;
   border-bottom: 1px solid var(--border);
+  cursor: pointer;
 }
 
 .goal-item:last-child {
@@ -876,6 +880,24 @@ body::before {
 
 .goal-item:first-child {
   padding-top: 0.1rem;
+}
+
+.goal-item input[type="checkbox"] {
+  margin-top: 0.3rem;
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.goal-item input[type="checkbox"]:disabled {
+  cursor: default;
+}
+
+.goal-item-body {
+  min-width: 0;
+  flex: 1;
 }
 
 .goal-item-top {

@@ -23,7 +23,10 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setVerifying(true);
-    const { error } = await getSupabaseClient().auth.verifyOtp({ email, token: code, type: "email" });
+    // Supabase routes signInWithOtp for an existing, already-confirmed user through its
+    // recovery-token mechanism internally (confirmed directly against auth.one_time_tokens) -
+    // "email" looks like the right type but only matches a separate, unrelated code path.
+    const { error } = await getSupabaseClient().auth.verifyOtp({ email, token: code.trim(), type: "recovery" });
     setVerifying(false);
     if (error) setError(error.message);
     // On success, onAuthStateChange in the dashboard picks up the new session and redirects.

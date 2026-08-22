@@ -94,6 +94,14 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
+
+      <div className="section section-system">
+        <div className="section-label">System</div>
+        <div className="grid">
+          <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
+        </div>
+      </div>
+
       <div className="page-layout">
         <div className="main-column">
           <QuotePanel />
@@ -122,13 +130,6 @@ export default function DashboardPage() {
           </div>
 
           <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
-
-          <div className="section section-system">
-            <div className="section-label">System</div>
-            <div className="grid">
-              <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
-            </div>
-          </div>
         </div>
         <aside className="sidebar">
           <NewsPanel source="dr" label="DR Nyheder" />

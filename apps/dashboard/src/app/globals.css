@@ -223,6 +223,7 @@ body::before {
 
 .section-system {
   opacity: 0.85;
+  margin-bottom: 2rem;
 }
 
 .section-system .section-label {

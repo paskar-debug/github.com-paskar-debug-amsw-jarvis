@@ -252,16 +252,52 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
 
 const GOAL_STATUS_LABELS: Record<string, string> = { done: "Nået", paused: "Pause", cancelled: "Annulleret" };
 
+// Fixed categorical order + hues - never cycled/generated, so a category always reads as the same
+// color. Unrecognized categories (a new one Claude infers via Telegram) fall back to a neutral tone
+// rather than an arbitrary hue.
+const CATEGORY_ORDER = ["Salg", "Økonomi", "Kunder"];
+const CATEGORY_COLORS: Record<string, string> = {
+  Salg: "#00c2ff",
+  Økonomi: "#2fe08a",
+  Kunder: "#9757f5",
+};
+const FALLBACK_CATEGORY_COLOR = "#8b93a7";
+
+function categoryColor(category: string | null): string {
+  return (category && CATEGORY_COLORS[category]) || FALLBACK_CATEGORY_COLOR;
+}
+
+function groupGoalsByCategory(goals: GoalRow[]): [string, GoalRow[]][] {
+  const groups = new Map<string, GoalRow[]>();
+  for (const goal of goals) {
+    const key = goal.category ?? "Andet";
+    const list = groups.get(key) ?? [];
+    list.push(goal);
+    groups.set(key, list);
+  }
+  for (const list of groups.values()) {
+    list.sort((a, b) => {
+      const targetA = a.metric_target ?? Infinity;
+      const targetB = b.metric_target ?? Infinity;
+      return targetA !== targetB ? targetA - targetB : a.title.localeCompare(b.title);
+    });
+  }
+  const orderedKeys = [
+    ...CATEGORY_ORDER.filter((c) => groups.has(c)),
+    ...[...groups.keys()].filter((c) => !CATEGORY_ORDER.includes(c)).sort(),
+  ];
+  return orderedKeys.map((key) => [key, groups.get(key)!]);
+}
+
 export function GoalsPanel({
   goals,
   isLoading,
   flash,
   onToggleDone,
 }: LiveProps & { goals: GoalRow[]; onToggleDone: (id: string) => void }) {
-  const visible = [...goals]
-    .filter((g) => g.status !== "cancelled")
-    .sort((a, b) => (a.target_date ?? "9999").localeCompare(b.target_date ?? "9999"));
+  const visible = goals.filter((g) => g.status !== "cancelled");
   const wonCount = visible.filter((g) => g.status === "done").length;
+  const grouped = groupGoalsByCategory(visible);
 
   return (
     <section className={panelClass(flash && "panel-flash")}>
@@ -277,44 +313,52 @@ export function GoalsPanel({
             </div>
           )}
           {visible.length === 0 && <p className="empty">Ingen mål endnu.</p>}
-          {visible.map((goal) => {
-            const done = goal.status === "done";
-            return (
-              <label className={`goal-item${done ? " goal-item-won" : ""}`} key={goal.id}>
-                <input type="checkbox" checked={done} disabled={done} onChange={() => onToggleDone(goal.id)} />
-                <div className="goal-item-body">
-                  <div className="goal-item-top">
-                    <span className="goal-title">
-                      {goal.category && <span className="goal-category">{goal.category}</span>}
-                      {goal.title}
-                    </span>
-                    {done ? (
-                      <span className="goal-won-badge">
-                        <IconTrophy /> Nået!
-                      </span>
-                    ) : (
-                      <span className="goal-progress-value">{goal.progress}%</span>
-                    )}
-                  </div>
-                  {!done && (
-                    <div className="progress-bar">
-                      <div style={{ width: `${goal.progress}%` }} />
-                    </div>
-                  )}
-                  {(goal.status === "paused" || goal.target_date) && (
-                    <div className="meta">
-                      {goal.status === "paused" && (
-                        <span className={`status-pill yellow`} style={{ marginRight: "0.5rem" }}>
-                          {GOAL_STATUS_LABELS.paused}
+          {grouped.map(([category, categoryGoals]) => (
+            <div className="goal-group" key={category}>
+              <div className="goal-group-label" style={{ color: categoryColor(category === "Andet" ? null : category) }}>
+                {category}
+              </div>
+              {categoryGoals.map((goal) => {
+                const done = goal.status === "done";
+                const color = categoryColor(goal.category);
+                return (
+                  <label className={`goal-item${done ? " goal-item-won" : ""}`} key={goal.id}>
+                    <input type="checkbox" checked={done} disabled={done} onChange={() => onToggleDone(goal.id)} />
+                    <div className="goal-item-body">
+                      <div className="goal-item-top">
+                        <span className="goal-title">
+                          <span className="goal-dot" style={{ background: done ? "var(--green)" : color }} />
+                          {goal.title}
                         </span>
+                        {done ? (
+                          <span className="goal-won-badge">
+                            <IconTrophy /> Nået!
+                          </span>
+                        ) : (
+                          <span className="goal-progress-value">{goal.progress}%</span>
+                        )}
+                      </div>
+                      {!done && (
+                        <div className="progress-bar">
+                          <div style={{ width: `${goal.progress}%`, background: `linear-gradient(90deg, ${color}55, ${color})`, boxShadow: `0 0 12px ${color}99` }} />
+                        </div>
                       )}
-                      {goal.target_date ? `mål: ${new Date(goal.target_date).toLocaleDateString("da-DK", { dateStyle: "medium" })}` : ""}
+                      {(goal.status === "paused" || goal.target_date) && (
+                        <div className="meta">
+                          {goal.status === "paused" && (
+                            <span className={`status-pill yellow`} style={{ marginRight: "0.5rem" }}>
+                              {GOAL_STATUS_LABELS.paused}
+                            </span>
+                          )}
+                          {goal.target_date ? `mål: ${new Date(goal.target_date).toLocaleDateString("da-DK", { dateStyle: "medium" })}` : ""}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </label>
-            );
-          })}
+                  </label>
+                );
+              })}
+            </div>
+          ))}
         </>
       )}
     </section>

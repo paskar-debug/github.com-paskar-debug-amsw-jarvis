@@ -852,7 +852,7 @@ body::before {
 .progress-bar {
   height: 8px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
   margin-top: 0.55rem;
 }
@@ -915,15 +915,26 @@ body::before {
   font-weight: 600;
 }
 
-.goal-category {
-  font-size: 0.68rem;
+.goal-group {
+  margin-bottom: 0.3rem;
+}
+
+.goal-group-label {
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--brand-bright);
-  background: var(--accent-soft);
-  border-radius: 999px;
-  padding: 0.15rem 0.55rem;
+  letter-spacing: 0.08em;
+  margin: 0.9rem 0 0.2rem;
+}
+
+.goal-group:first-of-type .goal-group-label {
+  margin-top: 0.1rem;
+}
+
+.goal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 

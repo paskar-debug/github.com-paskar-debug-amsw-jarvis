@@ -59,6 +59,10 @@ export interface ShopifySummary {
   revenueToday: number;
   ordersLast7Days: number;
   revenueLast7Days: number;
+  ordersLast30Days: number;
+  revenueLast30Days: number;
+  /** Most orders placed on any single Copenhagen calendar day within the last 30 days. */
+  peakDayOrders: number;
   totalCustomers: number | null;
   currency: string | null;
   dailyRevenue: ShopifyDailyBucket[];
@@ -88,29 +92,40 @@ export function bucketDailyRevenue(edges: ShopifyOrdersResponse["data"]["orders"
   return days;
 }
 
-/** Summarizes today's and this week's orders/revenue, plus total customers, and writes it as an amsw_status snapshot. */
+/** Summarizes today's/weekly/monthly orders/revenue, peak single-day orders, and total customers,
+ *  and writes it as an amsw_status snapshot. Fetches a single 30-day order window and derives every
+ *  narrower figure (today, 7 days) from it, rather than issuing a separate query per window. */
 export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string, config: ShopifyConfig): Promise<ShopifySummary> {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   const ordersQuery = `
     query OrdersRecent($queryString: String!) {
-      orders(first: 100, query: $queryString) {
+      orders(first: 250, query: $queryString) {
         edges { node { id createdAt totalPriceSet { shopMoney { amount currencyCode } } } }
       }
     }
   `;
 
   const result = await shopifyGraphql<ShopifyOrdersResponse>(config, ordersQuery, {
-    queryString: `created_at:>='${sevenDaysAgo.toISOString()}'`,
+    queryString: `created_at:>='${thirtyDaysAgo.toISOString()}'`,
   });
 
-  const edges = result.data.orders.edges;
-  const todayEdges = edges.filter((edge) => new Date(edge.node.createdAt) >= startOfDay);
+  const edges30d = result.data.orders.edges;
+  const edges7d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= sevenDaysAgo);
+  const todayEdges = edges30d.filter((edge) => new Date(edge.node.createdAt) >= startOfDay);
 
-  const sum = (list: typeof edges) => list.reduce((total, edge) => total + Number(edge.node.totalPriceSet.shopMoney.amount), 0);
-  const currency = edges[0]?.node.totalPriceSet.shopMoney.currencyCode ?? null;
+  const sum = (list: typeof edges30d) => list.reduce((total, edge) => total + Number(edge.node.totalPriceSet.shopMoney.amount), 0);
+  const currency = edges30d[0]?.node.totalPriceSet.shopMoney.currencyCode ?? null;
+
+  const ordersPerDay = new Map<string, number>();
+  for (const edge of edges30d) {
+    const key = copenhagenDateKey(edge.node.createdAt);
+    ordersPerDay.set(key, (ordersPerDay.get(key) ?? 0) + 1);
+  }
+  const peakDayOrders = Math.max(0, ...ordersPerDay.values());
 
   // Kræver `read_customers`-scope på Shopify-appen. Fejler den (fx manglende scope),
   // skal det ikke vælte selve ordre-synken - kundetal er en ekstra, ikke-kritisk stat.
@@ -125,11 +140,14 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   const summary: ShopifySummary = {
     ordersToday: todayEdges.length,
     revenueToday: sum(todayEdges),
-    ordersLast7Days: edges.length,
-    revenueLast7Days: sum(edges),
+    ordersLast7Days: edges7d.length,
+    revenueLast7Days: sum(edges7d),
+    ordersLast30Days: edges30d.length,
+    revenueLast30Days: sum(edges30d),
+    peakDayOrders,
     totalCustomers,
     currency,
-    dailyRevenue: bucketDailyRevenue(edges),
+    dailyRevenue: bucketDailyRevenue(edges7d),
   };
 
   const { error } = await supabase.from("amsw_status").insert({

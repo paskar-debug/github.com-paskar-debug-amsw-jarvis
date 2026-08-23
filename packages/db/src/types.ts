@@ -74,6 +74,8 @@ export interface Database {
           status: "active" | "paused" | "done" | "cancelled";
           progress: number;
           target_date: string | null;
+          metric_key: string | null;
+          metric_target: number | null;
           created_at: string;
           updated_at: string;
         };

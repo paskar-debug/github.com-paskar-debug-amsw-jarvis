@@ -2,6 +2,7 @@ import { syncGoogleCalendar, syncShopify, syncTodoist, syncWhoop, type ShopifySu
 import { env } from "./env.js";
 import { supabase } from "./supabase.js";
 import { recordFailure, recordSuccess } from "./statusStore.js";
+import { updateGoalsFromShopify } from "./goalsAutoUpdate.js";
 
 export interface SyncSummary {
   googleCalendar?: number;
@@ -56,6 +57,7 @@ async function runSync(): Promise<SyncSummary> {
     try {
       summary.shopify = await syncShopify(supabase, env.ownerId, env.shopify);
       await recordSuccess("shopify", "integration");
+      await updateGoalsFromShopify(summary.shopify);
     } catch (err) {
       const message = (err as Error).message;
       summary.errors.push(`Shopify: ${message}`);

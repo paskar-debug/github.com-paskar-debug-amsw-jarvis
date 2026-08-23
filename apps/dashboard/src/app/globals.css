@@ -62,7 +62,7 @@ body::before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 3rem;
+  margin-bottom: 1.6rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border);
 }
@@ -1032,27 +1032,48 @@ body::before {
   letter-spacing: 0.04em;
 }
 
-.quote-block {
-  margin: 0;
-  border-left: 3px solid var(--brand-bright);
-  padding-left: 1.1rem;
+.quote-strap {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.6rem;
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 1.6rem;
+  padding: 0 1rem;
 }
 
-.quote-block p {
+.quote-strap-icon {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin-top: 0.3rem;
+  color: var(--brand-bright);
+  opacity: 0.7;
+}
+
+.quote-strap-text {
   font-family: var(--font-display), var(--font-inter), sans-serif;
-  font-size: 1.4rem;
+  font-size: 1.05rem;
   font-weight: 400;
-  line-height: 1.35;
-  margin: 0 0 0.6rem;
+  font-style: italic;
+  line-height: 1.5;
   color: var(--text);
+  margin: 0;
 }
 
-.quote-block footer {
-  font-size: 0.82rem;
-  color: var(--muted);
+.quote-strap-author {
+  font-style: normal;
+  font-size: 0.78rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-weight: 600;
+  color: var(--muted);
+}
+
+.quote-strap-loading {
+  color: var(--muted);
+  font-style: normal;
 }
 
 .draft-card {
@@ -1575,10 +1596,6 @@ body::before {
 
   .stat-value {
     font-size: 1.65rem;
-  }
-
-  .quote-block p {
-    font-size: 1.15rem;
   }
 
   .draft-card-header {

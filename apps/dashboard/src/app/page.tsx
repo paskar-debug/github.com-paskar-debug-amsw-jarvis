@@ -100,6 +100,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      <QuotePanel />
+
       <div className="section section-system">
         <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
       </div>
@@ -125,8 +127,6 @@ export default function DashboardPage() {
 
         <NewsPanel source="dr" label="DR Nyheder" />
         <NewsPanel source="tv2" label="TV2 Nyheder" />
-
-        <QuotePanel />
 
         <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
       </div>

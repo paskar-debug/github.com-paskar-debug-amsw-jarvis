@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PanelHeader } from "./panels";
 import { IconQuote } from "./icons";
 
 export function QuotePanel() {
@@ -15,17 +14,18 @@ export function QuotePanel() {
       .catch(() => setFailed(true));
   }, []);
 
+  if (failed) return null;
+
   return (
-    <section className="panel panel-wide quote-panel">
-      <PanelHeader icon={<IconQuote />} title="Dagens citat" />
-      {failed && <p className="empty">Kunne ikke hente dagens citat.</p>}
-      {!failed && !quote && <p className="empty">Henter...</p>}
-      {quote && (
-        <blockquote className="quote-block">
-          <p>&ldquo;{quote.quote}&rdquo;</p>
-          <footer>— {quote.author}</footer>
-        </blockquote>
+    <div className="quote-strap">
+      <IconQuote className="quote-strap-icon" />
+      {quote ? (
+        <p className="quote-strap-text">
+          &ldquo;{quote.quote}&rdquo; <span className="quote-strap-author">— {quote.author}</span>
+        </p>
+      ) : (
+        <p className="quote-strap-text quote-strap-loading">Henter dagens citat...</p>
       )}
-    </section>
+    </div>
   );
 }

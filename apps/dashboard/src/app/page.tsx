@@ -104,45 +104,31 @@ export default function DashboardPage() {
         <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
       </div>
 
-      <div className="page-layout">
-        <div className="main-column">
-          <QuotePanel />
+      <div className="main-column">
+        <StatusPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
 
-          <div className="section">
-            <div className="section-label">I dag</div>
-            <div className="grid">
-              <TasksPanel
-                tasks={tasksLive.rows}
-                isLoading={tasksLive.isLoading}
-                flash={tasksLive.flash}
-                onToggleDone={handleToggleDone}
-                onDelete={handleDeleteTask}
-              />
-              <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
-              <WeatherPanel />
-            </div>
-          </div>
+        <TasksPanel
+          tasks={tasksLive.rows}
+          isLoading={tasksLive.isLoading}
+          flash={tasksLive.flash}
+          onToggleDone={handleToggleDone}
+          onDelete={handleDeleteTask}
+        />
 
-          <div className="section">
-            <div className="section-label">Overblik</div>
-            <div className="grid">
-              <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
-              <StatusPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
-              <GoalsPanel
-                goals={goalsLive.rows}
-                isLoading={goalsLive.isLoading}
-                flash={goalsLive.flash}
-                onToggleDone={handleToggleGoalDone}
-              />
-            </div>
-          </div>
+        <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
 
-          <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
-        </div>
-        <aside className="sidebar">
-          <NewsPanel source="dr" label="DR Nyheder" />
-          <NewsPanel source="tv2" label="TV2 Nyheder" />
-        </aside>
+        <GoalsPanel goals={goalsLive.rows} isLoading={goalsLive.isLoading} flash={goalsLive.flash} onToggleDone={handleToggleGoalDone} />
+
+        <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
+
+        <WeatherPanel />
+
+        <NewsPanel source="dr" label="DR Nyheder" />
+        <NewsPanel source="tv2" label="TV2 Nyheder" />
+
+        <QuotePanel />
+
+        <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
       </div>
       <AssistantWidget />
     </div>

@@ -3,13 +3,16 @@ import { supabase } from "./supabase.js";
 import { env } from "./env.js";
 
 // DKK is ERM II-pegged to EUR by Danmarks Nationalbank, held within a narrow band around this
-// rate for decades - a fixed constant is accurate enough here without an extra FX API call.
+// rate for decades - a fixed constant is accurate enough as a fallback without an extra FX API
+// call, for the unlikely case a sync's revenue ever comes back in EUR instead of DKK.
 const EUR_TO_DKK = 7.46;
 
 /** Metric keys a goal's `metric_key` column can reference - each maps to one live, computed
  *  number. Extend this map (and the goal's metric_key/metric_target) to auto-track a new goal;
  *  a goal with no metric_key stays fully manual, updated only via /maal_fremgang or the dashboard. */
 function metricValues(summary: ShopifySummary): Record<string, number> {
+  // revenueLast30Days is already presentmentMoney - the amount customers actually paid, in DKK
+  // for this shop's market - so normally no conversion at all, not even by the fixed rate above.
   const dkkFactor = summary.currency === "EUR" ? EUR_TO_DKK : 1;
   return {
     shopify_orders_7d: summary.ordersLast7Days,

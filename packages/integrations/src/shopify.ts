@@ -13,7 +13,12 @@ interface ShopifyOrdersResponse {
         node: {
           id: string;
           createdAt: string;
-          totalPriceSet: { shopMoney: { amount: string; currencyCode: string } };
+          // shopMoney is the shop's own reporting currency (EUR here) - orders from before a
+          // currency change can carry a different shopMoney currency than today's setting, which
+          // silently corrupts a naive sum across orders. presentmentMoney is what the customer
+          // actually paid in their local market currency (DKK) and is what the goals/dashboard
+          // should show - it's Shopify's own figure, not something we convert ourselves.
+          totalPriceSet: { presentmentMoney: { amount: string; currencyCode: string } };
         };
       }>;
     };
@@ -79,7 +84,7 @@ export function bucketDailyRevenue(edges: ShopifyOrdersResponse["data"]["orders"
     const key = copenhagenDateKey(edge.node.createdAt);
     const existing = byDate.get(key) ?? { orders: 0, revenue: 0 };
     existing.orders += 1;
-    existing.revenue += Number(edge.node.totalPriceSet.shopMoney.amount);
+    existing.revenue += Number(edge.node.totalPriceSet.presentmentMoney.amount);
     byDate.set(key, existing);
   }
 
@@ -104,7 +109,7 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   const ordersQuery = `
     query OrdersRecent($queryString: String!) {
       orders(first: 250, query: $queryString) {
-        edges { node { id createdAt totalPriceSet { shopMoney { amount currencyCode } } } }
+        edges { node { id createdAt totalPriceSet { presentmentMoney { amount currencyCode } } } }
       }
     }
   `;
@@ -117,8 +122,10 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   const edges7d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= sevenDaysAgo);
   const todayEdges = edges30d.filter((edge) => new Date(edge.node.createdAt) >= startOfDay);
 
-  const sum = (list: typeof edges30d) => list.reduce((total, edge) => total + Number(edge.node.totalPriceSet.shopMoney.amount), 0);
-  const currency = edges30d[0]?.node.totalPriceSet.shopMoney.currencyCode ?? null;
+  const sum = (list: typeof edges30d) => list.reduce((total, edge) => total + Number(edge.node.totalPriceSet.presentmentMoney.amount), 0);
+  // The most recent order's currency is the most representative "current" value if presentment
+  // currency ever varies across orders (different customer markets) - not averaged/guessed.
+  const currency = edges30d[edges30d.length - 1]?.node.totalPriceSet.presentmentMoney.currencyCode ?? null;
 
   const ordersPerDay = new Map<string, number>();
   for (const edge of edges30d) {

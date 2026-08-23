@@ -92,7 +92,7 @@ export function bucketDailyRevenue(edges: ShopifyOrdersResponse["data"]["orders"
   for (let i = 6; i >= 0; i--) {
     const key = copenhagenDateKey(new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString());
     const bucket = byDate.get(key) ?? { orders: 0, revenue: 0 };
-    days.push({ date: key, ...bucket });
+    days.push({ date: key, orders: bucket.orders, revenue: Math.round(bucket.revenue * 100) / 100 });
   }
   return days;
 }
@@ -122,7 +122,10 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   const edges7d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= sevenDaysAgo);
   const todayEdges = edges30d.filter((edge) => new Date(edge.node.createdAt) >= startOfDay);
 
-  const sum = (list: typeof edges30d) => list.reduce((total, edge) => total + Number(edge.node.totalPriceSet.presentmentMoney.amount), 0);
+  // Rounded to 2 decimals - summing money as floating point otherwise leaves artifacts like
+  // 857.9000000000001 from binary rounding, which showed up raw on the dashboard.
+  const sum = (list: typeof edges30d) =>
+    Math.round(list.reduce((total, edge) => total + Number(edge.node.totalPriceSet.presentmentMoney.amount), 0) * 100) / 100;
   // The most recent order's currency is the most representative "current" value if presentment
   // currency ever varies across orders (different customer markets) - not averaged/guessed.
   const currency = edges30d[edges30d.length - 1]?.node.totalPriceSet.presentmentMoney.currencyCode ?? null;

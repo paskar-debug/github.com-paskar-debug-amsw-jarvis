@@ -83,6 +83,12 @@ describe("toClassifyResult", () => {
     expect(toClassifyResult({ kind: "draft", title: "", starts_at: null, ends_at: null, category: null, goal_category: null })).toEqual({ kind: "draft" });
   });
 
+  it("maps a question classification", () => {
+    expect(
+      toClassifyResult({ kind: "question", title: "", starts_at: null, ends_at: null, category: null, goal_category: null }),
+    ).toEqual({ kind: "question" });
+  });
+
   it("maps a fact classification with its category", () => {
     expect(
       toClassifyResult({ kind: "fact", title: "Brugerens kone hedder Maria", starts_at: null, ends_at: null, category: "familie", goal_category: null }),

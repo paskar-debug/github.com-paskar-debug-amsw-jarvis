@@ -4,7 +4,7 @@ import { env } from "./env.js";
 import { supabase } from "./supabase.js";
 import { syncAll } from "./sync.js";
 import { classifyMessage, type FactCategory } from "./classify.js";
-import { generateDraft } from "./draft.js";
+import { answerQuestion, generateDraft } from "./draft.js";
 
 export async function createTask(title: string): Promise<string> {
   // Todoist is the source of truth for tasks when it's configured - created there first so it
@@ -325,6 +325,10 @@ export async function handleFreeformMessage(text: string): Promise<string> {
       const { error } = await supabase.from("drafts").insert({ owner_id: env.ownerId, request: text, content });
       if (error) console.error("Kunne ikke gemme udkast i databasen:", error);
       return content;
+    }
+    if (result.kind === "question") {
+      const context = await buildAssistantContext().catch(() => "");
+      return answerQuestion(text, env.anthropicApiKey, context);
     }
     if (result.kind === "fact") {
       return saveFact(result.fact, result.category);

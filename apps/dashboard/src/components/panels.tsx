@@ -153,6 +153,10 @@ interface ShopifyMetrics {
   revenueToday?: number;
   ordersLast7Days?: number;
   revenueLast7Days?: number;
+  ordersLast14Days?: number;
+  revenueLast14Days?: number;
+  ordersLast30Days?: number;
+  revenueLast30Days?: number;
   totalCustomers?: number;
   currency?: string | null;
   dailyRevenue?: { date: string; orders: number; revenue: number }[];
@@ -218,6 +222,34 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
                           {metrics.revenueLast7Days} {metrics.currency ?? ""}
                         </span>
                         <span className="stat-label">omsætning, 7 dage</span>
+                      </div>
+                    )}
+                    {typeof metrics.ordersLast14Days === "number" && (
+                      <div className="stat">
+                        <span className="stat-value">{metrics.ordersLast14Days}</span>
+                        <span className="stat-label">ordrer, 14 dage</span>
+                      </div>
+                    )}
+                    {typeof metrics.revenueLast14Days === "number" && (
+                      <div className="stat">
+                        <span className="stat-value">
+                          {metrics.revenueLast14Days} {metrics.currency ?? ""}
+                        </span>
+                        <span className="stat-label">omsætning, 14 dage</span>
+                      </div>
+                    )}
+                    {typeof metrics.ordersLast30Days === "number" && (
+                      <div className="stat">
+                        <span className="stat-value">{metrics.ordersLast30Days}</span>
+                        <span className="stat-label">ordrer, 30 dage</span>
+                      </div>
+                    )}
+                    {typeof metrics.revenueLast30Days === "number" && (
+                      <div className="stat">
+                        <span className="stat-value">
+                          {metrics.revenueLast30Days} {metrics.currency ?? ""}
+                        </span>
+                        <span className="stat-label">omsætning, 30 dage</span>
                       </div>
                     )}
                     {typeof metrics.totalCustomers === "number" && (

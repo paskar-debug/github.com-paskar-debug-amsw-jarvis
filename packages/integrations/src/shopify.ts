@@ -67,6 +67,8 @@ export interface ShopifySummary {
   revenueToday: number;
   ordersLast7Days: number;
   revenueLast7Days: number;
+  ordersLast14Days: number;
+  revenueLast14Days: number;
   ordersLast30Days: number;
   revenueLast30Days: number;
   /** Most orders placed on any single Copenhagen calendar day within the last 30 days. */
@@ -107,6 +109,7 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   const ordersQuery = `
@@ -125,6 +128,7 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   // toward orders/revenue anywhere below - it never became real business.
   const edges30d = result.data.orders.edges.filter((edge) => !edge.node.cancelledAt);
   const edges7d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= sevenDaysAgo);
+  const edges14d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= fourteenDaysAgo);
   const todayEdges = edges30d.filter((edge) => new Date(edge.node.createdAt) >= startOfDay);
 
   // Rounded to 2 decimals - summing money as floating point otherwise leaves artifacts like
@@ -157,6 +161,8 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
     revenueToday: sum(todayEdges),
     ordersLast7Days: edges7d.length,
     revenueLast7Days: sum(edges7d),
+    ordersLast14Days: edges14d.length,
+    revenueLast14Days: sum(edges14d),
     ordersLast30Days: edges30d.length,
     revenueLast30Days: sum(edges30d),
     peakDayOrders,

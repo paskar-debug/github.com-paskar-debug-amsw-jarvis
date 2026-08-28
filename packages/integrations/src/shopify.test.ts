@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { bucketDailyRevenue } from "./shopify.js";
 
 function edge(createdAt: string, amount: string, currencyCode = "DKK") {
-  return { node: { id: crypto.randomUUID(), createdAt, totalPriceSet: { presentmentMoney: { amount, currencyCode } } } };
+  return { node: { id: crypto.randomUUID(), createdAt, cancelledAt: null, totalPriceSet: { presentmentMoney: { amount, currencyCode } } } };
 }
 
 describe("bucketDailyRevenue", () => {

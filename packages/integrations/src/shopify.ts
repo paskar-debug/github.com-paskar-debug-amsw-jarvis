@@ -13,6 +13,9 @@ interface ShopifyOrdersResponse {
         node: {
           id: string;
           createdAt: string;
+          // A cancelled order keeps its original displayFinancialStatus (often still "PAID") -
+          // cancelledAt is the only reliable signal that it shouldn't count toward real revenue.
+          cancelledAt: string | null;
           // shopMoney is the shop's own reporting currency (EUR here) - orders from before a
           // currency change can carry a different shopMoney currency than today's setting, which
           // silently corrupts a naive sum across orders. presentmentMoney is what the customer
@@ -109,7 +112,7 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   const ordersQuery = `
     query OrdersRecent($queryString: String!) {
       orders(first: 250, query: $queryString) {
-        edges { node { id createdAt totalPriceSet { presentmentMoney { amount currencyCode } } } }
+        edges { node { id createdAt cancelledAt totalPriceSet { presentmentMoney { amount currencyCode } } } }
       }
     }
   `;
@@ -118,7 +121,9 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
     queryString: `created_at:>='${thirtyDaysAgo.toISOString()}'`,
   });
 
-  const edges30d = result.data.orders.edges;
+  // A cancelled order stays in this result set (it still "created_at:>=X") but shouldn't count
+  // toward orders/revenue anywhere below - it never became real business.
+  const edges30d = result.data.orders.edges.filter((edge) => !edge.node.cancelledAt);
   const edges7d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= sevenDaysAgo);
   const todayEdges = edges30d.filter((edge) => new Date(edge.node.createdAt) >= startOfDay);
 

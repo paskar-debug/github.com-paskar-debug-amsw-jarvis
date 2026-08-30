@@ -6,6 +6,7 @@ function edge(createdAt: string, amount: string, currencyCode = "DKK", refunded 
     node: {
       id: crypto.randomUUID(),
       createdAt,
+      test: false,
       cancelledAt: null,
       totalPriceSet: { presentmentMoney: { amount, currencyCode } },
       totalRefundedSet: { presentmentMoney: { amount: refunded } },

@@ -13,6 +13,9 @@ interface ShopifyOrdersResponse {
         node: {
           id: string;
           createdAt: string;
+          // Orders placed through Shopify's "Bogus Gateway" test payment method (e.g. while trying
+          // something out in the store admin) - never real business, exclude unconditionally.
+          test: boolean;
           // A cancelled order keeps its original displayFinancialStatus (often still "PAID") -
           // cancelledAt is the only reliable signal that it shouldn't count toward real revenue.
           cancelledAt: string | null;
@@ -132,6 +135,7 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
           node {
             id
             createdAt
+            test
             cancelledAt
             totalPriceSet { presentmentMoney { amount currencyCode } }
             totalRefundedSet { presentmentMoney { amount } }
@@ -148,7 +152,7 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   // A cancelled or fully-refunded order stays in this result set (it still "created_at:>=X") but
   // shouldn't count toward orders/revenue anywhere below - neither one ended up as real business.
   // A partial refund keeps the order but reduces its counted amount (handled by netAmount).
-  const edges30d = result.data.orders.edges.filter((edge) => !edge.node.cancelledAt && netAmount(edge) > 0);
+  const edges30d = result.data.orders.edges.filter((edge) => !edge.node.test && !edge.node.cancelledAt && netAmount(edge) > 0);
   const edges7d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= sevenDaysAgo);
   const edges14d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= fourteenDaysAgo);
   const todayEdges = edges30d.filter((edge) => new Date(edge.node.createdAt) >= startOfDay);

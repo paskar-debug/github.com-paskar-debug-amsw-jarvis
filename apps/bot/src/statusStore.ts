@@ -5,7 +5,7 @@ import { notifyOwner } from "./notify.js";
 export type StatusSource = "google_calendar" | "shopify" | "whoop" | "supabase" | "vercel" | "railway" | "openai" | "anthropic" | "telegram" | "todoist";
 export type StatusCategory = "integration" | "infrastructure";
 
-const LABELS: Record<StatusSource, string> = {
+export const LABELS: Record<StatusSource, string> = {
   google_calendar: "Google Kalender",
   shopify: "Shopify",
   whoop: "Whoop",

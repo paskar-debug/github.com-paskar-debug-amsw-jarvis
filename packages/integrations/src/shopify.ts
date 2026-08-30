@@ -22,6 +22,10 @@ interface ShopifyOrdersResponse {
           // actually paid in their local market currency (DKK) and is what the goals/dashboard
           // should show - it's Shopify's own figure, not something we convert ourselves.
           totalPriceSet: { presentmentMoney: { amount: string; currencyCode: string } };
+          // Money actually given back to the customer - a fully refunded order kept
+          // displayFinancialStatus "REFUNDED" but its totalPriceSet still shows the original
+          // amount, so without this a refund never reduces revenue at all.
+          totalRefundedSet: { presentmentMoney: { amount: string } };
         };
       }>;
     };
@@ -82,6 +86,15 @@ function copenhagenDateKey(iso: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Copenhagen", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
 }
 
+/** What the order is actually still worth after refunds - never below 0. Partial refunds reduce
+ *  this without removing the order; a full refund brings it to 0 (the order is filtered out
+ *  entirely before this is used, same as a cancelled one - see syncShopify). */
+function netAmount(edge: ShopifyOrdersResponse["data"]["orders"]["edges"][number]): number {
+  const total = Number(edge.node.totalPriceSet.presentmentMoney.amount);
+  const refunded = Number(edge.node.totalRefundedSet.presentmentMoney.amount);
+  return Math.max(0, total - refunded);
+}
+
 /** Buckets orders into the last 7 Copenhagen calendar days, filling in zero-order days so the trend line has no gaps. */
 export function bucketDailyRevenue(edges: ShopifyOrdersResponse["data"]["orders"]["edges"]): ShopifyDailyBucket[] {
   const byDate = new Map<string, { orders: number; revenue: number }>();
@@ -89,7 +102,7 @@ export function bucketDailyRevenue(edges: ShopifyOrdersResponse["data"]["orders"
     const key = copenhagenDateKey(edge.node.createdAt);
     const existing = byDate.get(key) ?? { orders: 0, revenue: 0 };
     existing.orders += 1;
-    existing.revenue += Number(edge.node.totalPriceSet.presentmentMoney.amount);
+    existing.revenue += netAmount(edge);
     byDate.set(key, existing);
   }
 
@@ -115,7 +128,15 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   const ordersQuery = `
     query OrdersRecent($queryString: String!) {
       orders(first: 250, query: $queryString) {
-        edges { node { id createdAt cancelledAt totalPriceSet { presentmentMoney { amount currencyCode } } } }
+        edges {
+          node {
+            id
+            createdAt
+            cancelledAt
+            totalPriceSet { presentmentMoney { amount currencyCode } }
+            totalRefundedSet { presentmentMoney { amount } }
+          }
+        }
       }
     }
   `;
@@ -124,17 +145,17 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
     queryString: `created_at:>='${thirtyDaysAgo.toISOString()}'`,
   });
 
-  // A cancelled order stays in this result set (it still "created_at:>=X") but shouldn't count
-  // toward orders/revenue anywhere below - it never became real business.
-  const edges30d = result.data.orders.edges.filter((edge) => !edge.node.cancelledAt);
+  // A cancelled or fully-refunded order stays in this result set (it still "created_at:>=X") but
+  // shouldn't count toward orders/revenue anywhere below - neither one ended up as real business.
+  // A partial refund keeps the order but reduces its counted amount (handled by netAmount).
+  const edges30d = result.data.orders.edges.filter((edge) => !edge.node.cancelledAt && netAmount(edge) > 0);
   const edges7d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= sevenDaysAgo);
   const edges14d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= fourteenDaysAgo);
   const todayEdges = edges30d.filter((edge) => new Date(edge.node.createdAt) >= startOfDay);
 
   // Rounded to 2 decimals - summing money as floating point otherwise leaves artifacts like
   // 857.9000000000001 from binary rounding, which showed up raw on the dashboard.
-  const sum = (list: typeof edges30d) =>
-    Math.round(list.reduce((total, edge) => total + Number(edge.node.totalPriceSet.presentmentMoney.amount), 0) * 100) / 100;
+  const sum = (list: typeof edges30d) => Math.round(list.reduce((total, edge) => total + netAmount(edge), 0) * 100) / 100;
   // The most recent order's currency is the most representative "current" value if presentment
   // currency ever varies across orders (different customer markets) - not averaged/guessed.
   const currency = edges30d[edges30d.length - 1]?.node.totalPriceSet.presentmentMoney.currencyCode ?? null;

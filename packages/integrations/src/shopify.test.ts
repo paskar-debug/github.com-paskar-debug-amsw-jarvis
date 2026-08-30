@@ -1,8 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
 import { bucketDailyRevenue } from "./shopify.js";
 
-function edge(createdAt: string, amount: string, currencyCode = "DKK") {
-  return { node: { id: crypto.randomUUID(), createdAt, cancelledAt: null, totalPriceSet: { presentmentMoney: { amount, currencyCode } } } };
+function edge(createdAt: string, amount: string, currencyCode = "DKK", refunded = "0") {
+  return {
+    node: {
+      id: crypto.randomUUID(),
+      createdAt,
+      cancelledAt: null,
+      totalPriceSet: { presentmentMoney: { amount, currencyCode } },
+      totalRefundedSet: { presentmentMoney: { amount: refunded } },
+    },
+  };
 }
 
 describe("bucketDailyRevenue", () => {
@@ -23,6 +31,15 @@ describe("bucketDailyRevenue", () => {
     const buckets = bucketDailyRevenue([edge("2026-08-09T08:00:00Z", "100.00"), edge("2026-08-09T09:00:00Z", "50.50")]);
     const today = buckets.find((b) => b.date === "2026-08-09");
     expect(today).toEqual({ date: "2026-08-09", orders: 2, revenue: 150.5 });
+    vi.useRealTimers();
+  });
+
+  it("counts a partially refunded order's remaining amount, not its original total", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-09T20:00:00Z"));
+    const buckets = bucketDailyRevenue([edge("2026-08-09T08:00:00Z", "354.00", "DKK", "100.00")]);
+    const today = buckets.find((b) => b.date === "2026-08-09");
+    expect(today).toEqual({ date: "2026-08-09", orders: 1, revenue: 254 });
     vi.useRealTimers();
   });
 });

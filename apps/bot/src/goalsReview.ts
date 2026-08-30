@@ -88,9 +88,16 @@ function isMondayInCopenhagen(): boolean {
 }
 
 /** Hook for the daily 08:00 scheduler - only actually sends anything on Mondays, so goals get a
- *  weekly cadence without needing a separate weekly-scheduling primitive. */
+ *  weekly cadence without needing a separate weekly-scheduling primitive. Catches its own errors
+ *  (rather than leaving it to the scheduler's silent console.error) and tells the owner directly -
+ *  this only runs once a week, so a swallowed failure would otherwise go unnoticed for days. */
 export async function runWeeklyGoalsCheck(): Promise<void> {
   if (!isMondayInCopenhagen()) return;
-  const message = await buildGoalsReview();
-  if (message) await notifyOwner(message);
+  try {
+    const message = await buildGoalsReview();
+    if (message) await notifyOwner(message);
+  } catch (err) {
+    console.error("Ugentligt mål-tjek fejlede:", err);
+    await notifyOwner(`⚠️ Det ugentlige mål-tjek fejlede i dag: ${(err as Error).message}`);
+  }
 }

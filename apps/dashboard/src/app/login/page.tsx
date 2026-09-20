@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -64,6 +66,7 @@ export default function LoginPage() {
         refresh_token: data.refresh_token,
       });
       if (error) setError(error.message);
+      else router.replace("/");
     } catch (err) {
       // A fetch-level failure (CORS, offline, DNS) throws instead of returning an { error }
       // shape - without this, it was silently swallowed: verifying reset via finally, but
@@ -84,7 +87,7 @@ export default function LoginPage() {
     const { error } = await getSupabaseClient().auth.verifyOtp({ email, token: code.trim(), type: "recovery" });
     setVerifying(false);
     if (error) setError(error.message);
-    // On success, onAuthStateChange in the dashboard picks up the new session and redirects.
+    else router.replace("/");
   }
 
   if (sent) {

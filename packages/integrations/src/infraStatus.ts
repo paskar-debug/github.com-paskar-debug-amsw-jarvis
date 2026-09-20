@@ -23,15 +23,22 @@ export async function checkSupabaseStatus(cfg: { accessToken: string; projectUrl
   if (!projectRes.ok) throw new Error(`Supabase projekt-opslag fejlede: ${projectRes.status}`);
   const project = (await projectRes.json()) as { status: string; organization_slug: string };
 
-  const orgRes = await fetch(`https://api.supabase.com/v1/organizations/${project.organization_slug}`, { headers });
-  if (!orgRes.ok) throw new Error(`Supabase organisations-opslag fejlede: ${orgRes.status}`);
-  const org = (await orgRes.json()) as { plan: string };
-
   if (project.status !== "ACTIVE_HEALTHY") {
     throw new Error(`Supabase-projekt status: ${project.status}`);
   }
 
-  return { plan: org.plan, detail: { projectStatus: project.status } };
+  // The plan name is a nice-to-have display detail, not a health signal - a personal access
+  // token can read project status without also having the separate Organizations scope, and
+  // that shouldn't turn a healthy project into a reported "Fejl".
+  let plan: string | null = null;
+  try {
+    const orgRes = await fetch(`https://api.supabase.com/v1/organizations/${project.organization_slug}`, { headers });
+    if (orgRes.ok) plan = ((await orgRes.json()) as { plan: string }).plan;
+  } catch {
+    plan = null;
+  }
+
+  return { plan, detail: { projectStatus: project.status } };
 }
 
 export async function checkVercelStatus(cfg: { apiToken: string; projectName: string }): Promise<InfraServiceStatus> {

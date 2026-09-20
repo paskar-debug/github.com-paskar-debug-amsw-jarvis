@@ -63,16 +63,45 @@ function Skeleton({ lines = 3 }: { lines?: number }) {
 
 const TASKS_VISIBLE_LIMIT = 6;
 
+function QuickAdd({ placeholder, onSubmit }: { placeholder: string; onSubmit: (value: string) => Promise<void> }) {
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = value.trim();
+    if (!trimmed || busy) return;
+    setBusy(true);
+    try {
+      await onSubmit(trimmed);
+      setValue("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="quick-add" onSubmit={handleSubmit}>
+      <input type="text" placeholder={placeholder} value={value} onChange={(e) => setValue(e.target.value)} disabled={busy} />
+      <button type="submit" disabled={busy || !value.trim()} aria-label="Tilføj">
+        +
+      </button>
+    </form>
+  );
+}
+
 export function TasksPanel({
   tasks,
   isLoading,
   flash,
   onToggleDone,
   onDelete,
+  onCreate,
 }: LiveProps & {
   tasks: TaskRow[];
   onToggleDone: (id: string) => void;
   onDelete: (id: string) => void;
+  onCreate: (title: string) => Promise<void>;
 }) {
   const open = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
   const visible = open.slice(0, TASKS_VISIBLE_LIMIT);
@@ -84,6 +113,7 @@ export function TasksPanel({
         <Skeleton lines={3} />
       ) : (
         <>
+          <QuickAdd placeholder="Ny opgave..." onSubmit={onCreate} />
           {open.length === 0 && <p className="empty">Ingen åbne opgaver.</p>}
           {visible.map((task) => (
             <div className="item item-checkable" key={task.id}>

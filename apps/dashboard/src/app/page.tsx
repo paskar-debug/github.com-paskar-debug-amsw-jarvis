@@ -75,6 +75,17 @@ export default function DashboardPage() {
     await callTaskAction(id, "delete");
   }
 
+  async function handleCreateTask(title: string) {
+    const { data } = await getSupabaseClient().auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return;
+    await fetch("/api/tasks/action", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "create", title }),
+    });
+  }
+
   async function handleLogout() {
     await getSupabaseClient().auth.signOut();
   }
@@ -115,6 +126,7 @@ export default function DashboardPage() {
           flash={tasksLive.flash}
           onToggleDone={handleToggleDone}
           onDelete={handleDeleteTask}
+          onCreate={handleCreateTask}
         />
 
         <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />

@@ -6,7 +6,7 @@
 
 import { requireOwner } from "../_shared/auth.ts";
 import { OWNER_ID, serviceClient } from "../_shared/db.ts";
-import { closeTodoistTask, deleteTodoistTask } from "../_shared/todoist.ts";
+import { closeTodoistTask, createTodoistTask, deleteTodoistTask } from "../_shared/todoist.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "https://paskars-kontor.vercel.app",
@@ -24,12 +24,42 @@ Deno.serve(async (req) => {
   const unauthorized = await requireOwner(req);
   if (unauthorized) return json(401, { error: "Unauthorized" });
 
-  const body = (await req.json().catch(() => null)) as { taskId?: string; action?: "complete" | "delete" } | null;
-  if (!body?.taskId || (body.action !== "complete" && body.action !== "delete")) {
-    return json(400, { error: "Mangler taskId eller ugyldig action." });
+  const body = (await req.json().catch(() => null)) as
+    | { action: "create"; title?: string }
+    | { action: "complete" | "delete"; taskId?: string }
+    | null;
+  if (!body?.action || !["create", "complete", "delete"].includes(body.action)) {
+    return json(400, { error: "Ugyldig action." });
   }
 
   const supabase = serviceClient();
+
+  if (body.action === "create") {
+    const title = body.title?.trim();
+    if (!title) return json(400, { error: "Mangler titel." });
+
+    const apiToken = Deno.env.get("TODOIST_API_TOKEN");
+    if (apiToken) {
+      try {
+        const todoistTask = await createTodoistTask({ apiToken }, title);
+        const { data, error } = await supabase
+          .from("tasks")
+          .insert({ owner_id: OWNER_ID, title, source: "todoist", external_id: todoistTask.id })
+          .select()
+          .single();
+        if (error) return json(500, { error: error.message });
+        return json(200, data);
+      } catch (err) {
+        console.error("Kunne ikke oprette opgave i Todoist, gemmer kun lokalt:", err);
+      }
+    }
+
+    const { data, error } = await supabase.from("tasks").insert({ owner_id: OWNER_ID, title, source: "manual" }).select().single();
+    if (error) return json(500, { error: error.message });
+    return json(200, data);
+  }
+
+  if (!body.taskId) return json(400, { error: "Mangler taskId." });
   const { data: task, error: fetchError } = await supabase
     .from("tasks")
     .select("id, title, source, external_id")

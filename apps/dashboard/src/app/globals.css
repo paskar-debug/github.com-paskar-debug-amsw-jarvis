@@ -473,6 +473,70 @@ body::before {
   height: 14px;
 }
 
+.quick-add {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.quick-add input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.quick-add input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.quick-add input::placeholder {
+  color: var(--muted);
+}
+
+.quick-add input:disabled {
+  opacity: 0.6;
+}
+
+.quick-add button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #05121c;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity 0.12s ease, transform 0.08s ease;
+}
+
+.quick-add button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.quick-add button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.quick-add button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .empty {
   color: var(--muted);
   font-size: 0.85rem;

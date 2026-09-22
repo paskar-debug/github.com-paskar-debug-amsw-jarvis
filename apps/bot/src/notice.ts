@@ -16,6 +16,11 @@ export interface DraftedReply {
   body: string;
 }
 
+export interface SuggestedTask {
+  taskId: string;
+  title: string;
+}
+
 export interface InlineKeyboardMarkup {
   inline_keyboard: { text: string; callback_data: string }[][];
 }
@@ -32,6 +37,19 @@ const TOOLS = [
         body: { type: "string", description: "Selve svarteksten, kort, på samme sprog som den oprindelige mail." },
       },
       required: ["message_id", "body"],
+    },
+  },
+  {
+    name: "suggest_task",
+    description:
+      "Foreslå en opgave ud fra en mail der beskriver et konkret stykke arbejde (fx en kunde beder om noget, en leverandør skal følges op). Opretter IKKE opgaven - kræver brugerens godkendelse bagefter.",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Kort, handlingsorienteret opgavetitel." },
+        description: { type: "string", description: "Ekstra kontekst fra mailen, valgfrit." },
+      },
+      required: ["title"],
     },
   },
   {
@@ -68,7 +86,7 @@ async function callClaude(messages: unknown[]): Promise<{ content: ContentBlock[
       model: "claude-sonnet-5",
       max_tokens: 800,
       system:
-        "Du overvåger brugerens forretning (AMSW) og konti for aktivitet der kræver opmærksomhed UOPFORDRET - fx uventede konto-/betalingsændringer, sikkerhedsadvarsler, fejl der er dukket op, eller noget der ser forkert eller mistænkeligt ud. Vær konservativ: flag kun hvis det reelt kræver brugerens opmærksomhed nu - de fleste gennemgange bør ende med flag=false. Hvis en mail reelt kalder på et svar (fx et konkret spørgsmål fra en person), kan du oprette et udkast til svar med draft_reply, FØR du afslutter med flag_review. Opret aldrig et udkast for rutine-mails, nyhedsbreve eller noget der ikke behøver svar. Afslut altid med præcis ét kald til flag_review. Skriv altid på dansk, kort og direkte.",
+        "Du overvåger brugerens forretning (AMSW) og konti for aktivitet der kræver opmærksomhed UOPFORDRET - fx uventede konto-/betalingsændringer, sikkerhedsadvarsler, fejl der er dukket op, eller noget der ser forkert eller mistænkeligt ud. Vær konservativ: flag kun hvis det reelt kræver brugerens opmærksomhed nu, eller der er et udkast/opgaveforslag klar til godkendelse - de fleste gennemgange bør stadig ende med flag=false. Hvis en mail reelt kalder på et svar (fx et konkret spørgsmål fra en person), kan du oprette et udkast til svar med draft_reply. Hvis en mail beskriver et konkret stykke arbejde der skal udføres (fx en kunde beder om noget, en leverandør skal følges op), kan du foreslå en opgave med suggest_task. Brug begge værktøjer FØR du afslutter, og sæt flag=true når du har brugt et af dem, så brugeren rent faktisk ser forslaget. Opret aldrig udkast eller opgaveforslag for rutine-mails, nyhedsbreve, kvitteringer eller noget der ikke kræver en konkret handling. Afslut altid med præcis ét kald til flag_review. Skriv altid på dansk, kort og direkte.",
       messages,
       tools: TOOLS,
     }),
@@ -77,16 +95,17 @@ async function callClaude(messages: unknown[]): Promise<{ content: ContentBlock[
   return response.json() as Promise<{ content: ContentBlock[] }>;
 }
 
-async function runTriageLoop(context: string): Promise<{ result: FlagResult; drafts: DraftedReply[] }> {
+async function runTriageLoop(context: string): Promise<{ result: FlagResult; drafts: DraftedReply[]; suggestions: SuggestedTask[] }> {
   const messages: unknown[] = [{ role: "user", content: context }];
   const drafts: DraftedReply[] = [];
+  const suggestions: SuggestedTask[] = [];
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const response = await callClaude(messages);
     const toolUses = response.content.filter((b) => b.type === "tool_use" && b.name && b.id);
 
     if (toolUses.length === 0) {
-      return { result: { flag: false, message: null }, drafts };
+      return { result: { flag: false, message: null }, drafts, suggestions };
     }
 
     // A single turn can contain several parallel tool_use blocks (e.g. more than one draft_reply,
@@ -116,16 +135,37 @@ async function runTriageLoop(context: string): Promise<{ result: FlagResult; dra
           }
           return { type: "tool_result" as const, tool_use_id: toolUse.id as string, content: toolResultText };
         }
+        if (toolUse.name === "suggest_task") {
+          const input = (toolUse.input ?? {}) as { title?: string; description?: string };
+          let toolResultText: string;
+          if (input.title) {
+            try {
+              const { data, error } = await supabase
+                .from("tasks")
+                .insert({ owner_id: env.ownerId, title: input.title, description: input.description, source: "email", status: "suggested" })
+                .select("id")
+                .single();
+              if (error) throw error;
+              suggestions.push({ taskId: data.id as string, title: input.title });
+              toolResultText = `Opgaveforslag oprettet (id: ${data.id}). Nævn i din afsluttende besked at der ligger et opgaveforslag klar til godkendelse.`;
+            } catch (err) {
+              toolResultText = `Kunne ikke oprette opgaveforslag: ${(err as Error).message}`;
+            }
+          } else {
+            toolResultText = "Mangler title.";
+          }
+          return { type: "tool_result" as const, tool_use_id: toolUse.id as string, content: toolResultText };
+        }
         return { type: "tool_result" as const, tool_use_id: toolUse.id as string, content: "Ukendt værktøj." };
       }),
     );
 
-    if (finalResult) return { result: finalResult, drafts };
+    if (finalResult) return { result: finalResult, drafts, suggestions };
 
     messages.push({ role: "assistant", content: response.content });
     messages.push({ role: "user", content: toolResults });
   }
-  return { result: { flag: false, message: null }, drafts };
+  return { result: { flag: false, message: null }, drafts, suggestions };
 }
 
 /** Pulls together only what's changed/arrived since the last lookback window - not the full daily
@@ -175,35 +215,43 @@ async function gatherRecentSignals(): Promise<string> {
   return parts.join("\n\n");
 }
 
-export async function checkRecentActivity(): Promise<{ result: FlagResult; drafts: DraftedReply[] }> {
-  if (!env.anthropicApiKey) return { result: { flag: false, message: null }, drafts: [] };
+export async function checkRecentActivity(): Promise<{ result: FlagResult; drafts: DraftedReply[]; suggestions: SuggestedTask[] }> {
+  if (!env.anthropicApiKey) return { result: { flag: false, message: null }, drafts: [], suggestions: [] };
 
   const context = await gatherRecentSignals();
-  if (!context.trim()) return { result: { flag: false, message: null }, drafts: [] };
+  if (!context.trim()) return { result: { flag: false, message: null }, drafts: [], suggestions: [] };
 
   return runTriageLoop(context).catch((err) => {
     console.error("Proaktivt tjek fejlede:", err);
-    return { result: { flag: false, message: null }, drafts: [] };
+    return { result: { flag: false, message: null }, drafts: [], suggestions: [] };
   });
 }
 
 /** Builds the message text + Telegram inline-keyboard for a triage result. The drafted reply's exact
  *  text is always shown verbatim - never just Claude's paraphrase of it - so a tap on "Send" is an
- *  informed approval, not a blind one. */
-export function formatTriageOutcome(result: FlagResult, drafts: DraftedReply[]): { text: string; replyMarkup?: InlineKeyboardMarkup } {
+ *  informed approval, not a blind one. Same principle for a suggested task's title. */
+export function formatTriageOutcome(
+  result: FlagResult,
+  drafts: DraftedReply[],
+  suggestions: SuggestedTask[] = [],
+): { text: string; replyMarkup?: InlineKeyboardMarkup } {
   const lines = [`👀 ${result.message}`];
   for (const [i, d] of drafts.entries()) {
     lines.push("", `📝 Udkast til svar${drafts.length > 1 ? ` ${i + 1}` : ""}:`, `"${d.body}"`);
   }
-  const replyMarkup =
-    drafts.length > 0
-      ? {
-          inline_keyboard: drafts.map((d, i) => [
-            { text: `✅ Send udkast${drafts.length > 1 ? ` ${i + 1}` : ""}`, callback_data: `send_draft:${d.draftId}` },
-            { text: `🗑 Slet udkast${drafts.length > 1 ? ` ${i + 1}` : ""}`, callback_data: `discard_draft:${d.draftId}` },
-          ]),
-        }
-      : undefined;
+  for (const [i, s] of suggestions.entries()) {
+    lines.push("", `✅ Forslag til opgave${suggestions.length > 1 ? ` ${i + 1}` : ""}: "${s.title}"`);
+  }
+  const draftButtons = drafts.map((d, i) => [
+    { text: `✅ Send udkast${drafts.length > 1 ? ` ${i + 1}` : ""}`, callback_data: `send_draft:${d.draftId}` },
+    { text: `🗑 Slet udkast${drafts.length > 1 ? ` ${i + 1}` : ""}`, callback_data: `discard_draft:${d.draftId}` },
+  ]);
+  const suggestionButtons = suggestions.map((s, i) => [
+    { text: `✅ Opret opgave${suggestions.length > 1 ? ` ${i + 1}` : ""}`, callback_data: `approve_task:${s.taskId}` },
+    { text: `❌ Afvis${suggestions.length > 1 ? ` ${i + 1}` : ""}`, callback_data: `reject_task:${s.taskId}` },
+  ]);
+  const allButtons = [...draftButtons, ...suggestionButtons];
+  const replyMarkup = allButtons.length > 0 ? { inline_keyboard: allButtons } : undefined;
   return { text: lines.join("\n"), replyMarkup };
 }
 
@@ -211,9 +259,9 @@ export function formatTriageOutcome(result: FlagResult, drafts: DraftedReply[]):
  *  flagged. Deliberately says nothing when there's nothing to report - a job that pings twice a day
  *  with "all clear" trains the owner to ignore it, which defeats the point. */
 export async function runProactiveCheck(): Promise<void> {
-  const { result, drafts } = await checkRecentActivity();
+  const { result, drafts, suggestions } = await checkRecentActivity();
   if (!result.flag || !result.message) return;
 
-  const { text, replyMarkup } = formatTriageOutcome(result, drafts);
+  const { text, replyMarkup } = formatTriageOutcome(result, drafts, suggestions);
   await notifyOwner(text, replyMarkup);
 }

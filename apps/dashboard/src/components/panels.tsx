@@ -103,7 +103,7 @@ export function TasksPanel({
   onDelete: (id: string) => void;
   onCreate: (title: string) => Promise<void>;
 }) {
-  const open = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
+  const open = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled" && t.status !== "suggested");
   const visible = open.slice(0, TASKS_VISIBLE_LIMIT);
   const remaining = open.length - visible.length;
   return (

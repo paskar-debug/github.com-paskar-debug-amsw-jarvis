@@ -5,7 +5,17 @@ import { env } from "./env.js";
 import { transcribeVoice } from "./stt.js";
 import { synthesizeSpeech } from "./tts.js";
 import { ttsConfig } from "./ttsConfig.js";
-import { createGoal, createTask, handleFreeformMessage, runSync, saveFact, setStatus, updateGoalProgress } from "./handlers.js";
+import {
+  approveTaskSuggestion,
+  createGoal,
+  createTask,
+  handleFreeformMessage,
+  rejectTaskSuggestion,
+  runSync,
+  saveFact,
+  setStatus,
+  updateGoalProgress,
+} from "./handlers.js";
 import { syncAll } from "./sync.js";
 import { checkInfra } from "./infraSync.js";
 import { sendDailyBriefing } from "./briefing.js";
@@ -135,29 +145,38 @@ bot.command("sync", async (ctx) => {
 
 bot.command("tjek", async (ctx) => {
   await ctx.reply("Tjekker seneste aktivitet...");
-  const { result, drafts } = await checkRecentActivity();
+  const { result, drafts, suggestions } = await checkRecentActivity();
   if (!result.flag || !result.message) {
     await ctx.reply("Ingen ting at bemærke lige nu.");
     return;
   }
-  const { text, replyMarkup } = formatTriageOutcome(result, drafts);
+  const { text, replyMarkup } = formatTriageOutcome(result, drafts, suggestions);
   await ctx.reply(text, replyMarkup ? { reply_markup: replyMarkup } : undefined);
 });
 
+const CALLBACK_HANDLERS: Record<string, (id: string) => Promise<string | void>> = {
+  send_draft: async (id) => {
+    await sendDraft(env.google, id);
+    return "Sendt!";
+  },
+  discard_draft: async (id) => {
+    await discardDraft(env.google, id);
+    return "Udkast slettet.";
+  },
+  approve_task: (id) => approveTaskSuggestion(id),
+  reject_task: (id) => rejectTaskSuggestion(id),
+};
+
 bot.on("callback_query:data", async (ctx) => {
-  const [action, draftId] = ctx.callbackQuery.data.split(":");
-  if (!draftId || (action !== "send_draft" && action !== "discard_draft")) {
+  const [action, id] = ctx.callbackQuery.data.split(":");
+  const handler = id ? CALLBACK_HANDLERS[action] : undefined;
+  if (!handler) {
     await ctx.answerCallbackQuery();
     return;
   }
   try {
-    if (action === "send_draft") {
-      await sendDraft(env.google, draftId);
-      await ctx.answerCallbackQuery({ text: "Sendt!" });
-    } else {
-      await discardDraft(env.google, draftId);
-      await ctx.answerCallbackQuery({ text: "Udkast slettet." });
-    }
+    const text = (await handler(id)) || "Registreret.";
+    await ctx.answerCallbackQuery({ text });
     await ctx.editMessageReplyMarkup(undefined);
   } catch (err) {
     await ctx.answerCallbackQuery({ text: `Fejlede: ${(err as Error).message}`, show_alert: true });

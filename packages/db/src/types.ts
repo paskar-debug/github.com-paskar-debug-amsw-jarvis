@@ -7,10 +7,10 @@ export interface Database {
           owner_id: string;
           title: string;
           description: string | null;
-          status: "todo" | "in_progress" | "done" | "cancelled";
+          status: "todo" | "in_progress" | "done" | "cancelled" | "suggested";
           priority: "p1" | "p2" | "p3" | "p4";
           due_at: string | null;
-          source: "manual" | "telegram" | "todoist";
+          source: "manual" | "telegram" | "todoist" | "email";
           external_id: string | null;
           created_at: string;
           updated_at: string;

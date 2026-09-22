@@ -34,6 +34,44 @@ export async function createTask(title: string): Promise<string> {
   return `Opgave oprettet: "${title}"`;
 }
 
+/** Turns a proactively-suggested task (status 'suggested', from notice.ts's email triage) into a
+ *  real one, the same way createTask does - Todoist first when configured, local fallback otherwise. */
+export async function approveTaskSuggestion(taskId: string): Promise<string> {
+  const { data: task, error: fetchError } = await supabase
+    .from("tasks")
+    .select("id, title")
+    .eq("id", taskId)
+    .eq("owner_id", env.ownerId)
+    .eq("status", "suggested")
+    .maybeSingle();
+  if (fetchError) throw fetchError;
+  if (!task) return "Forslaget findes ikke længere.";
+
+  if (env.todoist.apiToken) {
+    try {
+      const todoistTask = await createTodoistTask(env.todoist, task.title);
+      const { error } = await supabase
+        .from("tasks")
+        .update({ status: "todo", source: "todoist", external_id: todoistTask.id })
+        .eq("id", taskId);
+      if (error) throw error;
+      return `Opgave oprettet: "${task.title}"`;
+    } catch (err) {
+      console.error("Kunne ikke oprette opgave i Todoist, gemmer kun lokalt:", err);
+    }
+  }
+
+  const { error } = await supabase.from("tasks").update({ status: "todo" }).eq("id", taskId);
+  if (error) throw error;
+  return `Opgave oprettet: "${task.title}"`;
+}
+
+export async function rejectTaskSuggestion(taskId: string): Promise<string> {
+  const { error } = await supabase.from("tasks").delete().eq("id", taskId).eq("owner_id", env.ownerId).eq("status", "suggested");
+  if (error) throw error;
+  return "Forslag afvist.";
+}
+
 export async function saveFact(fact: string, category: FactCategory = "andet"): Promise<string> {
   const { error } = await supabase.from("user_facts").insert({ owner_id: env.ownerId, fact, category });
   if (error) throw error;

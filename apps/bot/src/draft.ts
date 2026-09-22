@@ -35,6 +35,10 @@ async function callClaude(system: string, messages: unknown[], apiKey: string): 
     body: JSON.stringify({
       model: "claude-sonnet-5",
       max_tokens: 3000,
+      // See notice.ts's callClaude for why this matters: extended thinking is on by default for
+      // this model and draws from the same max_tokens budget, which can silently truncate the
+      // actual draft/answer to nothing.
+      thinking: { type: "disabled" },
       system,
       messages,
       tools: TOOLS,

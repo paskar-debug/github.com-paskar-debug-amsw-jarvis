@@ -60,7 +60,12 @@ export async function buildGoalsReview(): Promise<string | null> {
     },
     body: JSON.stringify({
       model: "claude-sonnet-5",
-      max_tokens: 600,
+      max_tokens: 1200,
+      // See notice.ts's callClaude for why this matters: extended thinking is on by default for
+      // this model and draws from the same max_tokens budget, which can silently truncate the
+      // actual review text to nothing - `text || null` below would then quietly skip sending
+      // anything, with no error anywhere.
+      thinking: { type: "disabled" },
       system:
         "Du skriver en kort, varm, motiverende ugentlig status til en Telegram-besked om AMSW's mål (en personlig virksomheds forretningsmål). " +
         "Fremhæv det der går godt og giv anerkendelse. Nævn forsigtigt og uden at være dømmende de mål der er markeret som 'INGEN FREMGANG I OVER 2 UGER', som en blid observation, ikke en bebrejdelse. " +

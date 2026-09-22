@@ -84,9 +84,20 @@ async function callClaude(messages: unknown[]): Promise<{ content: ContentBlock[
     },
     body: JSON.stringify({
       model: "claude-sonnet-5",
-      max_tokens: 800,
-      system:
-        "Du overvåger brugerens forretning (AMSW) og konti for aktivitet der kræver opmærksomhed UOPFORDRET - fx uventede konto-/betalingsændringer, sikkerhedsadvarsler, fejl der er dukket op, eller noget der ser forkert eller mistænkeligt ud. Vær konservativ: flag kun hvis det reelt kræver brugerens opmærksomhed nu, eller der er et udkast/opgaveforslag klar til godkendelse - de fleste gennemgange bør stadig ende med flag=false. Hvis en mail reelt kalder på et svar (fx et konkret spørgsmål fra en person), kan du oprette et udkast til svar med draft_reply. Hvis en mail beskriver et konkret stykke arbejde der skal udføres (fx en kunde beder om noget, en leverandør skal følges op), kan du foreslå en opgave med suggest_task. Brug begge værktøjer FØR du afslutter, og sæt flag=true når du har brugt et af dem, så brugeren rent faktisk ser forslaget. Opret aldrig udkast eller opgaveforslag for rutine-mails, nyhedsbreve, kvitteringer eller noget der ikke kræver en konkret handling. Afslut altid med præcis ét kald til flag_review. Skriv altid på dansk, kort og direkte.",
+      max_tokens: 2048,
+      // Extended thinking is on by default for this model and draws from the same max_tokens
+      // budget - for a mechanical triage/tool-calling task like this, that risks burning the
+      // whole budget on thinking with stop_reason "max_tokens" and zero actual output. Disabled
+      // rather than just raising the budget, since a bigger number only narrows the window.
+      thinking: { type: "disabled" },
+      system: [
+        "Du gennemgår brugerens seneste aktivitet for AMSW (mails, status, fejl) for at afgøre om der er noget brugeren bør se nu. Der er to helt ligeværdige grunde til at flagge:",
+        "1. Noget er GALT eller uventet - fx sikkerhedsadvarsler, fejl, uventede konto-/betalingsændringer.",
+        "2. En mail kræver en konkret handling fra brugeren - nogen beder om noget (informationer, en godkendelse, et møde-tidspunkt), venter på svar, eller der er et stykke arbejde der tydeligt skal udføres. Dette er lige så vigtigt at flagge som punkt 1, og er den langt hyppigste grund til at flagge - lad ikke ordet 'GALT' narre dig til kun at reagere på fejl.",
+        "For punkt 2: brug draft_reply hvis mailen kalder på et svar, og/eller suggest_task hvis der er et konkret stykke arbejde at udføre (de kan begge bruges på samme mail). Ignorer kun: nyhedsbreve, marketing, kvitteringer/fakturaer og pakke-tracking uden handling krævet, rutine-notifikationer (logins, engangskoder), og mails der reelt ikke beder om noget fra brugeren.",
+        "Brug de relevante værktøjer FØR du afslutter, og sæt flag=true når du har brugt draft_reply og/eller suggest_task, så brugeren rent faktisk ser det. Bedre at flagge 2-3 reelle ting fra én gennemgang end at overse dem af forsigtighed - men opret aldrig udkast/opgaveforslag for mails der ikke reelt beder om noget.",
+        "Afslut altid med præcis ét kald til flag_review. Skriv altid på dansk, kort og direkte.",
+      ].join(" "),
       messages,
       tools: TOOLS,
     }),

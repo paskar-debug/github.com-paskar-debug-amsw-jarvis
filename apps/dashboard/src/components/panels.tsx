@@ -183,6 +183,8 @@ interface ShopifyMetrics {
   revenueToday?: number;
   ordersLast7Days?: number;
   revenueLast7Days?: number;
+  ordersPrevious7Days?: number;
+  revenuePrevious7Days?: number;
   ordersLast14Days?: number;
   revenueLast14Days?: number;
   ordersLast30Days?: number;
@@ -190,6 +192,28 @@ interface ShopifyMetrics {
   totalCustomers?: number;
   currency?: string | null;
   dailyRevenue?: { date: string; orders: number; revenue: number }[];
+}
+
+/** A period-over-period change, expressed as a direction + whole-percent magnitude. Returns null
+ *  when there's nothing meaningful to compare (no prior-period activity to divide by). */
+function computeDelta(current: number, previous: number): { direction: "up" | "down" | "flat"; percent: number } | null {
+  if (previous === 0) return current === 0 ? null : { direction: "up", percent: 100 };
+  const percent = Math.round(((current - previous) / previous) * 100);
+  if (percent === 0) return { direction: "flat", percent: 0 };
+  return { direction: percent > 0 ? "up" : "down", percent: Math.abs(percent) };
+}
+
+/** Status color carries the direction; an arrow + text label repeats it, so the meaning never rests
+ *  on color alone (a plain color-coded number would fail that on its own). */
+function DeltaBadge({ current, previous }: { current: number; previous: number }) {
+  const delta = computeDelta(current, previous);
+  if (!delta) return null;
+  const arrow = delta.direction === "up" ? "▲" : delta.direction === "down" ? "▼" : "—";
+  return (
+    <span className={`stat-delta stat-delta-${delta.direction}`}>
+      {arrow} {delta.percent}% <span className="stat-delta-label">vs. forrige uge</span>
+    </span>
+  );
 }
 
 export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { statuses: StatusRow[] }) {
@@ -244,6 +268,9 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
                       <div className="stat">
                         <span className="stat-value">{metrics.ordersLast7Days}</span>
                         <span className="stat-label">ordrer, 7 dage</span>
+                        {typeof metrics.ordersPrevious7Days === "number" && (
+                          <DeltaBadge current={metrics.ordersLast7Days} previous={metrics.ordersPrevious7Days} />
+                        )}
                       </div>
                     )}
                     {typeof metrics.revenueLast7Days === "number" && (
@@ -252,6 +279,9 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
                           {metrics.revenueLast7Days} {metrics.currency ?? ""}
                         </span>
                         <span className="stat-label">omsætning, 7 dage</span>
+                        {typeof metrics.revenuePrevious7Days === "number" && (
+                          <DeltaBadge current={metrics.revenueLast7Days} previous={metrics.revenuePrevious7Days} />
+                        )}
                       </div>
                     )}
                     {typeof metrics.ordersLast14Days === "number" && (

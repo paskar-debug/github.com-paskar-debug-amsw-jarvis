@@ -1054,6 +1054,26 @@ body::before {
   font-weight: 600;
 }
 
+.stat-delta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 0.3rem;
+}
+
+.stat-delta-up { color: var(--green); }
+.stat-delta-down { color: var(--red); }
+.stat-delta-flat { color: var(--muted); }
+
+.stat-delta-label {
+  color: var(--muted);
+  text-transform: none;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+
 .progress-bar {
   height: 8px;
   border-radius: 4px;

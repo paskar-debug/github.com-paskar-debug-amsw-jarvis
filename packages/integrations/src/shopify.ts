@@ -74,6 +74,9 @@ export interface ShopifySummary {
   revenueToday: number;
   ordersLast7Days: number;
   revenueLast7Days: number;
+  /** The 7 days before that - lets the dashboard show "vs. last week" instead of a bare number. */
+  ordersPrevious7Days: number;
+  revenuePrevious7Days: number;
   ordersLast14Days: number;
   revenueLast14Days: number;
   ordersLast30Days: number;
@@ -154,6 +157,9 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   // A partial refund keeps the order but reduces its counted amount (handled by netAmount).
   const edges30d = result.data.orders.edges.filter((edge) => !edge.node.test && !edge.node.cancelledAt && netAmount(edge) > 0);
   const edges7d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= sevenDaysAgo);
+  const edgesPrevious7d = edges30d.filter(
+    (edge) => new Date(edge.node.createdAt) >= fourteenDaysAgo && new Date(edge.node.createdAt) < sevenDaysAgo,
+  );
   const edges14d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= fourteenDaysAgo);
   const todayEdges = edges30d.filter((edge) => new Date(edge.node.createdAt) >= startOfDay);
 
@@ -186,6 +192,8 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
     revenueToday: sum(todayEdges),
     ordersLast7Days: edges7d.length,
     revenueLast7Days: sum(edges7d),
+    ordersPrevious7Days: edgesPrevious7d.length,
+    revenuePrevious7Days: sum(edgesPrevious7d),
     ordersLast14Days: edges14d.length,
     revenueLast14Days: sum(edges14d),
     ordersLast30Days: edges30d.length,

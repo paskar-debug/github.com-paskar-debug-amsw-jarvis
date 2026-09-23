@@ -11,23 +11,37 @@
 
 const OWNER_EMAIL = "paskar@paramasamy.dk";
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "https://paskars-kontor.vercel.app",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "content-type",
-};
+// Shared login for every dashboard the owner runs (AMSW Jarvis, Engvang Koordinator, and local dev
+// for both) - a single Access-Control-Allow-Origin can't list multiple values, so this reflects
+// the request's own Origin when it's on the allow-list instead of hardcoding one.
+const ALLOWED_ORIGINS = [
+  "https://paskars-kontor.vercel.app",
+  /^https:\/\/engvang-.*\.vercel\.app$/,
+  "http://localhost:3000",
+  "http://localhost:3100",
+];
 
-function json(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+function corsHeaders(origin: string | null): Record<string, string> {
+  const allowed = origin && ALLOWED_ORIGINS.some((o) => (typeof o === "string" ? o === origin : o.test(origin)));
+  return {
+    "Access-Control-Allow-Origin": allowed ? origin! : ALLOWED_ORIGINS[0] as string,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "content-type",
+  };
+}
+
+function json(status: number, body: unknown, headers: Record<string, string>): Response {
+  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...headers } });
 }
 
 Deno.serve(async (req) => {
+  const CORS_HEADERS = corsHeaders(req.headers.get("origin"));
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
 
   const body = (await req.json().catch(() => null)) as { secret?: string } | null;
   const expected = Deno.env.get("OWNER_LOGIN_SECRET");
   if (!expected || !body?.secret || body.secret !== expected) {
-    return json(401, { error: "Forkert adgangskode." });
+    return json(401, { error: "Forkert adgangskode." }, CORS_HEADERS);
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -38,20 +52,20 @@ Deno.serve(async (req) => {
     headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({ type: "magiclink", email: OWNER_EMAIL }),
   });
-  if (!genRes.ok) return json(502, { error: `Kunne ikke generere login: ${await genRes.text()}` });
+  if (!genRes.ok) return json(502, { error: `Kunne ikke generere login: ${await genRes.text()}` }, CORS_HEADERS);
   const gen = (await genRes.json()) as { action_link: string };
 
   const verifyRes = await fetch(gen.action_link, { redirect: "manual" });
   const location = verifyRes.headers.get("location");
-  if (!location) return json(502, { error: "Uventet svar fra Supabase (intet redirect)." });
+  if (!location) return json(502, { error: "Uventet svar fra Supabase (intet redirect)." }, CORS_HEADERS);
 
   const fragment = new URL(location).hash.replace(/^#/, "");
   const params = new URLSearchParams(fragment);
   const access_token = params.get("access_token");
   const refresh_token = params.get("refresh_token");
   if (!access_token || !refresh_token) {
-    return json(502, { error: params.get("error_description") ?? "Login fejlede - ingen tokens i redirect." });
+    return json(502, { error: params.get("error_description") ?? "Login fejlede - ingen tokens i redirect." }, CORS_HEADERS);
   }
 
-  return json(200, { access_token, refresh_token });
+  return json(200, { access_token, refresh_token }, CORS_HEADERS);
 });

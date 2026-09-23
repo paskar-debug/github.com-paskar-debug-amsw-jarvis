@@ -38,6 +38,29 @@ function formatDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString("da-DK", { dateStyle: "medium" });
 }
 
+/** One glanceable list of everything with a deadline, across all three types, sorted soonest
+ *  first - without this, seeing what's actually coming up meant scanning three separate panels. */
+function EngvangDeadlines({ items }: { items: EngvangRow[] }) {
+  const upcoming = items
+    .filter((i) => i.status === "active" && i.next_deadline)
+    .sort((a, b) => new Date(a.next_deadline!).getTime() - new Date(b.next_deadline!).getTime());
+
+  if (upcoming.length === 0) return null;
+
+  return (
+    <div className="engvang-deadlines">
+      <p className="engvang-deadlines-label">Kommende frister</p>
+      {upcoming.map((item) => (
+        <div className="engvang-deadline-row" key={item.id}>
+          <span className="engvang-deadline-date">{formatDate(item.next_deadline)}</span>
+          <span>{item.title}</span>
+          {item.deadline_label && <span className="engvang-deadline-tag">({item.deadline_label})</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function EngvangTypePanel({
   type,
   items,
@@ -53,7 +76,7 @@ function EngvangTypePanel({
 }) {
   const meta = TYPE_META[type];
   return (
-    <section className={panelClass(flash && "panel-flash")}>
+    <section className={panelClass("panel-engvang", flash && "panel-flash")}>
       <PanelHeader icon={meta.icon} title={meta.title} subtitle={meta.subtitle} />
       {items.length === 0 && <p className="empty">Ingen registreret endnu.</p>}
       {items.map((item) => (
@@ -92,6 +115,7 @@ export function EngvangPanels({
 
   return (
     <>
+      <EngvangDeadlines items={items} />
       {(["leverandoraftale", "forsikring", "noegle"] as const).map((type) => (
         <EngvangTypePanel
           key={type}

@@ -180,7 +180,7 @@ export default function DashboardPage() {
         <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
       </div>
 
-      <div className="section-label">Engvang</div>
+      <div className="section-label section-label-engvang">Engvang</div>
       <div className="main-column">
         <EngvangPanels
           items={engvangLive.rows}

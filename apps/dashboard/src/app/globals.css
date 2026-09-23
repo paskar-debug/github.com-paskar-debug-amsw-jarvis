@@ -20,6 +20,12 @@
 
   --whoop-sleep: #38bdf8;
   --whoop-purple: #a855f7;
+
+  /* A distinct identity color for the Engvang section - a different employer, a different kind
+     of data, so it should read as visually "other" at a glance rather than blending into AMSW's
+     cyan theme. */
+  --engvang-accent: #f59e0b;
+  --engvang-accent-soft: rgba(245, 158, 11, 0.14);
 }
 
 * {
@@ -226,6 +232,24 @@ body::before {
   margin-bottom: 2rem;
 }
 
+.section-label-engvang {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--engvang-accent);
+  border-bottom-color: rgba(245, 158, 11, 0.25);
+  margin-top: 0.5rem;
+}
+
+.section-label-engvang::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--engvang-accent);
+  box-shadow: 0 0 8px var(--engvang-accent);
+}
+
 .section-system .section-label {
   font-size: 0.78rem;
   letter-spacing: 0.1em;
@@ -258,6 +282,15 @@ body::before {
   height: 2px;
   background: linear-gradient(90deg, var(--brand-bright), transparent 70%);
   opacity: 0.7;
+}
+
+.panel-engvang::before {
+  background: linear-gradient(90deg, var(--engvang-accent), transparent 70%);
+}
+
+.panel-engvang:hover {
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.04) inset, 0 24px 50px -22px rgba(245, 158, 11, 0.35);
 }
 
 .panel:hover {
@@ -676,6 +709,15 @@ body::before {
 .quick-add button:disabled {
   opacity: 0.35;
   cursor: default;
+}
+
+.panel-engvang .quick-add button {
+  background: var(--engvang-accent);
+  color: #1a1005;
+}
+
+.panel-engvang .quick-add input:focus {
+  border-color: var(--engvang-accent);
 }
 
 .empty {
@@ -1860,4 +1902,45 @@ body::before {
     width: calc(100vw - 2rem);
     height: 65vh;
   }
+}
+
+.engvang-deadlines {
+  background: linear-gradient(160deg, var(--panel), var(--engvang-accent-soft));
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 4px 20px 4px 20px;
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1.1rem;
+}
+
+.engvang-deadlines-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.6rem;
+}
+
+.engvang-deadline-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.4rem 0;
+  border-top: 1px solid rgba(245, 158, 11, 0.15);
+  font-size: 0.88rem;
+}
+
+.engvang-deadline-row:first-of-type {
+  border-top: none;
+}
+
+.engvang-deadline-date {
+  color: var(--engvang-accent);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  min-width: 6.5rem;
+}
+
+.engvang-deadline-tag {
+  color: var(--muted);
+  font-size: 0.78rem;
 }

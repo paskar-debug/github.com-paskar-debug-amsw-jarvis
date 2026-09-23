@@ -833,7 +833,10 @@ body::before {
 .integrations-strip {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  /* flex-start, not center: a centered wrap leaves an orphaned last item floating alone on its
+     own row whenever the count doesn't divide evenly - left-aligned wrapping reads as an
+     intentional grid instead. */
+  justify-content: flex-start;
   gap: 1.2rem 1.5rem;
 }
 

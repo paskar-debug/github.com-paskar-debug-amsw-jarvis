@@ -21,7 +21,7 @@ export function QuotePanel() {
       <IconQuote className="quote-strap-icon" />
       {quote ? (
         <p className="quote-strap-text">
-          &ldquo;{quote.quote}&rdquo; <span className="quote-strap-author">— {quote.author}</span>
+          &ldquo;{quote.quote}&rdquo; <span className="quote-strap-author">—&nbsp;{quote.author}</span>
         </p>
       ) : (
         <p className="quote-strap-text quote-strap-loading">Henter dagens citat...</p>

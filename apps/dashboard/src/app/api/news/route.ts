@@ -13,10 +13,19 @@ function extractTag(block: string, tag: string): string {
   return (cdata ? cdata[1] : value).trim();
 }
 
-/** Both RSS and og:image URLs come out of markup with entities like &amp; still literal - decode
- *  before use, or query strings past the first "&amp;" silently break. */
+/** Titles, links and og:image URLs all come out of markup with entities still literal - decode
+ *  before use, or a title shows a raw "&#x27;" instead of an apostrophe, and a URL's query string
+ *  past the first "&amp;" silently breaks. Named entities first, then any numeric reference
+ *  (decimal "&#39;" or hex "&#x27;") the feed happens to use instead. */
 function decodeHtmlEntities(value: string): string {
-  return value.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)));
 }
 
 /** RSS items rarely carry an image directly - DR occasionally does via media:content, TV2 never does. */
@@ -32,8 +41,8 @@ function extractDirectImage(block: string): string | null {
 function parseRssItems(xml: string, limit: number) {
   const blocks = xml.match(/<item>[\s\S]*?<\/item>/g) ?? [];
   return blocks.slice(0, limit).map((block) => ({
-    title: extractTag(block, "title"),
-    link: extractTag(block, "link"),
+    title: decodeHtmlEntities(extractTag(block, "title")),
+    link: decodeHtmlEntities(extractTag(block, "link")),
     pubDate: extractTag(block, "pubDate"),
     image: extractDirectImage(block),
   }));

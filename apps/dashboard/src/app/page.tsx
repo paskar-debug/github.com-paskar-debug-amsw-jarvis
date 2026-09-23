@@ -15,7 +15,7 @@ import { NewsPanel } from "@/components/NewsPanel";
 import { WeatherPanel } from "@/components/WeatherPanel";
 import { IntegrationsPanel } from "@/components/IntegrationsPanel";
 import { AssistantWidget } from "@/components/AssistantWidget";
-import { IconLogout } from "@/components/icons";
+import { IconLeaf, IconLogout } from "@/components/icons";
 
 type Tables = Database["public"]["Tables"];
 
@@ -180,7 +180,15 @@ export default function DashboardPage() {
         <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
       </div>
 
-      <div className="section-label section-label-engvang">Engvang</div>
+      <div className="engvang-header">
+        <span className="engvang-header-icon">
+          <IconLeaf />
+        </span>
+        <div>
+          <h2>Engvang</h2>
+          <p>Den grønne skole — drift og systematik</p>
+        </div>
+      </div>
       <div className="main-column">
         <EngvangPanels
           items={engvangLive.rows}

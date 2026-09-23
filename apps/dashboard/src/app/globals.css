@@ -24,8 +24,8 @@
   /* A distinct identity color for the Engvang section - a different employer, a different kind
      of data, so it should read as visually "other" at a glance rather than blending into AMSW's
      cyan theme. */
-  --engvang-accent: #f59e0b;
-  --engvang-accent-soft: rgba(245, 158, 11, 0.14);
+  --engvang-accent: #22c55e;
+  --engvang-accent-soft: rgba(34, 197, 94, 0.14);
 }
 
 * {
@@ -232,22 +232,50 @@ body::before {
   margin-bottom: 2rem;
 }
 
-.section-label-engvang {
+.engvang-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: var(--engvang-accent);
-  border-bottom-color: rgba(245, 158, 11, 0.25);
-  margin-top: 0.5rem;
+  gap: 0.9rem;
+  margin: 1.4rem 0 1.1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(34, 197, 94, 0.25);
 }
 
-.section-label-engvang::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--engvang-accent);
-  box-shadow: 0 0 8px var(--engvang-accent);
+.engvang-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 4px 14px 4px 14px;
+  background: linear-gradient(160deg, var(--engvang-accent), #064e2f);
+  color: #052e16;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px -4px rgba(34, 197, 94, 0.6);
+}
+
+.engvang-header-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.engvang-header h2 {
+  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+  background: linear-gradient(120deg, var(--text) 20%, var(--engvang-accent) 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.engvang-header p {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
 }
 
 .section-system .section-label {
@@ -286,7 +314,7 @@ body::before {
 
 .panel-engvang {
   background: linear-gradient(160deg, var(--panel), var(--engvang-accent-soft));
-  border-color: rgba(245, 158, 11, 0.25);
+  border-color: rgba(34, 197, 94, 0.25);
 }
 
 .panel-engvang::before {
@@ -294,20 +322,20 @@ body::before {
 }
 
 .panel-engvang:hover {
-  border-color: rgba(245, 158, 11, 0.55);
-  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.04) inset, 0 24px 50px -22px rgba(245, 158, 11, 0.35);
+  border-color: rgba(34, 197, 94, 0.55);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.04) inset, 0 24px 50px -22px rgba(34, 197, 94, 0.35);
 }
 
 .panel-engvang .panel-icon {
-  background: linear-gradient(160deg, var(--engvang-accent), #7c4a03);
-  color: #1a1005;
-  box-shadow: 0 4px 16px -4px rgba(245, 158, 11, 0.6);
+  background: linear-gradient(160deg, var(--engvang-accent), #064e2f);
+  color: #052e16;
+  box-shadow: 0 4px 16px -4px rgba(34, 197, 94, 0.6);
 }
 
 .panel-engvang .item-close:hover,
 .panel-engvang .task-delete-button:hover {
   color: var(--engvang-accent);
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(34, 197, 94, 0.12);
 }
 
 .panel:hover {
@@ -730,7 +758,7 @@ body::before {
 
 .panel-engvang .quick-add button {
   background: var(--engvang-accent);
-  color: #1a1005;
+  color: #052e16;
 }
 
 .panel-engvang .quick-add input:focus {
@@ -1923,7 +1951,7 @@ body::before {
 
 .engvang-deadlines {
   background: linear-gradient(160deg, var(--panel), var(--engvang-accent-soft));
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  border: 1px solid rgba(34, 197, 94, 0.35);
   border-radius: 4px 20px 4px 20px;
   padding: 1.2rem 1.4rem;
   margin-bottom: 1.1rem;
@@ -1942,7 +1970,7 @@ body::before {
   align-items: baseline;
   gap: 0.75rem;
   padding: 0.4rem 0;
-  border-top: 1px solid rgba(245, 158, 11, 0.15);
+  border-top: 1px solid rgba(34, 197, 94, 0.15);
   font-size: 0.88rem;
 }
 

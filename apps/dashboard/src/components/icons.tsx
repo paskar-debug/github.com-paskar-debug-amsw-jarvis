@@ -285,6 +285,15 @@ export function IconShield(props: IconProps) {
   );
 }
 
+export function IconLeaf(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M20 4c-9 0-16 5-16 14 0 1 .1 2 .3 3C13 21 20 14 20 4Z" />
+      <path d="M4 20c4-6 9-10 14-14" />
+    </svg>
+  );
+}
+
 export function IconKey(props: IconProps) {
   return (
     <svg {...common} {...props}>

@@ -96,7 +96,7 @@ export function EngvangPanels({
         <EngvangTypePanel
           key={type}
           type={type}
-          items={items.filter((i) => i.type === type)}
+          items={items.filter((i) => i.type === type && i.status === "active")}
           flash={flash}
           onCreate={(raw) => onCreate(type, raw)}
           onClose={onClose}

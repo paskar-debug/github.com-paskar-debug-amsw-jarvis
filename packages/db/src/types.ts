@@ -165,6 +165,29 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["whoop_auth"]["Row"]>;
         Relationships: [];
       };
+      // Engvang Koordinator's data - a separate job, not AMSW, but shown as its own section of the
+      // same dashboard (one page to check) while staying its own table (no data blending).
+      engvang_items: {
+        Row: {
+          id: string;
+          owner_id: string;
+          type: "leverandoraftale" | "forsikring" | "noegle" | "andet";
+          title: string;
+          detail: string | null;
+          next_deadline: string | null;
+          deadline_label: string | null;
+          status: "active" | "archived";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["engvang_items"]["Row"]> & {
+          owner_id: string;
+          type: "leverandoraftale" | "forsikring" | "noegle" | "andet";
+          title: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["engvang_items"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

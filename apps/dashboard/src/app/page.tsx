@@ -7,6 +7,7 @@ import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
 import { CalendarPanel, DraftsPanel, GoalsPanel, StatusPanel, TasksPanel, WhoopPanel } from "@/components/panels";
+import { EngvangPanels } from "@/components/EngvangPanel";
 import { TodayPanel } from "@/components/TodayPanel";
 import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
@@ -45,6 +46,10 @@ export default function DashboardPage() {
     { column: "source" },
   );
   const goalsLive = useLiveTable<"goals", Tables["goals"]["Row"]>("goals", userId ?? null, { column: "target_date" });
+  const engvangLive = useLiveTable<"engvang_items", Tables["engvang_items"]["Row"]>("engvang_items", userId ?? null, {
+    column: "created_at",
+    ascending: false,
+  });
 
   // Routed through /api/tasks/action (not a direct table write) because a task sourced from
   // Todoist needs to be closed/deleted there too - otherwise the next Todoist sync just pulls
@@ -95,6 +100,19 @@ export default function DashboardPage() {
     await callTaskAction(id, "reject");
   }
 
+  async function handleCreateEngvangItem(type: Tables["engvang_items"]["Row"]["type"], raw: string) {
+    if (!userId) return;
+    const [title, detail, deadline, label] = raw.split("|").map((s) => s.trim());
+    if (!title) return;
+    await getSupabaseClient()
+      .from("engvang_items")
+      .insert({ owner_id: userId, type, title, detail: detail || null, next_deadline: deadline || null, deadline_label: label || null });
+  }
+
+  async function handleCloseEngvangItem(id: string) {
+    await getSupabaseClient().from("engvang_items").update({ status: "archived" }).eq("id", id);
+  }
+
   async function handleLogout() {
     await getSupabaseClient().auth.signOut();
   }
@@ -124,6 +142,7 @@ export default function DashboardPage() {
         tasks={tasksLive.rows}
         events={eventsLive.rows}
         statuses={statusesLive.rows}
+        engvangItems={engvangLive.rows}
         isLoading={tasksLive.isLoading || eventsLive.isLoading || statusesLive.isLoading}
         onApprove={handleApproveSuggestion}
         onReject={handleRejectSuggestion}
@@ -159,6 +178,17 @@ export default function DashboardPage() {
         <NewsPanel source="tv2" label="TV2 Nyheder" />
 
         <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
+      </div>
+
+      <div className="section-label">Engvang</div>
+      <div className="main-column">
+        <EngvangPanels
+          items={engvangLive.rows}
+          isLoading={engvangLive.isLoading}
+          flash={engvangLive.flash}
+          onCreate={handleCreateEngvangItem}
+          onClose={handleCloseEngvangItem}
+        />
       </div>
       <AssistantWidget />
     </div>

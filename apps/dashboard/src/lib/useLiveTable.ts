@@ -15,7 +15,10 @@ export interface LiveTableResult<Row> {
  * Loads all rows for a table (scoped to the logged-in user by RLS) and keeps
  * them live-updated via a Supabase Realtime subscription.
  */
-export function useLiveTable<TableName extends "tasks" | "calendar_events" | "amsw_status" | "drafts" | "integration_sync_state" | "user_facts" | "goals", Row>(
+export function useLiveTable<
+  TableName extends "tasks" | "calendar_events" | "amsw_status" | "drafts" | "integration_sync_state" | "user_facts" | "goals" | "engvang_items",
+  Row,
+>(
   table: TableName,
   userId: string | null,
   order: { column: string; ascending?: boolean },

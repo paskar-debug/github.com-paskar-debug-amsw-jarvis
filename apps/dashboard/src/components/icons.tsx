@@ -265,3 +265,33 @@ export function IconCopy(props: IconProps) {
     </svg>
   );
 }
+
+export function IconBriefcase(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <rect x="3" y="7.5" width="18" height="12" rx="2.5" />
+      <path d="M8.5 7.5V6a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5" />
+      <path d="M3 12.5h18" />
+    </svg>
+  );
+}
+
+export function IconShield(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M12 3.5 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6Z" />
+      <path d="m9.5 12 1.7 1.7L14.7 10" />
+    </svg>
+  );
+}
+
+export function IconKey(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <circle cx="7.5" cy="14.5" r="3.5" />
+      <path d="m10 12 8-8" />
+      <path d="M15 7l2.5 2.5" />
+      <path d="M18 4l2 2" />
+    </svg>
+  );
+}

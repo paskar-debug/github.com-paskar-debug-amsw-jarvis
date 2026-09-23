@@ -6,6 +6,7 @@ import { IconCalendar, IconCheck, IconClose, IconSun } from "./icons";
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
 type CalendarRow = Database["public"]["Tables"]["calendar_events"]["Row"];
 type StatusRow = Database["public"]["Tables"]["amsw_status"]["Row"];
+type EngvangRow = Database["public"]["Tables"]["engvang_items"]["Row"];
 
 interface ShopifyMetrics {
   ordersToday?: number;
@@ -43,6 +44,7 @@ export function TodayPanel({
   tasks,
   events,
   statuses,
+  engvangItems,
   isLoading,
   onApprove,
   onReject,
@@ -50,6 +52,7 @@ export function TodayPanel({
   tasks: TaskRow[];
   events: CalendarRow[];
   statuses: StatusRow[];
+  engvangItems?: EngvangRow[];
   isLoading?: boolean;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
@@ -61,6 +64,12 @@ export function TodayPanel({
   const todaysEvents = events
     .filter((e) => isToday(e.starts_at))
     .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
+
+  const engvangDeadlineSoon = (engvangItems ?? []).filter((i) => {
+    if (!i.next_deadline || i.status !== "active") return false;
+    const days = (new Date(i.next_deadline).getTime() - Date.now()) / (24 * 60 * 60 * 1000);
+    return days <= 14;
+  });
 
   const shopify = latestByArea(statuses, "shopify")?.metrics as ShopifyMetrics | undefined;
   const whoop = latestByArea(statuses, "whoop")?.metrics as WhoopMetrics | undefined;
@@ -101,6 +110,12 @@ export function TodayPanel({
           <span className="stat-value">{todaysEvents.length}</span>
           <span className="stat-label">aftaler i dag</span>
         </div>
+        {engvangDeadlineSoon.length > 0 && (
+          <div className="stat">
+            <span className="stat-value">{engvangDeadlineSoon.length}</span>
+            <span className="stat-label">arbejds-frister snart</span>
+          </div>
+        )}
       </div>
 
       {suggested.length > 0 && (

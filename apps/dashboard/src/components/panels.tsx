@@ -33,7 +33,7 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
 }
 
-function panelClass(...extra: (string | false | undefined)[]) {
+export function panelClass(...extra: (string | false | undefined)[]) {
   return ["panel", ...extra].filter(Boolean).join(" ");
 }
 
@@ -51,7 +51,7 @@ export function PanelHeader({ icon, title, subtitle }: { icon: React.ReactNode; 
   );
 }
 
-function Skeleton({ lines = 3 }: { lines?: number }) {
+export function Skeleton({ lines = 3 }: { lines?: number }) {
   return (
     <div className="skeleton-group" aria-hidden="true">
       {Array.from({ length: lines }).map((_, i) => (
@@ -63,7 +63,7 @@ function Skeleton({ lines = 3 }: { lines?: number }) {
 
 const TASKS_VISIBLE_LIMIT = 6;
 
-function QuickAdd({ placeholder, onSubmit }: { placeholder: string; onSubmit: (value: string) => Promise<void> }) {
+export function QuickAdd({ placeholder, onSubmit }: { placeholder: string; onSubmit: (value: string) => Promise<void> }) {
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
 

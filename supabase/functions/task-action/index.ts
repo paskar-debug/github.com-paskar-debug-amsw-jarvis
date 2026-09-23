@@ -26,19 +26,19 @@ Deno.serve(async (req) => {
 
   const body = (await req.json().catch(() => null)) as
     | { action: "create"; title?: string }
-    | { action: "complete" | "delete"; taskId?: string }
+    | { action: "complete" | "delete" | "approve" | "reject"; taskId?: string }
     | null;
-  if (!body?.action || !["create", "complete", "delete"].includes(body.action)) {
+  if (!body?.action || !["create", "complete", "delete", "approve", "reject"].includes(body.action)) {
     return json(400, { error: "Ugyldig action." });
   }
 
   const supabase = serviceClient();
+  const apiToken = Deno.env.get("TODOIST_API_TOKEN");
 
   if (body.action === "create") {
     const title = body.title?.trim();
     if (!title) return json(400, { error: "Mangler titel." });
 
-    const apiToken = Deno.env.get("TODOIST_API_TOKEN");
     if (apiToken) {
       try {
         const todoistTask = await createTodoistTask({ apiToken }, title);
@@ -60,6 +60,46 @@ Deno.serve(async (req) => {
   }
 
   if (!body.taskId) return json(400, { error: "Mangler taskId." });
+
+  // A task proactively suggested from an email (notice.ts's triage) sits as status 'suggested'
+  // until approved here or in Telegram - nothing was ever pushed to Todoist for it yet, so
+  // approving needs its own path rather than reusing complete/delete's Todoist-sync logic below.
+  if (body.action === "approve" || body.action === "reject") {
+    const { data: suggestion, error: fetchError } = await supabase
+      .from("tasks")
+      .select("id, title")
+      .eq("id", body.taskId)
+      .eq("owner_id", OWNER_ID)
+      .eq("status", "suggested")
+      .maybeSingle();
+    if (fetchError) return json(500, { error: fetchError.message });
+    if (!suggestion) return json(404, { error: "Forslaget findes ikke længere." });
+
+    if (body.action === "reject") {
+      const { error } = await supabase.from("tasks").delete().eq("id", suggestion.id);
+      if (error) return json(500, { error: error.message });
+      return json(200, { ok: true });
+    }
+
+    if (apiToken) {
+      try {
+        const todoistTask = await createTodoistTask({ apiToken }, suggestion.title);
+        const { error } = await supabase
+          .from("tasks")
+          .update({ status: "todo", source: "todoist", external_id: todoistTask.id })
+          .eq("id", suggestion.id);
+        if (error) return json(500, { error: error.message });
+        return json(200, { ok: true });
+      } catch (err) {
+        console.error("Kunne ikke oprette opgave i Todoist, gemmer kun lokalt:", err);
+      }
+    }
+
+    const { error } = await supabase.from("tasks").update({ status: "todo" }).eq("id", suggestion.id);
+    if (error) return json(500, { error: error.message });
+    return json(200, { ok: true });
+  }
+
   const { data: task, error: fetchError } = await supabase
     .from("tasks")
     .select("id, title, source, external_id")
@@ -69,7 +109,6 @@ Deno.serve(async (req) => {
   if (fetchError) return json(500, { error: fetchError.message });
   if (!task) return json(404, { error: "Opgave ikke fundet." });
 
-  const apiToken = Deno.env.get("TODOIST_API_TOKEN");
   if (task.source === "todoist" && task.external_id && apiToken) {
     try {
       if (body.action === "complete") await closeTodoistTask({ apiToken }, task.external_id);

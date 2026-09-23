@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
 
   const body = (await req.json().catch(() => null)) as
     | { action: "create"; title?: string }
-    | { action: "complete" | "delete"; taskId?: string }
+    | { action: "complete" | "delete" | "approve" | "reject"; taskId?: string }
     | null;
   if (!body?.action) return NextResponse.json({ error: "Mangler action." }, { status: 400 });
 

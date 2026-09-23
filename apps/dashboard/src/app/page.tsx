@@ -7,6 +7,7 @@ import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
 import { CalendarPanel, DraftsPanel, GoalsPanel, StatusPanel, TasksPanel, WhoopPanel } from "@/components/panels";
+import { TodayPanel } from "@/components/TodayPanel";
 import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
 import { NewsPanel } from "@/components/NewsPanel";
@@ -48,7 +49,7 @@ export default function DashboardPage() {
   // Routed through /api/tasks/action (not a direct table write) because a task sourced from
   // Todoist needs to be closed/deleted there too - otherwise the next Todoist sync just pulls
   // the still-open task back in, silently undoing the checkbox or the delete.
-  async function callTaskAction(taskId: string, action: "complete" | "delete") {
+  async function callTaskAction(taskId: string, action: "complete" | "delete" | "approve" | "reject") {
     const { data } = await getSupabaseClient().auth.getSession();
     const token = data.session?.access_token;
     if (!token) return;
@@ -86,6 +87,14 @@ export default function DashboardPage() {
     });
   }
 
+  async function handleApproveSuggestion(id: string) {
+    await callTaskAction(id, "approve");
+  }
+
+  async function handleRejectSuggestion(id: string) {
+    await callTaskAction(id, "reject");
+  }
+
   async function handleLogout() {
     await getSupabaseClient().auth.signOut();
   }
@@ -110,6 +119,15 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
+
+      <TodayPanel
+        tasks={tasksLive.rows}
+        events={eventsLive.rows}
+        statuses={statusesLive.rows}
+        isLoading={tasksLive.isLoading || eventsLive.isLoading || statusesLive.isLoading}
+        onApprove={handleApproveSuggestion}
+        onReject={handleRejectSuggestion}
+      />
 
       <QuotePanel />
 

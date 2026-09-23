@@ -285,6 +285,147 @@ body::before {
   }
 }
 
+.today-hero {
+  position: relative;
+  background: linear-gradient(160deg, var(--panel), rgba(0, 194, 255, 0.05));
+  border: 1px solid var(--border-hover);
+  border-radius: 4px 24px 4px 24px;
+  padding: 1.8rem 1.8rem 1.6rem;
+  margin-bottom: 1.8rem;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset, 0 20px 48px -22px rgba(0, 194, 255, 0.25);
+}
+
+.today-hero-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1.1rem;
+}
+
+.today-hero-icon {
+  width: 26px;
+  height: 26px;
+  color: var(--brand-bright);
+}
+
+.today-hero-header h1 {
+  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.today-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem 2rem;
+}
+
+.today-section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 1.4rem 0 0.6rem;
+}
+
+.today-section-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.today-suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.today-suggestion-item:first-of-type {
+  border-top: none;
+}
+
+.today-suggestion-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.today-suggestion-title {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.today-suggestion-desc {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.today-suggestion-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.today-suggestion-approve,
+.today-suggestion-reject {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.today-suggestion-approve svg,
+.today-suggestion-reject svg {
+  width: 15px;
+  height: 15px;
+}
+
+.today-suggestion-approve {
+  background: rgba(47, 224, 138, 0.15);
+  color: var(--green);
+}
+
+.today-suggestion-reject {
+  background: rgba(248, 81, 73, 0.12);
+  color: var(--red);
+}
+
+.today-suggestion-approve:hover,
+.today-suggestion-reject:hover {
+  opacity: 0.8;
+}
+
+.today-event-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.4rem 0;
+  font-size: 0.85rem;
+}
+
+.today-event-time {
+  color: var(--brand-bright);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.today-event-title {
+  color: var(--text);
+}
+
 .skeleton-group {
   display: flex;
   flex-direction: column;

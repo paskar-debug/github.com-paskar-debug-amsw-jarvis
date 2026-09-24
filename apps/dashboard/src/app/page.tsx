@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
-import { CalendarPanel, DraftsPanel, GoalsPanel, StatusPanel, TasksPanel, WhoopPanel } from "@/components/panels";
+import { CalendarPanel, DraftsPanel, GoalsPanel, StatusPanel, WhoopPanel } from "@/components/panels";
 import { EngvangPanels } from "@/components/EngvangPanel";
 import { PipelinePanel } from "@/components/PipelinePanel";
 import { TodayPanel } from "@/components/TodayPanel";
@@ -158,22 +158,12 @@ export default function DashboardPage() {
       <div className="main-column">
         <StatusPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
 
-        <TasksPanel
+        <PipelinePanel
           tasks={tasksLive.rows}
           isLoading={tasksLive.isLoading}
           flash={tasksLive.flash}
           onToggleDone={handleToggleDone}
           onDelete={handleDeleteTask}
-          onCreate={handleCreateTask}
-        />
-
-        <PipelinePanel
-          tasks={tasksLive.rows}
-          isLoading={tasksLive.isLoading}
-          flash={tasksLive.flash}
-          onApprove={handleApproveSuggestion}
-          onReject={handleRejectSuggestion}
-          onToggleDone={handleToggleDone}
           onCreate={handleCreateTask}
         />
 
@@ -185,10 +175,11 @@ export default function DashboardPage() {
 
         <WeatherPanel />
 
-        <NewsPanel source="dr" label="DR Nyheder" />
-        <NewsPanel source="tv2" label="TV2 Nyheder" />
+        <NewsPanel />
 
-        <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
+        {(draftsLive.isLoading || draftsLive.rows.length > 0) && (
+          <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
+        )}
       </div>
 
       <div className="engvang-header">

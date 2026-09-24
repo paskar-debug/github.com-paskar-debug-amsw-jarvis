@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import type { Database } from "@amsw/db";
-import { IconCalendar, IconClose, IconCopy, IconDraft, IconPulse, IconRing, IconTarget, IconTasks, IconTrophy } from "./icons";
+import { IconCalendar, IconClose, IconCopy, IconDraft, IconPulse, IconRing, IconTarget, IconTrophy } from "./icons";
 import { Sparkline } from "./Sparkline";
 
-type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
 type CalendarRow = Database["public"]["Tables"]["calendar_events"]["Row"];
 type StatusRow = Database["public"]["Tables"]["amsw_status"]["Row"];
 type DraftRow = Database["public"]["Tables"]["drafts"]["Row"];
@@ -61,8 +60,6 @@ export function Skeleton({ lines = 3 }: { lines?: number }) {
   );
 }
 
-const TASKS_VISIBLE_LIMIT = 6;
-
 export function QuickAdd({ placeholder, onSubmit }: { placeholder: string; onSubmit: (value: string) => Promise<void> }) {
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
@@ -87,55 +84,6 @@ export function QuickAdd({ placeholder, onSubmit }: { placeholder: string; onSub
         +
       </button>
     </form>
-  );
-}
-
-export function TasksPanel({
-  tasks,
-  isLoading,
-  flash,
-  onToggleDone,
-  onDelete,
-  onCreate,
-}: LiveProps & {
-  tasks: TaskRow[];
-  onToggleDone: (id: string) => void;
-  onDelete: (id: string) => void;
-  onCreate: (title: string) => Promise<void>;
-}) {
-  const open = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled" && t.status !== "suggested");
-  const visible = open.slice(0, TASKS_VISIBLE_LIMIT);
-  const remaining = open.length - visible.length;
-  return (
-    <section className={panelClass(flash && "panel-flash")}>
-      <PanelHeader icon={<IconTasks />} title="Opgaver" subtitle="Huskesedler du sender via tekst eller tale i Telegram" />
-      {isLoading ? (
-        <Skeleton lines={3} />
-      ) : (
-        <>
-          <QuickAdd placeholder="Ny opgave..." onSubmit={onCreate} />
-          {open.length === 0 && <p className="empty">Ingen åbne opgaver.</p>}
-          {visible.map((task) => (
-            <div className="item item-checkable" key={task.id}>
-              <label className="task-label">
-                <input type="checkbox" onChange={() => onToggleDone(task.id)} />
-                <div>
-                  {task.title}
-                  <div className="meta">
-                    {task.priority.toUpperCase()} · {task.source}
-                    {task.due_at ? ` · ${formatDate(task.due_at)}` : ""}
-                  </div>
-                </div>
-              </label>
-              <button type="button" className="task-delete-button" onClick={() => onDelete(task.id)} aria-label="Slet opgave">
-                <IconClose />
-              </button>
-            </div>
-          ))}
-          {remaining > 0 && <p className="empty">+{remaining} flere opgaver.</p>}
-        </>
-      )}
-    </section>
   );
 }
 

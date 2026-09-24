@@ -11,6 +11,11 @@ interface NewsItem {
   image: string | null;
 }
 
+const SOURCES: { key: "dr" | "tv2"; label: string }[] = [
+  { key: "dr", label: "DR" },
+  { key: "tv2", label: "TV2" },
+];
+
 function formatTime(pubDate: string) {
   if (!pubDate) return "";
   const date = new Date(pubDate);
@@ -18,11 +23,16 @@ function formatTime(pubDate: string) {
   return date.toLocaleString("da-DK", { dateStyle: "short", timeStyle: "short" });
 }
 
-export function NewsPanel({ source, label }: { source: "dr" | "tv2"; label: string }) {
+// One panel, not two - DR and TV2 headlines are the same kind of content, so a source toggle
+// keeps them one scroll-stop instead of two near-identical panels back to back.
+export function NewsPanel() {
+  const [source, setSource] = useState<"dr" | "tv2">("dr");
   const [items, setItems] = useState<NewsItem[] | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    setItems(null);
+    setFailed(false);
     fetch(`/api/news?source=${source}`)
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data) => setItems(data.items))
@@ -31,7 +41,21 @@ export function NewsPanel({ source, label }: { source: "dr" | "tv2"; label: stri
 
   return (
     <section className="panel">
-      <PanelHeader icon={<IconNews />} title={label} subtitle="Seneste overskrifter, opdateres automatisk" />
+      <div className="news-panel-header">
+        <PanelHeader icon={<IconNews />} title="Nyheder" subtitle="Seneste overskrifter, opdateres automatisk" />
+        <div className="news-source-toggle">
+          {SOURCES.map((s) => (
+            <button
+              type="button"
+              key={s.key}
+              className={s.key === source ? "news-source-active" : ""}
+              onClick={() => setSource(s.key)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
       {failed && <p className="empty">Kunne ikke hente nyheder.</p>}
       {!failed && !items && <p className="empty">Henter...</p>}
       {items?.length === 0 && <p className="empty">Ingen nyheder lige nu.</p>}

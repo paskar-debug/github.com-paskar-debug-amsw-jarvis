@@ -2,7 +2,7 @@
 
 import type { Database } from "@amsw/db";
 import { IconBriefcase, IconClose, IconKey, IconShield } from "./icons";
-import { panelClass, PanelHeader, QuickAdd, Skeleton } from "./panels";
+import { QuickAdd, Skeleton } from "./panels";
 
 type EngvangRow = Database["public"]["Tables"]["engvang_items"]["Row"];
 type EngvangType = EngvangRow["type"];
@@ -12,25 +12,10 @@ interface LiveProps {
   flash?: boolean;
 }
 
-const TYPE_META: Record<Exclude<EngvangType, "andet">, { title: string; icon: React.ReactNode; subtitle: string; placeholder: string }> = {
-  leverandoraftale: {
-    title: "Leverandøraftaler",
-    icon: <IconBriefcase />,
-    subtitle: "Kontrakter, bindingsperioder og opsigelsesfrister",
-    placeholder: "Titel | Detaljer | Frist (YYYY-MM-DD) | Label",
-  },
-  forsikring: {
-    title: "Forsikringer",
-    icon: <IconShield />,
-    subtitle: "Policer og fornyelsesdatoer",
-    placeholder: "Titel | Detaljer | Frist (YYYY-MM-DD) | Label",
-  },
-  noegle: {
-    title: "Nøgler",
-    icon: <IconKey />,
-    subtitle: "Hvem har hvad",
-    placeholder: "Titel | Hvem har den",
-  },
+const TYPE_META: Record<Exclude<EngvangType, "andet">, { title: string; icon: React.ReactNode; placeholder: string }> = {
+  leverandoraftale: { title: "Leverandøraftaler", icon: <IconBriefcase />, placeholder: "Titel | Detaljer | Frist (YYYY-MM-DD) | Label" },
+  forsikring: { title: "Forsikringer", icon: <IconShield />, placeholder: "Titel | Detaljer | Frist (YYYY-MM-DD) | Label" },
+  noegle: { title: "Nøgler", icon: <IconKey />, placeholder: "Titel | Hvem har den" },
 };
 
 function formatDate(iso: string | null): string {
@@ -61,23 +46,24 @@ function EngvangDeadlines({ items }: { items: EngvangRow[] }) {
   );
 }
 
-function EngvangTypePanel({
+function EngvangSection({
   type,
   items,
-  flash,
   onCreate,
   onClose,
 }: {
   type: Exclude<EngvangType, "andet">;
   items: EngvangRow[];
-  flash?: boolean;
   onCreate: (raw: string) => Promise<void>;
   onClose: (id: string) => void;
 }) {
   const meta = TYPE_META[type];
   return (
-    <section className={panelClass("panel-engvang", flash && "panel-flash")}>
-      <PanelHeader icon={meta.icon} title={meta.title} subtitle={meta.subtitle} />
+    <div className="engvang-section">
+      <p className="engvang-section-label">
+        {meta.icon}
+        {meta.title} ({items.length})
+      </p>
       {items.length === 0 && <p className="empty">Ingen registreret endnu.</p>}
       {items.map((item) => (
         <div className="item item-checkable" key={item.id}>
@@ -96,7 +82,7 @@ function EngvangTypePanel({
         </div>
       ))}
       <QuickAdd placeholder={meta.placeholder} onSubmit={onCreate} />
-    </section>
+    </div>
   );
 }
 
@@ -114,18 +100,18 @@ export function EngvangPanels({
   if (isLoading) return <Skeleton lines={3} />;
 
   return (
-    <>
+    <section className={["panel panel-engvang", flash && "panel-flash"].filter(Boolean).join(" ")}>
       <EngvangDeadlines items={items} />
-      {(["leverandoraftale", "forsikring", "noegle"] as const).map((type) => (
-        <EngvangTypePanel
-          key={type}
-          type={type}
-          items={items.filter((i) => i.type === type && i.status === "active")}
-          flash={flash}
-          onCreate={(raw) => onCreate(type, raw)}
-          onClose={onClose}
-        />
+      {(["leverandoraftale", "forsikring", "noegle"] as const).map((type, i) => (
+        <div key={type} className={i > 0 ? "engvang-section-divider" : undefined}>
+          <EngvangSection
+            type={type}
+            items={items.filter((it) => it.type === type && it.status === "active")}
+            onCreate={(raw) => onCreate(type, raw)}
+            onClose={onClose}
+          />
+        </div>
       ))}
-    </>
+    </section>
   );
 }

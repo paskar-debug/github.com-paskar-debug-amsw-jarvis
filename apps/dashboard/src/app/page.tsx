@@ -8,6 +8,7 @@ import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
 import { CalendarPanel, DraftsPanel, GoalsPanel, StatusPanel, TasksPanel, WhoopPanel } from "@/components/panels";
 import { EngvangPanels } from "@/components/EngvangPanel";
+import { PipelinePanel } from "@/components/PipelinePanel";
 import { TodayPanel } from "@/components/TodayPanel";
 import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
@@ -163,6 +164,16 @@ export default function DashboardPage() {
           flash={tasksLive.flash}
           onToggleDone={handleToggleDone}
           onDelete={handleDeleteTask}
+          onCreate={handleCreateTask}
+        />
+
+        <PipelinePanel
+          tasks={tasksLive.rows}
+          isLoading={tasksLive.isLoading}
+          flash={tasksLive.flash}
+          onApprove={handleApproveSuggestion}
+          onReject={handleRejectSuggestion}
+          onToggleDone={handleToggleDone}
           onCreate={handleCreateTask}
         />
 

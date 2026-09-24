@@ -1989,3 +1989,130 @@ body::before {
   color: var(--muted);
   font-size: 0.78rem;
 }
+
+.pipeline-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .pipeline-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pipeline-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pipeline-column-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.6rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.pipeline-column-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.pipeline-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  margin-bottom: 0.5rem;
+}
+
+.pipeline-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.pipeline-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.pipeline-card-origin {
+  width: 12px;
+  height: 12px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.pipeline-card-desc {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.pipeline-card-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.pipeline-approve,
+.pipeline-reject {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pipeline-approve svg,
+.pipeline-reject svg {
+  width: 13px;
+  height: 13px;
+}
+
+.pipeline-approve {
+  background: rgba(47, 224, 138, 0.15);
+  color: var(--green);
+}
+
+.pipeline-reject {
+  background: rgba(255, 92, 92, 0.12);
+  color: var(--red);
+}
+
+.pipeline-approve:hover,
+.pipeline-reject:hover {
+  opacity: 0.8;
+}
+
+.pipeline-done-check {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.pipeline-done-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}

@@ -12,6 +12,10 @@ export interface Database {
           due_at: string | null;
           source: "manual" | "telegram" | "todoist" | "email";
           external_id: string | null;
+          /** Where the task originally came from, distinct from `source` (which tracks Todoist
+           *  mirroring and gets overwritten on approval). Set once at creation, never overwritten -
+           *  "email_triage" is what powers the mail-to-task pipeline view. */
+          origin: string | null;
           created_at: string;
           updated_at: string;
         };

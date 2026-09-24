@@ -153,7 +153,14 @@ async function runTriageLoop(context: string): Promise<{ result: FlagResult; dra
             try {
               const { data, error } = await supabase
                 .from("tasks")
-                .insert({ owner_id: env.ownerId, title: input.title, description: input.description, source: "email", status: "suggested" })
+                .insert({
+                  owner_id: env.ownerId,
+                  title: input.title,
+                  description: input.description,
+                  source: "email",
+                  status: "suggested",
+                  origin: "email_triage",
+                })
                 .select("id")
                 .single();
               if (error) throw error;

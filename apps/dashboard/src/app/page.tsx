@@ -12,7 +12,6 @@ import { PipelinePanel } from "@/components/PipelinePanel";
 import { TodayPanel } from "@/components/TodayPanel";
 import { Clock } from "@/components/Clock";
 import { QuotePanel } from "@/components/QuotePanel";
-import { NewsPanel } from "@/components/NewsPanel";
 import { WeatherPanel } from "@/components/WeatherPanel";
 import { IntegrationsPanel } from "@/components/IntegrationsPanel";
 import { AssistantWidget } from "@/components/AssistantWidget";
@@ -175,7 +174,6 @@ export default function DashboardPage() {
 
         <WeatherPanel />
 
-        <NewsPanel />
 
         {(draftsLive.isLoading || draftsLive.rows.length > 0) && (
           <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />

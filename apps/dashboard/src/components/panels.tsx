@@ -266,6 +266,14 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
                         <span className="stat-label">kunder i alt</span>
                       </div>
                     )}
+                    {typeof metrics.revenueLast30Days === "number" && typeof metrics.ordersLast30Days === "number" && metrics.ordersLast30Days > 0 && (
+                      <div className="stat">
+                        <span className="stat-value">
+                          {Math.round((metrics.revenueLast30Days / metrics.ordersLast30Days) * 100) / 100} {metrics.currency ?? ""}
+                        </span>
+                        <span className="stat-label">gns. ordreværdi, 30 dage</span>
+                      </div>
+                    )}
                   </div>
                 )}
                 {trendPoints.length >= 2 && (

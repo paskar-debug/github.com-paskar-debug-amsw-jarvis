@@ -140,7 +140,13 @@ interface ShopifyMetrics {
   totalCustomers?: number;
   currency?: string | null;
   dailyRevenue?: { date: string; orders: number; revenue: number }[];
+  productProfitLast30Days?:
+    | { title: string; quantity: number; revenue: number; cost: number | null; profit: number | null; marginPercent: number | null }[]
+    | null;
+  costDataCoveragePercent?: number | null;
 }
+
+const PRODUCT_PROFIT_VISIBLE_LIMIT = 8;
 
 /** A period-over-period change, expressed as a direction + whole-percent magnitude. Returns null
  *  when there's nothing meaningful to compare (no prior-period activity to divide by). */
@@ -284,6 +290,45 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
                       ariaLabel="Omsætning de sidste 7 dage"
                     />
                     <span className="stat-label">omsætning, 7-dages trend</span>
+                  </div>
+                )}
+                {hasOrderMetrics && metrics.productProfitLast30Days === null && (
+                  <p className="product-profit-note">
+                    Vare-profit kræver <code>read_products</code>-adgang på Shopify-appen — ikke sat op endnu.
+                  </p>
+                )}
+                {hasOrderMetrics && metrics.productProfitLast30Days && metrics.productProfitLast30Days.length > 0 && (
+                  <div className="product-profit-block">
+                    <p className="stat-label">indtjening pr. vare, 30 dage</p>
+                    {typeof metrics.costDataCoveragePercent === "number" && metrics.costDataCoveragePercent < 95 && (
+                      <p className="product-profit-note">
+                        Baseret på {metrics.costDataCoveragePercent}% af omsætningen — resten mangler vareomkostning i Shopify.
+                      </p>
+                    )}
+                    <table className="product-profit-table">
+                      <thead>
+                        <tr>
+                          <th>Vare</th>
+                          <th>Antal</th>
+                          <th>Omsætning</th>
+                          <th>Profit</th>
+                          <th>DG%</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {metrics.productProfitLast30Days.slice(0, PRODUCT_PROFIT_VISIBLE_LIMIT).map((p) => (
+                          <tr key={p.title}>
+                            <td>{p.title}</td>
+                            <td>{p.quantity}</td>
+                            <td>
+                              {p.revenue} {metrics.currency ?? ""}
+                            </td>
+                            <td>{p.profit === null ? "–" : `${p.profit} ${metrics.currency ?? ""}`}</td>
+                            <td>{p.marginPercent === null ? "–" : `${p.marginPercent}%`}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
                 <div className="meta">

@@ -41,6 +41,30 @@ interface ShopifyCustomersCountResponse {
   errors?: Array<{ message: string }>;
 }
 
+interface ShopifyLineItemsResponse {
+  data: {
+    orders: {
+      edges: Array<{
+        node: {
+          test: boolean;
+          cancelledAt: string | null;
+          lineItems: {
+            edges: Array<{
+              node: {
+                title: string;
+                quantity: number;
+                discountedTotalSet: { presentmentMoney: { amount: string } };
+                variant: { inventoryItem: { unitCost: { amount: string } | null } } | null;
+              };
+            }>;
+          };
+        };
+      }>;
+    };
+  };
+  errors?: Array<{ message: string }>;
+}
+
 async function shopifyGraphql<T>(config: ShopifyConfig, query: string, variables?: Record<string, unknown>): Promise<T> {
   const response = await fetch(
     `https://${config.storeDomain}/admin/api/${config.apiVersion}/graphql.json`,
@@ -69,6 +93,17 @@ export interface ShopifyDailyBucket {
   revenue: number;
 }
 
+export interface ShopifyProductProfit {
+  title: string;
+  quantity: number;
+  revenue: number;
+  /** Null when cost-per-item isn't set in Shopify for every unit of this product sold in the
+   *  window - showing a partial/averaged cost would be more misleading than showing nothing. */
+  cost: number | null;
+  profit: number | null;
+  marginPercent: number | null;
+}
+
 export interface ShopifySummary {
   ordersToday: number;
   revenueToday: number;
@@ -86,6 +121,12 @@ export interface ShopifySummary {
   totalCustomers: number | null;
   currency: string | null;
   dailyRevenue: ShopifyDailyBucket[];
+  /** Null when the app token doesn't have the read_products scope needed to see cost-per-item -
+   *  not the same as an empty array (which would mean "no sales", a real and different state). */
+  productProfitLast30Days: ShopifyProductProfit[] | null;
+  /** Share of the last 30 days' line-item revenue that had a cost-per-item on file, 0-100. Lets
+   *  the dashboard warn when profit figures are based on only a sliver of what was actually sold. */
+  costDataCoveragePercent: number | null;
 }
 
 function copenhagenDateKey(iso: string): string {
@@ -119,6 +160,85 @@ export function bucketDailyRevenue(edges: ShopifyOrdersResponse["data"]["orders"
     days.push({ date: key, orders: bucket.orders, revenue: Math.round(bucket.revenue * 100) / 100 });
   }
   return days;
+}
+
+/** Per-product revenue, cost and margin over the window, from Shopify's own cost-per-item field -
+ *  needs the read_products scope, which the app may not have. Kept as a fully separate query
+ *  (not merged into the main orders query) so a missing scope only silently disables this one
+ *  feature instead of throwing and taking down the whole sync - see shopifyGraphql's error
+ *  handling, which throws on ANY GraphQL error in the response. Line-item revenue is gross (not
+ *  reduced by order-level refunds) - refunds aren't broken out per line item, so per-product
+ *  profit is a slight overestimate on orders with partial refunds; the aggregate revenue figures
+ *  elsewhere in this file remain the refund-adjusted source of truth. */
+async function fetchProductProfit(
+  config: ShopifyConfig,
+  since: Date,
+): Promise<{ products: ShopifyProductProfit[]; coveragePercent: number } | null> {
+  const query = `
+    query OrdersLineItems($queryString: String!) {
+      orders(first: 250, query: $queryString) {
+        edges {
+          node {
+            test
+            cancelledAt
+            lineItems(first: 20) {
+              edges {
+                node {
+                  title
+                  quantity
+                  discountedTotalSet { presentmentMoney { amount } }
+                  variant { inventoryItem { unitCost { amount } } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  try {
+    const result = await shopifyGraphql<ShopifyLineItemsResponse>(config, query, {
+      queryString: `created_at:>='${since.toISOString()}'`,
+    });
+
+    const byProduct = new Map<string, { quantity: number; revenue: number; cost: number; costedQuantity: number }>();
+    let totalRevenue = 0;
+    let costedRevenue = 0;
+
+    for (const orderEdge of result.data.orders.edges) {
+      if (orderEdge.node.test || orderEdge.node.cancelledAt) continue;
+      for (const li of orderEdge.node.lineItems.edges) {
+        const revenue = Number(li.node.discountedTotalSet.presentmentMoney.amount);
+        totalRevenue += revenue;
+        const existing = byProduct.get(li.node.title) ?? { quantity: 0, revenue: 0, cost: 0, costedQuantity: 0 };
+        existing.quantity += li.node.quantity;
+        existing.revenue += revenue;
+        const unitCost = li.node.variant?.inventoryItem?.unitCost?.amount;
+        if (unitCost != null) {
+          existing.cost += Number(unitCost) * li.node.quantity;
+          existing.costedQuantity += li.node.quantity;
+          costedRevenue += revenue;
+        }
+        byProduct.set(li.node.title, existing);
+      }
+    }
+
+    const products: ShopifyProductProfit[] = [...byProduct.entries()]
+      .map(([title, v]) => {
+        const hasFullCost = v.costedQuantity > 0 && v.costedQuantity === v.quantity;
+        const cost = hasFullCost ? Math.round(v.cost * 100) / 100 : null;
+        const profit = hasFullCost ? Math.round((v.revenue - v.cost) * 100) / 100 : null;
+        const marginPercent = hasFullCost && v.revenue > 0 ? Math.round(((v.revenue - v.cost) / v.revenue) * 1000) / 10 : null;
+        return { title, quantity: v.quantity, revenue: Math.round(v.revenue * 100) / 100, cost, profit, marginPercent };
+      })
+      .sort((a, b) => b.revenue - a.revenue);
+
+    const coveragePercent = totalRevenue > 0 ? Math.round((costedRevenue / totalRevenue) * 1000) / 10 : 0;
+    return { products, coveragePercent };
+  } catch {
+    return null;
+  }
 }
 
 /** Summarizes today's/weekly/monthly orders/revenue, peak single-day orders, and total customers,
@@ -187,6 +307,8 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
     totalCustomers = null;
   }
 
+  const productProfit = await fetchProductProfit(config, thirtyDaysAgo);
+
   const summary: ShopifySummary = {
     ordersToday: todayEdges.length,
     revenueToday: sum(todayEdges),
@@ -202,6 +324,8 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
     totalCustomers,
     currency,
     dailyRevenue: bucketDailyRevenue(edges7d),
+    productProfitLast30Days: productProfit?.products ?? null,
+    costDataCoveragePercent: productProfit?.coveragePercent ?? null,
   };
 
   const { error } = await supabase.from("amsw_status").insert({

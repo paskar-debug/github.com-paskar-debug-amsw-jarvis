@@ -2074,3 +2074,57 @@ body::before {
   height: 16px;
   color: var(--engvang-accent);
 }
+
+.product-profit-note {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-style: italic;
+  margin: 0.7rem 0 0;
+}
+
+.product-profit-note code {
+  font-family: var(--font-inter), monospace;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+  font-style: normal;
+}
+
+.product-profit-block {
+  margin-top: 1.1rem;
+}
+
+.product-profit-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+}
+
+.product-profit-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  padding: 0.3rem 0.5rem 0.3rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.product-profit-table td {
+  padding: 0.4rem 0.5rem 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.product-profit-table td:first-child {
+  white-space: normal;
+  min-width: 120px;
+}
+
+.product-profit-table th:nth-child(n+2),
+.product-profit-table td:nth-child(n+2) {
+  text-align: right;
+}

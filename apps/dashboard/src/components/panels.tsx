@@ -129,6 +129,8 @@ export function CalendarPanel({ events, isLoading, flash }: LiveProps & { events
 interface ShopifyMetrics {
   ordersToday?: number;
   revenueToday?: number;
+  ordersMTD?: number;
+  revenueMTD?: number;
   ordersLast7Days?: number;
   revenueLast7Days?: number;
   ordersPrevious7Days?: number;
@@ -138,6 +140,7 @@ interface ShopifyMetrics {
   ordersLast30Days?: number;
   revenueLast30Days?: number;
   totalCustomers?: number;
+  customerStats?: { newCustomersThisMonth: number; returningCustomersPercent: number; repeatPurchaseRatePercent: number } | null;
   currency?: string | null;
   dailyRevenue?: { date: string; orders: number; revenue: number }[];
   productProfitLast30Days?:
@@ -218,6 +221,20 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
                       </span>
                       <span className="stat-label">omsætning i dag</span>
                     </div>
+                    {typeof metrics.ordersMTD === "number" && (
+                      <div className="stat">
+                        <span className="stat-value">{metrics.ordersMTD}</span>
+                        <span className="stat-label">ordrer, denne måned</span>
+                      </div>
+                    )}
+                    {typeof metrics.revenueMTD === "number" && (
+                      <div className="stat">
+                        <span className="stat-value">
+                          {metrics.revenueMTD} {metrics.currency ?? ""}
+                        </span>
+                        <span className="stat-label">omsætning, denne måned</span>
+                      </div>
+                    )}
                     {typeof metrics.ordersLast7Days === "number" && (
                       <div className="stat">
                         <span className="stat-value">{metrics.ordersLast7Days}</span>
@@ -382,12 +399,61 @@ function groupGoalsByCategory(goals: GoalRow[]): [string, GoalRow[]][] {
   return orderedKeys.map((key) => [key, groups.get(key)!]);
 }
 
+interface CustomerOpsStats {
+  totalCustomers: number | null;
+  newCustomersThisMonth: number | null;
+  returningCustomersPercent: number | null;
+  repeatPurchaseRatePercent: number | null;
+}
+
+/** A milestone like "250 kunder" tells you the destination, not how the business is actually
+ *  moving right now - this sits above that category's milestones with the operational numbers
+ *  that answer "how are we doing today", not just "how far from the goalpost". */
+function CustomerOpsBlock({ stats }: { stats: CustomerOpsStats }) {
+  if (stats.totalCustomers === null && stats.newCustomersThisMonth === null) {
+    return (
+      <p className="product-profit-note" style={{ marginBottom: "0.8rem" }}>
+        Kundetal kræver <code>read_customers</code>-adgang på Shopify-appen — ikke sat op endnu.
+      </p>
+    );
+  }
+  return (
+    <div className="status-stats customer-ops-stats">
+      {stats.totalCustomers !== null && (
+        <div className="stat">
+          <span className="stat-value">{stats.totalCustomers}</span>
+          <span className="stat-label">kunder i alt</span>
+        </div>
+      )}
+      {stats.newCustomersThisMonth !== null && (
+        <div className="stat">
+          <span className="stat-value">{stats.newCustomersThisMonth}</span>
+          <span className="stat-label">nye denne måned</span>
+        </div>
+      )}
+      {stats.returningCustomersPercent !== null && (
+        <div className="stat">
+          <span className="stat-value">{stats.returningCustomersPercent}%</span>
+          <span className="stat-label">tilbagevendende kunder</span>
+        </div>
+      )}
+      {stats.repeatPurchaseRatePercent !== null && (
+        <div className="stat">
+          <span className="stat-value">{stats.repeatPurchaseRatePercent}%</span>
+          <span className="stat-label">repeat purchase rate</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function GoalsPanel({
   goals,
   isLoading,
   flash,
   onToggleDone,
-}: LiveProps & { goals: GoalRow[]; onToggleDone: (id: string) => void }) {
+  customerStats,
+}: LiveProps & { goals: GoalRow[]; onToggleDone: (id: string) => void; customerStats?: CustomerOpsStats }) {
   const visible = goals.filter((g) => g.status !== "cancelled");
   const wonCount = visible.filter((g) => g.status === "done").length;
   const grouped = groupGoalsByCategory(visible);
@@ -411,6 +477,7 @@ export function GoalsPanel({
               <div className="goal-group-label" style={{ color: categoryColor(category === "Andet" ? null : category) }}>
                 {category}
               </div>
+              {category === "Kunder" && customerStats && <CustomerOpsBlock stats={customerStats} />}
               {categoryGoals.map((goal) => {
                 const done = goal.status === "done";
                 const color = categoryColor(goal.category);

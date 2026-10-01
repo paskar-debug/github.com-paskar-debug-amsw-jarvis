@@ -2128,3 +2128,9 @@ body::before {
 .product-profit-table td:nth-child(n+2) {
   text-align: right;
 }
+
+.customer-ops-stats {
+  margin-bottom: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}

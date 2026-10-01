@@ -41,6 +41,15 @@ interface ShopifyCustomersCountResponse {
   errors?: Array<{ message: string }>;
 }
 
+interface ShopifyCustomersResponse {
+  data: {
+    customers: {
+      edges: Array<{ node: { id: string; createdAt: string; numberOfOrders: string } }>;
+    };
+  };
+  errors?: Array<{ message: string }>;
+}
+
 interface ShopifyLineItemsResponse {
   data: {
     orders: {
@@ -93,6 +102,16 @@ export interface ShopifyDailyBucket {
   revenue: number;
 }
 
+export interface ShopifyCustomerStats {
+  newCustomersThisMonth: number;
+  /** Share of the whole customer base that has ordered more than once, 0-100 - a lifetime loyalty
+   *  signal, distinct from repeatPurchaseRatePercent below. */
+  returningCustomersPercent: number;
+  /** Of customers who bought in the last 30 days, the share who had already ordered before this
+   *  purchase, 0-100 - a recent-behavior signal, not a lifetime one. */
+  repeatPurchaseRatePercent: number;
+}
+
 export interface ShopifyProductProfit {
   title: string;
   quantity: number;
@@ -107,6 +126,9 @@ export interface ShopifyProductProfit {
 export interface ShopifySummary {
   ordersToday: number;
   revenueToday: number;
+  /** Month-to-date, Copenhagen-local calendar month. */
+  ordersMTD: number;
+  revenueMTD: number;
   ordersLast7Days: number;
   revenueLast7Days: number;
   /** The 7 days before that - lets the dashboard show "vs. last week" instead of a bare number. */
@@ -119,6 +141,7 @@ export interface ShopifySummary {
   /** Most orders placed on any single Copenhagen calendar day within the last 30 days. */
   peakDayOrders: number;
   totalCustomers: number | null;
+  customerStats: ShopifyCustomerStats | null;
   currency: string | null;
   dailyRevenue: ShopifyDailyBucket[];
   /** Null when the app token doesn't have the read_products scope needed to see cost-per-item -
@@ -131,6 +154,21 @@ export interface ShopifySummary {
 
 function copenhagenDateKey(iso: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Copenhagen", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
+}
+
+/** Midnight on the 1st of the current Copenhagen-local month, as a UTC instant - "MTD" means the
+ *  calendar month the owner is actually in, not a UTC one that can start up to two hours off. */
+function startOfCopenhagenMonth(): Date {
+  const [year, month] = copenhagenDateKey(new Date().toISOString()).split("-");
+  const dayOneKey = `${year}-${month}-01`;
+  // UTC midnight on the 1st is always still "day 1" in Copenhagen (which is UTC+1 or UTC+2, never
+  // behind UTC), so step backward hour by hour - without hardcoding either offset, since it flips
+  // with daylight saving - until one more step would roll back into the previous month.
+  let candidate = new Date(`${dayOneKey}T00:00:00Z`);
+  while (copenhagenDateKey(new Date(candidate.getTime() - 60 * 60 * 1000).toISOString()) === dayOneKey) {
+    candidate = new Date(candidate.getTime() - 60 * 60 * 1000);
+  }
+  return candidate;
 }
 
 /** What the order is actually still worth after refunds - never below 0. Partial refunds reduce
@@ -241,6 +279,43 @@ async function fetchProductProfit(
   }
 }
 
+/** New-this-month, lifetime-returning, and recent-repeat-purchase rates - needs read_customers,
+ *  same as the totalCustomers count above, and kept just as isolated/best-effort as that one. */
+async function fetchCustomerStats(config: ShopifyConfig, startOfMonth: Date, thirtyDaysAgo: Date): Promise<ShopifyCustomerStats | null> {
+  try {
+    const [newResult, allResult, recentResult] = await Promise.all([
+      shopifyGraphql<ShopifyCustomersCountResponse>(config, "query($q: String!) { customersCount(query: $q) { count } }", {
+        q: `created_at:>='${startOfMonth.toISOString()}'`,
+      }),
+      shopifyGraphql<ShopifyCustomersResponse>(
+        config,
+        "{ customers(first: 250) { edges { node { id createdAt numberOfOrders } } } }",
+      ),
+      shopifyGraphql<ShopifyCustomersResponse>(
+        config,
+        "query($q: String!) { customers(first: 250, query: $q) { edges { node { id createdAt numberOfOrders } } } }",
+        { q: `last_order_date:>='${thirtyDaysAgo.toISOString()}'` },
+      ),
+    ]);
+
+    const allCustomers = allResult.data.customers.edges;
+    const returning = allCustomers.filter((e) => Number(e.node.numberOfOrders) > 1).length;
+    const returningCustomersPercent = allCustomers.length > 0 ? Math.round((returning / allCustomers.length) * 1000) / 10 : 0;
+
+    const recentCustomers = recentResult.data.customers.edges;
+    const recentReturning = recentCustomers.filter((e) => Number(e.node.numberOfOrders) > 1).length;
+    const repeatPurchaseRatePercent = recentCustomers.length > 0 ? Math.round((recentReturning / recentCustomers.length) * 1000) / 10 : 0;
+
+    return {
+      newCustomersThisMonth: newResult.data.customersCount.count,
+      returningCustomersPercent,
+      repeatPurchaseRatePercent,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /** Summarizes today's/weekly/monthly orders/revenue, peak single-day orders, and total customers,
  *  and writes it as an amsw_status snapshot. Fetches a single 30-day order window and derives every
  *  narrower figure (today, 7 days) from it, rather than issuing a separate query per window. */
@@ -250,6 +325,7 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const startOfMonth = startOfCopenhagenMonth();
 
   const ordersQuery = `
     query OrdersRecent($queryString: String!) {
@@ -268,20 +344,32 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
     }
   `;
 
+  // In a 31-day month checked near month-end, day 1 can fall just outside a strict 30-day lookback -
+  // fetch from whichever boundary is earlier so MTD is never silently short a day.
+  const queryWindowStart = startOfMonth < thirtyDaysAgo ? startOfMonth : thirtyDaysAgo;
   const result = await shopifyGraphql<ShopifyOrdersResponse>(config, ordersQuery, {
-    queryString: `created_at:>='${thirtyDaysAgo.toISOString()}'`,
+    queryString: `created_at:>='${queryWindowStart.toISOString()}'`,
   });
 
   // A cancelled or fully-refunded order stays in this result set (it still "created_at:>=X") but
   // shouldn't count toward orders/revenue anywhere below - neither one ended up as real business.
   // A partial refund keeps the order but reduces its counted amount (handled by netAmount).
-  const edges30d = result.data.orders.edges.filter((edge) => !edge.node.test && !edge.node.cancelledAt && netAmount(edge) > 0);
+  // Filtered to exactly 30 days regardless of queryWindowStart, which can reach slightly further
+  // back than that to make sure MTD (below) is never short a day near month-end.
+  const edges30d = result.data.orders.edges.filter(
+    (edge) => !edge.node.test && !edge.node.cancelledAt && netAmount(edge) > 0 && new Date(edge.node.createdAt) >= thirtyDaysAgo,
+  );
   const edges7d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= sevenDaysAgo);
   const edgesPrevious7d = edges30d.filter(
     (edge) => new Date(edge.node.createdAt) >= fourteenDaysAgo && new Date(edge.node.createdAt) < sevenDaysAgo,
   );
   const edges14d = edges30d.filter((edge) => new Date(edge.node.createdAt) >= fourteenDaysAgo);
   const todayEdges = edges30d.filter((edge) => new Date(edge.node.createdAt) >= startOfDay);
+  // MTD can include days the 30-day window doesn't reach (and vice versa in a short month) - filter
+  // straight from the raw, wider-fetched result rather than from edges30d.
+  const edgesMTD = result.data.orders.edges.filter(
+    (edge) => !edge.node.test && !edge.node.cancelledAt && netAmount(edge) > 0 && new Date(edge.node.createdAt) >= startOfMonth,
+  );
 
   // Rounded to 2 decimals - summing money as floating point otherwise leaves artifacts like
   // 857.9000000000001 from binary rounding, which showed up raw on the dashboard.
@@ -308,10 +396,13 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
   }
 
   const productProfit = await fetchProductProfit(config, thirtyDaysAgo);
+  const customerStats = await fetchCustomerStats(config, startOfMonth, thirtyDaysAgo);
 
   const summary: ShopifySummary = {
     ordersToday: todayEdges.length,
     revenueToday: sum(todayEdges),
+    ordersMTD: edgesMTD.length,
+    revenueMTD: sum(edgesMTD),
     ordersLast7Days: edges7d.length,
     revenueLast7Days: sum(edges7d),
     ordersPrevious7Days: edgesPrevious7d.length,
@@ -322,6 +413,7 @@ export async function syncShopify(supabase: TypedSupabaseClient, ownerId: string
     revenueLast30Days: sum(edges30d),
     peakDayOrders,
     totalCustomers,
+    customerStats,
     currency,
     dailyRevenue: bucketDailyRevenue(edges7d),
     productProfitLast30Days: productProfit?.products ?? null,

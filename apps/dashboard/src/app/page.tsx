@@ -19,6 +19,18 @@ import { IconLeaf, IconLogout } from "@/components/icons";
 
 type Tables = Database["public"]["Tables"];
 
+interface ShopifyCustomerMetrics {
+  totalCustomers?: number;
+  customerStats?: { newCustomersThisMonth: number; returningCustomersPercent: number; repeatPurchaseRatePercent: number } | null;
+}
+
+function latestShopifyMetrics(statuses: Tables["amsw_status"]["Row"][]): ShopifyCustomerMetrics | null {
+  const latest = [...statuses]
+    .filter((s) => s.area === "shopify")
+    .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())[0];
+  return (latest?.metrics as ShopifyCustomerMetrics | undefined) ?? null;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
@@ -168,7 +180,21 @@ export default function DashboardPage() {
 
         <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
 
-        <GoalsPanel goals={goalsLive.rows} isLoading={goalsLive.isLoading} flash={goalsLive.flash} onToggleDone={handleToggleGoalDone} />
+        <GoalsPanel
+          goals={goalsLive.rows}
+          isLoading={goalsLive.isLoading}
+          flash={goalsLive.flash}
+          onToggleDone={handleToggleGoalDone}
+          customerStats={(() => {
+            const metrics = latestShopifyMetrics(statusesLive.rows);
+            return {
+              totalCustomers: metrics?.totalCustomers ?? null,
+              newCustomersThisMonth: metrics?.customerStats?.newCustomersThisMonth ?? null,
+              returningCustomersPercent: metrics?.customerStats?.returningCustomersPercent ?? null,
+              repeatPurchaseRatePercent: metrics?.customerStats?.repeatPurchaseRatePercent ?? null,
+            };
+          })()}
+        />
 
         <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
 

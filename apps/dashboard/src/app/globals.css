@@ -1092,7 +1092,7 @@ body::before {
 
 .stat-value {
   font-family: var(--font-display), var(--font-inter), sans-serif;
-  font-size: 2.9rem;
+  font-size: 2.1rem;
   font-weight: 400;
   letter-spacing: 0.01em;
   line-height: 1;
@@ -1101,6 +1101,10 @@ body::before {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.panel-shopify-status .stat-value {
+  font-size: 2.9rem;
 }
 
 .stat-label {
@@ -1889,6 +1893,10 @@ body::before {
   }
 
   .stat-value {
+    font-size: 1.65rem;
+  }
+
+  .panel-shopify-status .stat-value {
     font-size: 2.1rem;
   }
 

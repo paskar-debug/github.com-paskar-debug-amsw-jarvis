@@ -184,7 +184,7 @@ export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { status
   }
   const latest = [...latestByArea.values()];
   return (
-    <section className={panelClass(flash && "panel-flash")}>
+    <section className={panelClass("panel-shopify-status", flash && "panel-flash")}>
       <PanelHeader icon={<IconPulse />} title="AMSW Shopify status" subtitle="Ordrer, omsætning og status hentet automatisk fra Shopify" />
       {isLoading ? (
         <Skeleton lines={4} />

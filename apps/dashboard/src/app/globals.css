@@ -1092,7 +1092,7 @@ body::before {
 
 .stat-value {
   font-family: var(--font-display), var(--font-inter), sans-serif;
-  font-size: 2.1rem;
+  font-size: 2.9rem;
   font-weight: 400;
   letter-spacing: 0.01em;
   line-height: 1;
@@ -1330,25 +1330,25 @@ body::before {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  gap: 0.6rem;
+  gap: 0.7rem;
   text-align: center;
-  max-width: 760px;
-  margin: 0 auto 1.6rem;
+  max-width: 920px;
+  margin: 0 auto 1.8rem;
   padding: 0 1rem;
 }
 
 .quote-strap-icon {
   flex-shrink: 0;
-  width: 15px;
-  height: 15px;
-  margin-top: 0.3rem;
+  width: 20px;
+  height: 20px;
+  margin-top: 0.35rem;
   color: var(--brand-bright);
   opacity: 0.7;
 }
 
 .quote-strap-text {
   font-family: var(--font-display), var(--font-inter), sans-serif;
-  font-size: 1.05rem;
+  font-size: 1.55rem;
   font-weight: 400;
   font-style: italic;
   line-height: 1.5;
@@ -1358,7 +1358,7 @@ body::before {
 
 .quote-strap-author {
   font-style: normal;
-  font-size: 0.78rem;
+  font-size: 0.95rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1889,7 +1889,7 @@ body::before {
   }
 
   .stat-value {
-    font-size: 1.65rem;
+    font-size: 2.1rem;
   }
 
   .draft-card-header {

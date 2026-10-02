@@ -215,6 +215,10 @@ body::before {
   gap: 1.1rem;
 }
 
+.top-status {
+  margin-bottom: 1.4rem;
+}
+
 .section-label {
   font-family: var(--font-display), var(--font-inter), sans-serif;
   font-size: 0.95rem;

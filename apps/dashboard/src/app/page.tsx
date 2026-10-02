@@ -150,6 +150,12 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      <QuotePanel />
+
+      <div className="main-column top-status">
+        <StatusPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
+      </div>
+
       <TodayPanel
         tasks={tasksLive.rows}
         events={eventsLive.rows}
@@ -160,15 +166,11 @@ export default function DashboardPage() {
         onReject={handleRejectSuggestion}
       />
 
-      <QuotePanel />
-
       <div className="section section-system">
         <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
       </div>
 
       <div className="main-column">
-        <StatusPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
-
         <PipelinePanel
           tasks={tasksLive.rows}
           isLoading={tasksLive.isLoading}

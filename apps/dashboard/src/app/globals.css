@@ -1108,7 +1108,7 @@ body::before {
 }
 
 .panel-shopify-status .stat-value {
-  font-size: 2.9rem;
+  font-size: 1.45rem;
 }
 
 .stat-label {
@@ -1901,7 +1901,7 @@ body::before {
   }
 
   .panel-shopify-status .stat-value {
-    font-size: 2.1rem;
+    font-size: 1.1rem;
   }
 
   .draft-card-header {

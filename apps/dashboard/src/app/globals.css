@@ -2434,3 +2434,67 @@ input[type="checkbox"]:hover {
   margin-bottom: -6rem;
   padding-bottom: 6rem;
 }
+
+/* ─── Approvals as a compact list ────────────────────────────────────────── */
+
+.approvals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.approval {
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: none;
+}
+
+.approval:last-child {
+  border-bottom: 0;
+}
+
+.approval-body {
+  padding: 0.3rem 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  gap: 0.35rem;
+}
+
+.approval-title {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.approval-open .approval-title {
+  white-space: normal;
+}
+
+.approval-body:hover .approval-title {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--petrol);
+  text-underline-offset: 3px;
+}
+
+.approval-age {
+  flex-shrink: 0;
+  padding-top: 0.45rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+}
+
+.approvals .disclosure {
+  margin-top: 0.5rem;
+}

@@ -1549,6 +1549,26 @@ input[type="checkbox"]:disabled {
   transform: translateY(-2px);
 }
 
+/* The secondary "use e-mail instead" action must not inherit the primary button look above. */
+.login-form .login-link-button {
+  width: auto;
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+  font-family: var(--font-inter), sans-serif;
+  font-size: 0.8rem;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 0.25rem;
+  text-decoration: underline;
+}
+
+.login-form .login-link-button:hover {
+  color: var(--brand-bright);
+  filter: none;
+  transform: none;
+}
+
 .assistant-widget {
   position: fixed;
   right: 1.5rem;

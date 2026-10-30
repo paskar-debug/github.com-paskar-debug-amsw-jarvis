@@ -14,7 +14,7 @@ import {
 } from "./logos";
 
 type SyncRow = Database["public"]["Tables"]["integration_sync_state"]["Row"];
-type Status = "green" | "yellow" | "red";
+type Status = "green" | "yellow" | "red" | "idle";
 
 interface SourceMeta {
   key: SyncRow["source"];
@@ -119,7 +119,7 @@ function WhoopChip({ state }: { state: SyncRow | undefined }) {
 
 function ManualToolChip({ label, letter, color, note }: { label: string; letter: string; color: string; note: string }) {
   return (
-    <Chip label={label} title={`${label} — Ikke overvåget — ${note}`} color={color} status="yellow">
+    <Chip label={label} title={`${label} — Ikke overvåget — ${note}`} color={color} status="idle">
       {letter}
     </Chip>
   );

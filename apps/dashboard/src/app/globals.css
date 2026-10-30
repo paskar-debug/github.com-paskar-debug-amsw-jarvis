@@ -1443,6 +1443,7 @@ input[type="checkbox"]:disabled {
 .integration-chip-dot.green { background: var(--green); }
 .integration-chip-dot.yellow { background: var(--yellow); }
 .integration-chip-dot.red { background: var(--red); }
+.integration-chip-dot.idle { background: var(--faint); }
 
 .integrations-strip-flash .integration-chip {
   animation: panel-flash 0.9s ease-out;

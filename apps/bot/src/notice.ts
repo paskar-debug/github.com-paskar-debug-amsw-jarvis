@@ -233,13 +233,29 @@ async function gatherRecentSignals(): Promise<string> {
   return parts.join("\n\n");
 }
 
+/** Lists what's already on the plate (open tasks and pending suggestions), so the same mail thread
+ *  arriving again doesn't produce a fresh duplicate suggestion every pass. */
+async function knownTasksContext(): Promise<string> {
+  const { data } = await supabase
+    .from("tasks")
+    .select("title")
+    .eq("owner_id", env.ownerId)
+    .in("status", ["todo", "in_progress", "suggested"]);
+  if (!data || data.length === 0) return "";
+  return (
+    "Opgaver og opgaveforslag der ALLEREDE findes - foreslå ikke noget der dækker det samme igen, heller ikke med en anden formulering:\n" +
+    data.map((t) => `- ${t.title}`).join("\n")
+  );
+}
+
 export async function checkRecentActivity(): Promise<{ result: FlagResult; drafts: DraftedReply[]; suggestions: SuggestedTask[] }> {
   if (!env.anthropicApiKey) return { result: { flag: false, message: null }, drafts: [], suggestions: [] };
 
   const context = await gatherRecentSignals();
   if (!context.trim()) return { result: { flag: false, message: null }, drafts: [], suggestions: [] };
 
-  return runTriageLoop(context).catch((err) => {
+  const known = await knownTasksContext();
+  return runTriageLoop(known ? `${context}\n\n${known}` : context).catch((err) => {
     console.error("Proaktivt tjek fejlede:", err);
     return { result: { flag: false, message: null }, drafts: [], suggestions: [] };
   });

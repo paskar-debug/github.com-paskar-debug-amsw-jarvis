@@ -1,21 +1,25 @@
 /* ─── Tokens ─────────────────────────────────────────────────────────────── */
 
 :root {
-  --bg: #0a0c11;
-  --surface: #12151c;
-  --surface-2: #181c25;
-  --surface-hover: #1b202a;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.13);
-  --text: #eef1f6;
-  --muted: #8b93a6;
-  --faint: #5c6477;
+  /* AMSW - locked brand colors from amsw.dk / brand/content-standard.md. */
+  --bg: #050505;
+  --surface: #0c0c0c;
+  --surface-2: #161616;
+  --surface-hover: #131313;
+  --border: rgba(239, 239, 239, 0.1);
+  --border-strong: rgba(239, 239, 239, 0.22);
+  --text: #efefef;
+  --muted: #9a9a9a;
+  --faint: #6a6a6a;
 
-  --brand-deep: #003a5c;
-  --brand: #0088c8;
-  --brand-bright: #00c2ff;
-  --accent: var(--brand-bright);
-  --accent-soft: rgba(0, 194, 255, 0.12);
+  --petrol: #1c6b82;
+  --petrol-deep: #124f5e;
+  --brand-deep: var(--petrol-deep);
+  --brand: var(--petrol);
+  /* On black, petrol is for lines and fills; emphasized text uses off-white instead. */
+  --brand-bright: var(--petrol);
+  --accent: var(--petrol);
+  --accent-soft: rgba(28, 107, 130, 0.2);
 
   --green: #34d399;
   --yellow: #fbbf24;
@@ -24,13 +28,16 @@
   --whoop-sleep: #60a5fa;
   --whoop-purple: #a78bfa;
 
-  /* Engvang is a different employer and a different kind of data, so it gets its own identity
-     color instead of blending into AMSW's cyan. */
-  --engvang-accent: #4ade80;
-  --engvang-accent-soft: rgba(74, 222, 128, 0.1);
+  /* Engvang - from engvangskole.dk. */
+  --engvang-accent: #225528;
+  --engvang-sage: #5a805e;
+  --engvang-text: #333333;
+  --engvang-line: #e6e6e6;
+  --engvang-paper: #f6f6f6;
+  --engvang-accent-soft: rgba(34, 85, 40, 0.08);
 
-  --radius: 18px;
-  --radius-sm: 10px;
+  --radius: 0;
+  --radius-sm: 0;
   --gap: 1.25rem;
 }
 
@@ -71,7 +78,7 @@ code {
   font-size: 0.85em;
   background: rgba(255, 255, 255, 0.06);
   padding: 0.1em 0.35em;
-  border-radius: 5px;
+  border-radius: 0;
 }
 
 /* ─── Page shell ─────────────────────────────────────────────────────────── */
@@ -121,7 +128,7 @@ code {
   gap: 0.5rem;
   height: 34px;
   padding: 0 0.85rem;
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   font-size: 0.82rem;
@@ -202,7 +209,7 @@ code {
   gap: 1.75rem;
   padding: 2rem;
   margin-bottom: var(--gap);
-  border-radius: 24px;
+  border-radius: 0;
   border: 1px solid var(--border);
   background:
     radial-gradient(600px 300px at 0% 0%, rgba(0, 194, 255, 0.16), transparent 70%),
@@ -263,7 +270,7 @@ code {
   gap: 0.15rem;
   min-width: 0;
   padding: 1rem 1.1rem;
-  border-radius: 14px;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid var(--border);
   backdrop-filter: blur(6px);
@@ -300,7 +307,7 @@ code {
 .approvals {
   margin-bottom: var(--gap);
   padding: 1.1rem 1.25rem;
-  border-radius: var(--radius);
+  border-radius: 0;
   border: 1px solid rgba(0, 194, 255, 0.3);
   background: linear-gradient(180deg, rgba(0, 194, 255, 0.08), rgba(0, 194, 255, 0.02)), var(--surface);
 }
@@ -331,7 +338,7 @@ code {
   align-items: center;
   gap: 0.75rem;
   padding: 0.7rem 0.75rem 0.7rem 0.9rem;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--border);
 }
@@ -382,7 +389,7 @@ code {
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 0;
   padding: 1.25rem 1.35rem;
   min-width: 0;
 }
@@ -415,7 +422,7 @@ code {
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: 0;
   background: var(--accent-soft);
   color: var(--brand-bright);
 }
@@ -440,7 +447,7 @@ code {
   height: 22px;
   padding: 0 0.45rem;
   justify-content: center;
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--surface-2);
   border: 1px solid var(--border);
   font-size: 0.75rem;
@@ -459,7 +466,7 @@ code {
   font-size: 0.72rem;
   font-weight: 600;
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  border-radius: 0;
 }
 
 .status-pill.green { color: var(--green); background: rgba(52, 211, 153, 0.12); }
@@ -521,7 +528,7 @@ code {
 
 .ghost-button {
   padding: 0.35rem 0.6rem;
-  border-radius: 8px;
+  border-radius: 0;
   color: var(--muted);
   border: 1px solid var(--border);
   white-space: nowrap;
@@ -581,7 +588,7 @@ code {
 
 .skeleton-line {
   height: 12px;
-  border-radius: 6px;
+  border-radius: 0;
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.6s ease-in-out infinite;
@@ -609,7 +616,7 @@ code {
   min-width: 0;
   height: 38px;
   padding: 0 0.85rem;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
@@ -630,7 +637,7 @@ code {
   width: 38px;
   height: 38px;
   flex-shrink: 0;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   border: none;
   background: var(--brand-bright);
   color: #04121a;
@@ -651,7 +658,7 @@ input[type="checkbox"] {
   height: 18px;
   flex-shrink: 0;
   margin: 0;
-  border-radius: 6px;
+  border-radius: 0;
   border: 1.5px solid var(--border-strong);
   background: transparent;
   cursor: pointer;
@@ -697,7 +704,7 @@ input[type="checkbox"]:disabled {
   gap: 0.75rem;
   padding: 0.6rem 0.5rem;
   margin: 0 -0.5rem;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   transition: background 0.12s ease;
 }
 
@@ -746,7 +753,7 @@ input[type="checkbox"]:disabled {
 .task-check-done {
   width: 18px;
   height: 18px;
-  border-radius: 6px;
+  border-radius: 0;
   background: rgba(52, 211, 153, 0.15);
   position: relative;
 }
@@ -771,7 +778,7 @@ input[type="checkbox"]:disabled {
   height: 26px;
   flex-shrink: 0;
   border: none;
-  border-radius: 7px;
+  border-radius: 0;
   background: none;
   color: var(--faint);
   cursor: pointer;
@@ -855,7 +862,7 @@ input[type="checkbox"]:disabled {
 .segmented {
   display: inline-flex;
   padding: 3px;
-  border-radius: 10px;
+  border-radius: 0;
   background: var(--bg);
   border: 1px solid var(--border);
   margin-bottom: 1.1rem;
@@ -868,7 +875,7 @@ input[type="checkbox"]:disabled {
   font-size: 0.8rem;
   font-weight: 500;
   padding: 0.35rem 0.85rem;
-  border-radius: 7px;
+  border-radius: 0;
   cursor: pointer;
 }
 
@@ -952,7 +959,7 @@ input[type="checkbox"]:disabled {
   flex-direction: column;
   align-items: center;
   padding: 0.3rem 0.55rem;
-  border-radius: 8px;
+  border-radius: 0;
   background: var(--surface-2);
   border: 1px solid var(--border-strong);
   pointer-events: none;
@@ -982,7 +989,7 @@ input[type="checkbox"]:disabled {
   display: flex;
   flex-direction: column;
   padding: 0.6rem 0.75rem;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   background: var(--surface-2);
 }
 
@@ -1095,14 +1102,14 @@ input[type="checkbox"]:disabled {
 
 .progress {
   height: 5px;
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--surface-2);
   overflow: hidden;
 }
 
 .progress > div {
   height: 100%;
-  border-radius: 999px;
+  border-radius: 0;
   transition: width 0.4s ease;
 }
 
@@ -1153,7 +1160,7 @@ input[type="checkbox"]:disabled {
 .callout {
   margin-top: 1rem;
   padding: 0.65rem 0.85rem;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   font-size: 0.84rem;
   border-left: 3px solid;
 }
@@ -1257,7 +1264,7 @@ input[type="checkbox"]:disabled {
   color: var(--text);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   padding: 1rem;
   max-height: 320px;
   overflow-y: auto;
@@ -1296,7 +1303,7 @@ input[type="checkbox"]:disabled {
   justify-content: center;
   width: 38px;
   height: 38px;
-  border-radius: 12px;
+  border-radius: 0;
   background: var(--engvang-accent-soft);
   color: var(--engvang-accent);
 }
@@ -1388,7 +1395,7 @@ input[type="checkbox"]:disabled {
   gap: 0.5rem;
   height: 34px;
   padding: 0 0.8rem 0 0.35rem;
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   cursor: default;
@@ -1448,7 +1455,7 @@ input[type="checkbox"]:disabled {
 .skeleton-chip-label {
   width: 60px;
   height: 10px;
-  border-radius: 5px;
+  border-radius: 0;
   background: var(--surface-2);
 }
 
@@ -1480,7 +1487,7 @@ input[type="checkbox"]:disabled {
   background: linear-gradient(160deg, rgba(20, 26, 36, 0.9), rgba(10, 14, 20, 0.9));
   border: 1px solid var(--border);
   backdrop-filter: blur(16px);
-  border-radius: 24px;
+  border-radius: 0;
   padding: 3rem 2.5rem;
   box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset, 0 32px 70px -28px rgba(0, 194, 255, 0.25), 0 32px 70px -28px rgba(0, 0, 0, 0.8);
   position: relative;
@@ -1490,7 +1497,7 @@ input[type="checkbox"]:disabled {
   content: "";
   position: absolute;
   inset: -1px;
-  border-radius: 24px;
+  border-radius: 0;
   padding: 1px;
   background: linear-gradient(160deg, var(--brand-bright), transparent 40%, transparent 60%, var(--brand-bright));
   opacity: 0.5;
@@ -1517,7 +1524,7 @@ input[type="checkbox"]:disabled {
   border: 1px solid var(--border);
   color: var(--text);
   padding: 0.8rem 1rem;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   font-size: 0.95rem;
 }
 
@@ -1537,7 +1544,7 @@ input[type="checkbox"]:disabled {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 0.85rem 0.9rem;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   cursor: pointer;
   font-size: 1.15rem;
   transition: filter 0.15s ease, transform 0.15s ease;
@@ -1613,7 +1620,7 @@ input[type="checkbox"]:disabled {
   flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 0;
   backdrop-filter: blur(16px);
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
   overflow: hidden;
@@ -1685,7 +1692,7 @@ input[type="checkbox"]:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-radius: 6px;
+  border-radius: 0;
   padding: 0.15rem 0.3rem 0.15rem 0;
 }
 
@@ -1740,7 +1747,7 @@ input[type="checkbox"]:disabled {
   position: relative;
   max-width: 85%;
   padding: 0.55rem 0.8rem;
-  border-radius: 12px;
+  border-radius: 0;
   font-size: 0.88rem;
   line-height: 1.4;
 }
@@ -1754,7 +1761,7 @@ input[type="checkbox"]:disabled {
   align-self: flex-end;
   background: linear-gradient(135deg, var(--brand-bright), var(--brand));
   color: #04121a;
-  border-radius: 12px 12px 2px 12px;
+  border-radius: 0;
 }
 
 .assistant-bubble-assistant {
@@ -1762,7 +1769,7 @@ input[type="checkbox"]:disabled {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
   color: var(--text);
-  border-radius: 12px 12px 12px 2px;
+  border-radius: 0;
   padding-right: 2.2rem;
 }
 
@@ -1807,7 +1814,7 @@ input[type="checkbox"]:disabled {
   border: 1px solid var(--border);
   color: var(--text);
   padding: 0.55rem 0.8rem;
-  border-radius: 999px;
+  border-radius: 0;
   font-size: 0.88rem;
 }
 
@@ -2009,3 +2016,421 @@ input[type="checkbox"]:disabled {
 .priority-p1 { background: var(--red); }
 .priority-p2 { background: var(--yellow); }
 .priority-p3 { background: var(--brand-bright); }
+
+/* ─── AMSW look (amsw.dk) ────────────────────────────────────────────────────
+   Square edges, Bebas Neue headlines in caps, DM Mono kickers with wide tracking, hairline
+   borders and petrol as the single accent - layered over the base styles above. */
+
+body {
+  background: var(--bg);
+}
+
+.brand img {
+  filter: none;
+}
+
+.brand-text,
+.panel-header h2,
+.hero-title,
+.zone-header h2 {
+  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.panel-header h2 {
+  font-size: 1.35rem;
+  line-height: 1;
+  padding-top: 0.15rem;
+}
+
+.kicker,
+.sub-label,
+.agenda-day-label,
+.plan-day-label,
+.metric-label,
+.mini-label,
+.ring-label,
+.updated,
+.data-table th,
+.weather-day-label,
+.integration-chip-label,
+.segmented button,
+.count,
+.count-pill,
+.status-pill,
+.live-pill,
+.disclosure-toggle,
+.more,
+.more-button,
+.ghost-button,
+.delta-label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 400;
+}
+
+.kicker,
+.sub-label,
+.agenda-day-label,
+.plan-day-label,
+.metric-label,
+.updated {
+  font-size: 0.66rem;
+}
+
+.mini-label,
+.ring-label,
+.weather-day-label,
+.integration-chip-label,
+.segmented button,
+.count,
+.count-pill,
+.status-pill,
+.disclosure-toggle,
+.more,
+.more-button,
+.ghost-button,
+.delta-label,
+.data-table th {
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+}
+
+.panel-icon {
+  background: none;
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+}
+
+.panel {
+  background: var(--surface);
+}
+
+/* Hero: black, big caps headline, the short petrol rule from amsw.dk under it. */
+.hero {
+  display: block;
+  padding: 2.5rem 0 2rem;
+  margin-bottom: 1.5rem;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: none;
+}
+
+.hero::after {
+  display: none;
+}
+
+.kicker {
+  color: var(--muted);
+  letter-spacing: 0.28em;
+}
+
+.hero-title {
+  margin-top: 0.6rem;
+  font-size: clamp(2.6rem, 6vw, 4rem);
+  line-height: 0.95;
+}
+
+.hero-title::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 2px;
+  margin-top: 1.1rem;
+  background: var(--petrol);
+}
+
+.hero-quote {
+  margin-top: 1rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-style: normal;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.systems-bar {
+  margin-bottom: 1.5rem;
+}
+
+.integration-chip {
+  background: none;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  margin: var(--gap) 0;
+}
+
+/* Buttons: solid off-white primary, outlined secondary - like "Shop kollektionen" / "Outlet". */
+.quick-add button {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.quick-add input {
+  background: transparent;
+}
+
+.quick-add input:focus {
+  border-color: var(--petrol);
+  box-shadow: none;
+}
+
+.segmented {
+  background: none;
+  border: 1px solid var(--border-strong);
+  padding: 0;
+}
+
+.segmented button {
+  padding: 0.55rem 0.9rem;
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--border-strong);
+}
+
+.segmented button.active {
+  background: var(--text);
+  color: var(--bg);
+  box-shadow: none;
+}
+
+.more-button {
+  color: var(--text);
+}
+
+input[type="checkbox"]:checked {
+  background: var(--text);
+  border-color: var(--text);
+}
+
+input[type="checkbox"]:checked::after {
+  border-color: var(--bg);
+}
+
+input[type="checkbox"]:hover {
+  border-color: var(--text);
+}
+
+.approvals {
+  border: 1px solid var(--petrol);
+  background: var(--surface);
+}
+
+.approvals-header {
+  color: var(--text);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+
+.approvals-header svg {
+  color: var(--petrol);
+}
+
+.approval {
+  background: none;
+}
+
+.agenda-day:first-child .agenda-day-label,
+.plan-day-today .plan-day-label {
+  color: var(--text);
+}
+
+.agenda-day:first-child .agenda-item {
+  border-left-color: var(--petrol);
+}
+
+.metric-value,
+.kpi-value,
+.weather-now-temp {
+  font-size: 2.3rem;
+}
+
+.metric + .metric {
+  border-left-color: var(--border);
+}
+
+.mini-stats > div {
+  background: none;
+  border: 1px solid var(--border);
+}
+
+.callout {
+  background: none;
+}
+
+.priority-p3 {
+  background: var(--petrol);
+}
+
+.live-dot {
+  background: var(--petrol);
+  box-shadow: none;
+  animation: none;
+}
+
+/* ─── Engvang look (engvangskole.dk) ─────────────────────────────────────────
+   A light "paper" section: white cards, dark green Noto Serif headings, Source Sans body,
+   solid green square buttons - so it reads as a different workplace at a glance. */
+
+.zone-engvang {
+  margin: 3rem -1.75rem 0;
+  padding: 2.5rem 1.75rem;
+  background: var(--engvang-paper);
+  color: var(--engvang-text);
+  font-family: var(--font-engvang-sans), var(--font-inter), sans-serif;
+  border-top: 6px solid var(--engvang-accent);
+}
+
+.zone-engvang .zone-header h2,
+.zone-engvang .panel-header h2 {
+  font-family: var(--font-engvang-serif), Georgia, serif;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--engvang-accent);
+}
+
+.zone-engvang .zone-header h2 {
+  font-size: 1.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.zone-engvang .zone-header p {
+  font-family: var(--font-engvang-serif), Georgia, serif;
+  color: var(--engvang-sage);
+  font-size: 1rem;
+}
+
+.zone-engvang .panel-header h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  padding-top: 0;
+}
+
+.zone-engvang .zone-icon,
+.zone-engvang .panel-icon {
+  background: none;
+  border: 1px solid var(--engvang-line);
+  color: var(--engvang-accent);
+}
+
+.zone-engvang .panel {
+  background: #fff;
+  border-color: var(--engvang-line);
+}
+
+.zone-engvang .engvang-deadlines {
+  background: #fff;
+  border-color: var(--engvang-line);
+  border-left: 4px solid var(--engvang-accent);
+}
+
+.zone-engvang .meta,
+.zone-engvang .deadline-date,
+.zone-engvang .deadline-days,
+.zone-engvang .empty {
+  color: #6f6f6f;
+}
+
+.zone-engvang .deadline,
+.zone-engvang .row + .row {
+  border-color: var(--engvang-line);
+  box-shadow: 0 -1px 0 var(--engvang-line);
+}
+
+.zone-engvang .deadline {
+  box-shadow: none;
+}
+
+.zone-engvang .deadline-soon .deadline-date,
+.zone-engvang .deadline-soon .deadline-days {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.zone-engvang .row:hover {
+  background: var(--engvang-accent-soft);
+}
+
+.zone-engvang .count {
+  font-family: var(--font-engvang-sans), sans-serif;
+  letter-spacing: 0;
+  background: var(--engvang-accent-soft);
+  border-color: transparent;
+  color: var(--engvang-accent);
+  font-size: 0.75rem;
+}
+
+.zone-engvang .quick-add input {
+  background: #fff;
+  border-color: var(--engvang-line);
+  color: var(--engvang-text);
+}
+
+.zone-engvang .quick-add input::placeholder {
+  color: #9a9a9a;
+}
+
+.zone-engvang .quick-add input:focus {
+  border-color: var(--engvang-accent);
+}
+
+.zone-engvang .quick-add button {
+  background: var(--engvang-accent);
+  color: #fff;
+}
+
+.zone-engvang .quick-add button:disabled {
+  background: var(--engvang-line);
+  color: #9a9a9a;
+}
+
+.zone-engvang .row-delete:hover {
+  background: rgba(220, 38, 38, 0.08);
+}
+
+@media (max-width: 640px) {
+  .zone-engvang {
+    margin: 2.5rem -1rem 0;
+    padding: 2rem 1rem;
+  }
+
+  .hero {
+    padding: 1.5rem 0 1.5rem;
+  }
+}
+
+/* Fit-and-finish for the brand layout. */
+.hero-quote {
+  max-width: 90ch;
+}
+
+.icon-button {
+  border-radius: 0;
+}
+
+/* Columns end level: the last panel in each column takes up any leftover height. */
+.layout {
+  align-items: stretch;
+}
+
+.col > :last-child {
+  flex: 1;
+}
+
+/* Engvang is the last section, so its paper background runs to the bottom of the page. */
+.zone-engvang {
+  margin-bottom: -6rem;
+  padding-bottom: 6rem;
+}

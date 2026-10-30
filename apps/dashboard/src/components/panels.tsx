@@ -187,10 +187,11 @@ function money(value: number, currency?: string | null): string {
   return `${value.toLocaleString("da-DK", { maximumFractionDigits: 0 })}${currency ? ` ${currency}` : ""}`;
 }
 
-type Period = "7d" | "mtd" | "30d";
-const PERIOD_LABELS: Record<Period, string> = { "7d": "7 dage", mtd: "Måned", "30d": "30 dage" };
+type Period = "today" | "7d" | "mtd" | "30d";
+const PERIOD_LABELS: Record<Period, string> = { today: "I dag", "7d": "7 dage", mtd: "Måned", "30d": "30 dage" };
 
 function periodNumbers(m: ShopifyMetrics, period: Period): { orders?: number; revenue?: number; prevOrders?: number; prevRevenue?: number } {
+  if (period === "today") return { orders: m.ordersToday, revenue: m.revenueToday };
   if (period === "7d") {
     return { orders: m.ordersLast7Days, revenue: m.revenueLast7Days, prevOrders: m.ordersPrevious7Days, prevRevenue: m.revenuePrevious7Days };
   }

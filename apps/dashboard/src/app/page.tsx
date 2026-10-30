@@ -12,7 +12,7 @@ import { PipelinePanel } from "@/components/PipelinePanel";
 import { ApprovalsPanel, TodayHero } from "@/components/TodayPanel";
 import { Clock } from "@/components/Clock";
 import { WeatherPanel } from "@/components/WeatherPanel";
-import { IntegrationsPanel, IntegrationsSummary } from "@/components/IntegrationsPanel";
+import { IntegrationsPanel } from "@/components/IntegrationsPanel";
 import { AssistantWidget } from "@/components/AssistantWidget";
 import { IconLeaf, IconLogout } from "@/components/icons";
 
@@ -126,7 +126,6 @@ export default function DashboardPage() {
           <span className="brand-text">Paskar&apos;s kontor</span>
         </div>
         <div className="topbar-right">
-          <IntegrationsSummary states={integrationsLive.rows} isLoading={integrationsLive.isLoading} />
           <span className="live-pill">
             <span className="live-dot" />
             <Clock />
@@ -137,9 +136,26 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <TodayHero tasks={tasksLive.rows} events={eventsLive.rows} statuses={statusesLive.rows} />
+      <TodayHero />
 
-      <ApprovalsPanel tasks={tasksLive.rows} onApprove={handleApproveSuggestion} onReject={handleRejectSuggestion} />
+      <div className="systems-bar">
+        <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
+      </div>
+
+      <div className="layout">
+        <div className="col col-main">
+          <ShopifyPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
+        </div>
+        <div className="col col-side">
+          <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
+          <WeatherPanel />
+        </div>
+      </div>
+
+      <div className="stack">
+        <GoalsPanel goals={goalsLive.rows} isLoading={goalsLive.isLoading} flash={goalsLive.flash} onToggleDone={handleToggleGoalDone} />
+        <ApprovalsPanel tasks={tasksLive.rows} onApprove={handleApproveSuggestion} onReject={handleRejectSuggestion} />
+      </div>
 
       <div className="layout">
         <div className="col col-main">
@@ -151,16 +167,12 @@ export default function DashboardPage() {
             onDelete={handleDeleteTask}
             onCreate={handleCreateTask}
           />
-          <ShopifyPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
-          <GoalsPanel goals={goalsLive.rows} isLoading={goalsLive.isLoading} flash={goalsLive.flash} onToggleDone={handleToggleGoalDone} />
           {(draftsLive.isLoading || draftsLive.rows.length > 0) && (
             <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
           )}
         </div>
         <div className="col col-side">
           <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
-          <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
-          <WeatherPanel />
         </div>
       </div>
 
@@ -182,11 +194,6 @@ export default function DashboardPage() {
           onClose={handleCloseEngvangItem}
         />
       </section>
-
-      <footer className="footer">
-        <p className="sub-label">Systemer</p>
-        <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
-      </footer>
 
       <AssistantWidget />
     </div>

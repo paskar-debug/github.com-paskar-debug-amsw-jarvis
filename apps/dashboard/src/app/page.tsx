@@ -7,14 +7,13 @@ import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
 import { CalendarPanel, DraftsPanel, GoalsPanel, ShopifyPanel, WhoopPanel } from "@/components/panels";
-import { EngvangPanels } from "@/components/EngvangPanel";
 import { PipelinePanel } from "@/components/PipelinePanel";
 import { ApprovalsPanel, TodayHero } from "@/components/TodayPanel";
 import { Clock } from "@/components/Clock";
 import { WeatherPanel } from "@/components/WeatherPanel";
 import { IntegrationsPanel } from "@/components/IntegrationsPanel";
 import { AssistantWidget } from "@/components/AssistantWidget";
-import { IconLeaf, IconLogout } from "@/components/icons";
+import { IconLogout } from "@/components/icons";
 
 type Tables = Database["public"]["Tables"];
 
@@ -45,10 +44,6 @@ export default function DashboardPage() {
     { column: "source" },
   );
   const goalsLive = useLiveTable<"goals", Tables["goals"]["Row"]>("goals", userId ?? null, { column: "target_date" });
-  const engvangLive = useLiveTable<"engvang_items", Tables["engvang_items"]["Row"]>("engvang_items", userId ?? null, {
-    column: "created_at",
-    ascending: false,
-  });
 
   // Routed through /api/tasks/action (not a direct table write) because a task sourced from
   // Todoist needs to be closed/deleted there too - otherwise the next Todoist sync just pulls
@@ -97,19 +92,6 @@ export default function DashboardPage() {
 
   async function handleRejectSuggestion(id: string) {
     await callTaskAction(id, "reject");
-  }
-
-  async function handleCreateEngvangItem(type: Tables["engvang_items"]["Row"]["type"], raw: string) {
-    if (!userId) return;
-    const [title, detail, deadline, label] = raw.split("|").map((s) => s.trim());
-    if (!title) return;
-    await getSupabaseClient()
-      .from("engvang_items")
-      .insert({ owner_id: userId, type, title, detail: detail || null, next_deadline: deadline || null, deadline_label: label || null });
-  }
-
-  async function handleCloseEngvangItem(id: string) {
-    await getSupabaseClient().from("engvang_items").update({ status: "archived" }).eq("id", id);
   }
 
   async function handleLogout() {
@@ -175,25 +157,6 @@ export default function DashboardPage() {
           <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
         </div>
       </div>
-
-      <section className="zone zone-engvang">
-        <div className="zone-header">
-          <span className="zone-icon">
-            <IconLeaf />
-          </span>
-          <div>
-            <h2>Engvang</h2>
-            <p>Den grønne skole — drift og systematik</p>
-          </div>
-        </div>
-        <EngvangPanels
-          items={engvangLive.rows}
-          isLoading={engvangLive.isLoading}
-          flash={engvangLive.flash}
-          onCreate={handleCreateEngvangItem}
-          onClose={handleCloseEngvangItem}
-        />
-      </section>
 
       <AssistantWidget />
     </div>

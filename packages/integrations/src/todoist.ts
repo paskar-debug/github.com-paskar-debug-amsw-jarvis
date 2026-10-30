@@ -66,6 +66,19 @@ export async function syncTodoist(
     if (error) throw error;
   }
 
+  // The API only lists open tasks, so anything we still hold as open but Todoist no longer returns
+  // was completed or deleted in the Todoist app - without this it would sit on the dashboard forever.
+  const openIds = tasks.map((task) => task.id);
+  let closeStale = supabase
+    .from("tasks")
+    .update({ status: "done" })
+    .eq("owner_id", ownerId)
+    .eq("source", "todoist")
+    .in("status", ["todo", "in_progress"]);
+  if (openIds.length > 0) closeStale = closeStale.not("external_id", "in", `(${openIds.map((id) => `"${id}"`).join(",")})`);
+  const { error: closeError } = await closeStale;
+  if (closeError) throw closeError;
+
   return rows.length;
 }
 

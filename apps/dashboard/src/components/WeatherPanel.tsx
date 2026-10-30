@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PanelHeader } from "./panels";
+import { PanelHeader, Skeleton } from "./panels";
 import { IconCloud, IconCloudSun, IconFog, IconRain, IconSnow, IconStorm, IconSun } from "./icons";
 
 interface WeatherData {
@@ -108,36 +108,27 @@ export function WeatherPanel() {
 
   return (
     <section className="panel">
-      <PanelHeader icon={<IconCloudSun />} title="Vejr" subtitle="Smørum lige nu" />
+      <PanelHeader icon={<IconCloudSun />} title="Vejr · Smørum" />
       {failed && <p className="empty">Kunne ikke hente vejret.</p>}
-      {!failed && !data && <p className="empty">Henter...</p>}
+      {!failed && !data && <Skeleton lines={2} />}
       {data && (
         <>
           <div className="weather-now">
-            <span className="weather-now-icon" style={{ "--weather-glow": weatherColor(data.current.weather_code) } as React.CSSProperties}>
-              <WeatherIcon code={data.current.weather_code} />
+            <WeatherIcon code={data.current.weather_code} className="weather-now-icon" style={{ color: weatherColor(data.current.weather_code) }} />
+            <span className="weather-now-temp">{Math.round(data.current.temperature_2m)}°</span>
+            <span className="meta">
+              {WEATHER_LABELS[data.current.weather_code] ?? "Ukendt vejr"}
+              <br />
+              Føles som {Math.round(data.current.apparent_temperature)}°
             </span>
-            <div>
-              <div className="weather-now-temp" style={{ "--weather-glow": weatherColor(data.current.weather_code) } as React.CSSProperties}>
-                {Math.round(data.current.temperature_2m)}°
-              </div>
-              <div className="meta">
-                Føles som {Math.round(data.current.apparent_temperature)}° · {WEATHER_LABELS[data.current.weather_code] ?? "Ukendt vejr"}
-              </div>
-            </div>
           </div>
           <div className="weather-days">
             {data.daily.time.map((iso, i) => (
               <div className="weather-day" key={iso}>
                 <span className="weather-day-label">{dayLabel(iso, i)}</span>
-                <WeatherIcon
-                  code={data.daily.weather_code[i]}
-                  className="weather-day-icon"
-                  style={{ color: weatherColor(data.daily.weather_code[i]) }}
-                />
+                <WeatherIcon code={data.daily.weather_code[i]} className="weather-day-icon" style={{ color: weatherColor(data.daily.weather_code[i]) }} />
                 <span className="weather-day-temp">
-                  {Math.round(data.daily.temperature_2m_max[i])}°
-                  <span className="weather-day-min"> {Math.round(data.daily.temperature_2m_min[i])}°</span>
+                  {Math.round(data.daily.temperature_2m_max[i])}°<span className="weather-day-min"> {Math.round(data.daily.temperature_2m_min[i])}°</span>
                 </span>
               </div>
             ))}

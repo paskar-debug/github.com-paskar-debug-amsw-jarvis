@@ -6,30 +6,17 @@ import { useRouter } from "next/navigation";
 import type { Database } from "@amsw/db";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
-import { CalendarPanel, DraftsPanel, GoalsPanel, StatusPanel, WhoopPanel } from "@/components/panels";
+import { CalendarPanel, DraftsPanel, GoalsPanel, ShopifyPanel, WhoopPanel } from "@/components/panels";
 import { EngvangPanels } from "@/components/EngvangPanel";
 import { PipelinePanel } from "@/components/PipelinePanel";
-import { TodayPanel } from "@/components/TodayPanel";
+import { ApprovalsPanel, TodayHero } from "@/components/TodayPanel";
 import { Clock } from "@/components/Clock";
-import { QuotePanel } from "@/components/QuotePanel";
 import { WeatherPanel } from "@/components/WeatherPanel";
-import { IntegrationsPanel } from "@/components/IntegrationsPanel";
+import { IntegrationsPanel, IntegrationsSummary } from "@/components/IntegrationsPanel";
 import { AssistantWidget } from "@/components/AssistantWidget";
 import { IconLeaf, IconLogout } from "@/components/icons";
 
 type Tables = Database["public"]["Tables"];
-
-interface ShopifyCustomerMetrics {
-  totalCustomers?: number;
-  customerStats?: { newCustomersThisMonth: number; returningCustomersPercent: number; repeatPurchaseRatePercent: number } | null;
-}
-
-function latestShopifyMetrics(statuses: Tables["amsw_status"]["Row"][]): ShopifyCustomerMetrics | null {
-  const latest = [...statuses]
-    .filter((s) => s.area === "shopify")
-    .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())[0];
-  return (latest?.metrics as ShopifyCustomerMetrics | undefined) ?? null;
-}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -133,91 +120,60 @@ export default function DashboardPage() {
 
   return (
     <div className="page">
-      <div className="page-header">
+      <header className="topbar">
         <div className="brand">
-          <Image src="/logo-icon.png" alt="Paramasamy" width={84} height={90} priority />
-          <span className="brand-text">askar&apos;s kontor</span>
+          <Image src="/logo-icon.png" alt="Paramasamy" width={28} height={30} priority />
+          <span className="brand-text">Paskar&apos;s kontor</span>
         </div>
-        <Clock />
-        <div className="page-header-right">
+        <div className="topbar-right">
+          <IntegrationsSummary states={integrationsLive.rows} isLoading={integrationsLive.isLoading} />
           <span className="live-pill">
             <span className="live-dot" />
-            Live
+            <Clock />
           </span>
-          <button type="button" className="logout-button" onClick={handleLogout} aria-label="Log ud">
+          <button type="button" className="icon-button" onClick={handleLogout} aria-label="Log ud">
             <IconLogout />
           </button>
         </div>
-      </div>
+      </header>
 
-      <QuotePanel />
+      <TodayHero tasks={tasksLive.rows} events={eventsLive.rows} statuses={statusesLive.rows} />
 
-      <div className="main-column top-status">
-        <StatusPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
-      </div>
+      <ApprovalsPanel tasks={tasksLive.rows} onApprove={handleApproveSuggestion} onReject={handleRejectSuggestion} />
 
-      <TodayPanel
-        tasks={tasksLive.rows}
-        events={eventsLive.rows}
-        statuses={statusesLive.rows}
-        engvangItems={engvangLive.rows}
-        isLoading={tasksLive.isLoading || eventsLive.isLoading || statusesLive.isLoading}
-        onApprove={handleApproveSuggestion}
-        onReject={handleRejectSuggestion}
-      />
-
-      <div className="section section-system">
-        <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
-      </div>
-
-      <div className="main-column">
-        <PipelinePanel
-          tasks={tasksLive.rows}
-          isLoading={tasksLive.isLoading}
-          flash={tasksLive.flash}
-          onToggleDone={handleToggleDone}
-          onDelete={handleDeleteTask}
-          onCreate={handleCreateTask}
-        />
-
-        <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
-
-        <GoalsPanel
-          goals={goalsLive.rows}
-          isLoading={goalsLive.isLoading}
-          flash={goalsLive.flash}
-          onToggleDone={handleToggleGoalDone}
-          customerStats={(() => {
-            const metrics = latestShopifyMetrics(statusesLive.rows);
-            return {
-              totalCustomers: metrics?.totalCustomers ?? null,
-              newCustomersThisMonth: metrics?.customerStats?.newCustomersThisMonth ?? null,
-              returningCustomersPercent: metrics?.customerStats?.returningCustomersPercent ?? null,
-              repeatPurchaseRatePercent: metrics?.customerStats?.repeatPurchaseRatePercent ?? null,
-            };
-          })()}
-        />
-
-        <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
-
-        <WeatherPanel />
-
-
-        {(draftsLive.isLoading || draftsLive.rows.length > 0) && (
-          <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
-        )}
-      </div>
-
-      <div className="engvang-header">
-        <span className="engvang-header-icon">
-          <IconLeaf />
-        </span>
-        <div>
-          <h2>Engvang</h2>
-          <p>Den grønne skole — drift og systematik</p>
+      <div className="layout">
+        <div className="col col-main">
+          <PipelinePanel
+            tasks={tasksLive.rows}
+            isLoading={tasksLive.isLoading}
+            flash={tasksLive.flash}
+            onToggleDone={handleToggleDone}
+            onDelete={handleDeleteTask}
+            onCreate={handleCreateTask}
+          />
+          <ShopifyPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
+          <GoalsPanel goals={goalsLive.rows} isLoading={goalsLive.isLoading} flash={goalsLive.flash} onToggleDone={handleToggleGoalDone} />
+          {(draftsLive.isLoading || draftsLive.rows.length > 0) && (
+            <DraftsPanel drafts={draftsLive.rows} isLoading={draftsLive.isLoading} flash={draftsLive.flash} onDelete={handleDeleteDraft} />
+          )}
+        </div>
+        <div className="col col-side">
+          <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
+          <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
+          <WeatherPanel />
         </div>
       </div>
-      <div className="main-column">
+
+      <section className="zone zone-engvang">
+        <div className="zone-header">
+          <span className="zone-icon">
+            <IconLeaf />
+          </span>
+          <div>
+            <h2>Engvang</h2>
+            <p>Den grønne skole — drift og systematik</p>
+          </div>
+        </div>
         <EngvangPanels
           items={engvangLive.rows}
           isLoading={engvangLive.isLoading}
@@ -225,7 +181,13 @@ export default function DashboardPage() {
           onCreate={handleCreateEngvangItem}
           onClose={handleCloseEngvangItem}
         />
-      </div>
+      </section>
+
+      <footer className="footer">
+        <p className="sub-label">Systemer</p>
+        <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
+      </footer>
+
       <AssistantWidget />
     </div>
   );

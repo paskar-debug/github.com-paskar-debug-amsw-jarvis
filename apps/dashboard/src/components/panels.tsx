@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Database } from "@amsw/db";
-import { IconCalendar, IconClose, IconCopy, IconDraft, IconPulse, IconRing, IconTarget, IconTrophy } from "./icons";
+import { IconCalendar, IconChevron, IconCopy, IconDraft, IconPulse, IconRing, IconTarget, IconTrophy } from "./icons";
 import { Sparkline } from "./Sparkline";
 
 type CalendarRow = Database["public"]["Tables"]["calendar_events"]["Row"];
@@ -20,14 +20,6 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleString("da-DK", { dateStyle: "short", timeStyle: "short" });
 }
 
-function formatDayBadge(iso: string): { day: string; month: string } {
-  const d = new Date(iso);
-  return {
-    day: d.toLocaleDateString("da-DK", { day: "2-digit" }),
-    month: d.toLocaleDateString("da-DK", { month: "short" }).replace(".", "").toUpperCase(),
-  };
-}
-
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
 }
@@ -38,14 +30,12 @@ export function panelClass(...extra: (string | false | undefined)[]) {
 
 const STATE_LABELS: Record<string, string> = { green: "OK", yellow: "Advarsel", red: "Kritisk" };
 
-export function PanelHeader({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle?: string }) {
+export function PanelHeader({ icon, title, aside }: { icon: React.ReactNode; title: string; aside?: React.ReactNode }) {
   return (
     <div className="panel-header">
       <span className="panel-icon">{icon}</span>
-      <div className="panel-header-text">
-        <h2>{title}</h2>
-        {subtitle && <p className="panel-subtitle">{subtitle}</p>}
-      </div>
+      <h2>{title}</h2>
+      {aside && <div className="panel-aside">{aside}</div>}
     </div>
   );
 }
@@ -87,39 +77,61 @@ export function QuickAdd({ placeholder, onSubmit }: { placeholder: string; onSub
   );
 }
 
-const CALENDAR_VISIBLE_LIMIT = 5;
+const CALENDAR_VISIBLE_LIMIT = 6;
 
+function dayKey(iso: string): string {
+  return new Date(iso).toDateString();
+}
+
+function dayHeading(iso: string): string {
+  const d = new Date(iso);
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+  if (d.toDateString() === today.toDateString()) return "I dag";
+  if (d.toDateString() === tomorrow.toDateString()) return "I morgen";
+  const label = d.toLocaleDateString("da-DK", { weekday: "long", day: "numeric", month: "short" });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+/** Grouped by day so "today" and "later" read as one list instead of two panels repeating each other. */
 export function CalendarPanel({ events, isLoading, flash }: LiveProps & { events: CalendarRow[] }) {
-  const upcoming = events.filter((e) => new Date(e.ends_at).getTime() >= Date.now());
+  const upcoming = events
+    .filter((e) => new Date(e.ends_at).getTime() >= Date.now())
+    .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
   const visible = upcoming.slice(0, CALENDAR_VISIBLE_LIMIT);
   const remaining = upcoming.length - visible.length;
+  const groups: [string, CalendarRow[]][] = [];
+  for (const event of visible) {
+    const key = dayKey(event.starts_at);
+    const group = groups.find(([k]) => k === key);
+    if (group) group[1].push(event);
+    else groups.push([key, [event]]);
+  }
+
   return (
     <section className={panelClass(flash && "panel-flash")}>
-      <PanelHeader icon={<IconCalendar />} title="Kalender" subtitle="Kommende aftaler fra Google Kalender og botten" />
+      <PanelHeader icon={<IconCalendar />} title="Kalender" />
       {isLoading ? (
         <Skeleton lines={3} />
       ) : (
         <>
-          {upcoming.length === 0 && <p className="empty">Ingen kommende begivenheder.</p>}
-          {visible.map((event) => {
-            const { day, month } = formatDayBadge(event.starts_at);
-            return (
-              <div className="item calendar-item" key={event.id}>
-                <div className="date-badge">
-                  <span className="date-badge-day">{day}</span>
-                  <span className="date-badge-month">{month}</span>
-                </div>
-                <div className="calendar-item-body">
-                  {event.title}
-                  <div className="meta">
-                    {formatTime(event.starts_at)}
-                    {event.location ? ` · ${event.location}` : ""}
+          {upcoming.length === 0 && <p className="empty">Ingen kommende aftaler.</p>}
+          {groups.map(([key, dayEvents]) => (
+            <div className="agenda-day" key={key}>
+              <p className="agenda-day-label">{dayHeading(dayEvents[0].starts_at)}</p>
+              {dayEvents.map((event) => (
+                <div className="agenda-item" key={event.id}>
+                  <span className="agenda-time">{formatTime(event.starts_at)}</span>
+                  <div className="agenda-body">
+                    <span className="agenda-title">{event.title}</span>
+                    {event.location && <span className="meta">{event.location}</span>}
                   </div>
                 </div>
-              </div>
-            );
-          })}
-          {remaining > 0 && <p className="empty">+{remaining} flere i kalenderen.</p>}
+              ))}
+            </div>
+          ))}
+          {remaining > 0 && <p className="more">+{remaining} flere i kalenderen</p>}
         </>
       )}
     </section>
@@ -135,8 +147,6 @@ interface ShopifyMetrics {
   revenueLast7Days?: number;
   ordersPrevious7Days?: number;
   revenuePrevious7Days?: number;
-  ordersLast14Days?: number;
-  revenueLast14Days?: number;
   ordersLast30Days?: number;
   revenueLast30Days?: number;
   totalCustomers?: number;
@@ -167,193 +177,164 @@ function DeltaBadge({ current, previous }: { current: number; previous: number }
   if (!delta) return null;
   const arrow = delta.direction === "up" ? "▲" : delta.direction === "down" ? "▼" : "—";
   return (
-    <span className={`stat-delta stat-delta-${delta.direction}`}>
-      {arrow} {delta.percent}% <span className="stat-delta-label">vs. forrige uge</span>
+    <span className={`delta delta-${delta.direction}`}>
+      {arrow} {delta.percent}% <span className="delta-label">vs. forrige uge</span>
     </span>
   );
 }
 
-export function StatusPanel({ statuses, isLoading, flash }: LiveProps & { statuses: StatusRow[] }) {
-  const latestByArea = new Map<string, StatusRow>();
-  for (const status of statuses) {
-    if (status.area !== "shopify") continue;
-    const existing = latestByArea.get(status.area);
-    if (!existing || new Date(status.recorded_at) > new Date(existing.recorded_at)) {
-      latestByArea.set(status.area, status);
-    }
+function money(value: number, currency?: string | null): string {
+  return `${value.toLocaleString("da-DK", { maximumFractionDigits: 0 })}${currency ? ` ${currency}` : ""}`;
+}
+
+type Period = "7d" | "mtd" | "30d";
+const PERIOD_LABELS: Record<Period, string> = { "7d": "7 dage", mtd: "Måned", "30d": "30 dage" };
+
+function periodNumbers(m: ShopifyMetrics, period: Period): { orders?: number; revenue?: number; prevOrders?: number; prevRevenue?: number } {
+  if (period === "7d") {
+    return { orders: m.ordersLast7Days, revenue: m.revenueLast7Days, prevOrders: m.ordersPrevious7Days, prevRevenue: m.revenuePrevious7Days };
   }
-  const latest = [...latestByArea.values()];
+  if (period === "mtd") return { orders: m.ordersMTD, revenue: m.revenueMTD };
+  return { orders: m.ordersLast30Days, revenue: m.revenueLast30Days };
+}
+
+/** All of AMSW's commerce numbers in one place: one period at a time instead of a wall of twelve
+ *  stats, with customers and per-product profit tucked below. */
+export function ShopifyPanel({ statuses, isLoading, flash }: LiveProps & { statuses: StatusRow[] }) {
+  const [period, setPeriod] = useState<Period>("7d");
+  const [showProducts, setShowProducts] = useState(false);
+  const status = [...statuses]
+    .filter((s) => s.area === "shopify")
+    .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())[0];
+  const metrics = (status?.metrics ?? {}) as ShopifyMetrics;
+  const currency = metrics.currency ?? "";
+  const { orders, revenue, prevOrders, prevRevenue } = periodNumbers(metrics, period);
+  const aov = typeof orders === "number" && typeof revenue === "number" && orders > 0 ? revenue / orders : null;
+  const trendPoints = (metrics.dailyRevenue ?? [])
+    .filter((d) => !Number.isNaN(new Date(d.date).getTime()))
+    .map((d) => ({ label: new Date(d.date).toLocaleDateString("da-DK", { weekday: "short" }), value: d.revenue }));
+  const products = metrics.productProfitLast30Days;
+
   return (
-    <section className={panelClass("panel-shopify-status", flash && "panel-flash")}>
-      <PanelHeader icon={<IconPulse />} title="AMSW Shopify status" subtitle="Ordrer, omsætning og status hentet automatisk fra Shopify" />
+    <section className={panelClass(flash && "panel-flash")}>
+      <PanelHeader
+        icon={<IconPulse />}
+        title="AMSW · Shopify"
+        aside={status && <span className={`status-pill ${status.state}`}>{STATE_LABELS[status.state] ?? status.state}</span>}
+      />
       {isLoading ? (
         <Skeleton lines={4} />
+      ) : !status ? (
+        <p className="empty">Ingen Shopify-data endnu.</p>
+      ) : typeof metrics.ordersToday !== "number" ? (
+        <p className="empty">{status.note ?? "Ingen ordredata."}</p>
       ) : (
         <>
-          {latest.length === 0 && <p className="empty">Ingen status endnu.</p>}
-          {latest.map((status) => {
-            const metrics = status.metrics as ShopifyMetrics;
-            const hasOrderMetrics = typeof metrics?.ordersToday === "number";
-            const trendPoints = (metrics.dailyRevenue ?? [])
-              .filter((d) => !Number.isNaN(new Date(d.date).getTime()))
-              .map((d) => ({
-                label: new Date(d.date).toLocaleDateString("da-DK", { weekday: "short" }),
-                value: d.revenue,
-              }));
-            return (
-              <div className="item status-item" key={status.id}>
-                <div className="status-item-top">
-                  <span className="status-name">
-                    <span className={`badge ${status.state}`} />
-                    {status.area}
-                  </span>
-                  <span className={`status-pill ${status.state}`}>{STATE_LABELS[status.state] ?? status.state}</span>
+          <div className="segmented" role="tablist">
+            {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+              <button type="button" role="tab" aria-selected={p === period} className={p === period ? "active" : ""} onClick={() => setPeriod(p)} key={p}>
+                {PERIOD_LABELS[p]}
+              </button>
+            ))}
+          </div>
+
+          <div className="metric-row">
+            <div className="metric">
+              <span className="metric-label">Omsætning</span>
+              <span className="metric-value">{typeof revenue === "number" ? money(revenue, currency) : "–"}</span>
+              {typeof revenue === "number" && typeof prevRevenue === "number" && <DeltaBadge current={revenue} previous={prevRevenue} />}
+            </div>
+            <div className="metric">
+              <span className="metric-label">Ordrer</span>
+              <span className="metric-value">{orders ?? "–"}</span>
+              {typeof orders === "number" && typeof prevOrders === "number" && <DeltaBadge current={orders} previous={prevOrders} />}
+            </div>
+            <div className="metric">
+              <span className="metric-label">Gns. ordre</span>
+              <span className="metric-value">{aov === null ? "–" : money(aov, currency)}</span>
+            </div>
+          </div>
+
+          {trendPoints.length >= 2 && (
+            <div className="chart-block">
+              <span className="sub-label">Omsætning pr. dag</span>
+              <Sparkline points={trendPoints} formatValue={(v) => money(v, currency)} ariaLabel="Omsætning de sidste 7 dage" />
+            </div>
+          )}
+
+          {(typeof metrics.totalCustomers === "number" || metrics.customerStats) && (
+            <div className="mini-stats">
+              {typeof metrics.totalCustomers === "number" && (
+                <div>
+                  <span className="mini-value">{metrics.totalCustomers}</span>
+                  <span className="mini-label">kunder i alt</span>
                 </div>
-                {hasOrderMetrics && (
-                  <div className="status-stats">
-                    <div className="stat">
-                      <span className="stat-value">{metrics.ordersToday}</span>
-                      <span className="stat-label">ordrer i dag</span>
-                    </div>
-                    <div className="stat">
-                      <span className="stat-value">
-                        {metrics.revenueToday} {metrics.currency ?? ""}
-                      </span>
-                      <span className="stat-label">omsætning i dag</span>
-                    </div>
-                    {typeof metrics.ordersMTD === "number" && (
-                      <div className="stat">
-                        <span className="stat-value">{metrics.ordersMTD}</span>
-                        <span className="stat-label">ordrer, denne måned</span>
-                      </div>
-                    )}
-                    {typeof metrics.revenueMTD === "number" && (
-                      <div className="stat">
-                        <span className="stat-value">
-                          {metrics.revenueMTD} {metrics.currency ?? ""}
-                        </span>
-                        <span className="stat-label">omsætning, denne måned</span>
-                      </div>
-                    )}
-                    {typeof metrics.ordersLast7Days === "number" && (
-                      <div className="stat">
-                        <span className="stat-value">{metrics.ordersLast7Days}</span>
-                        <span className="stat-label">ordrer, 7 dage</span>
-                        {typeof metrics.ordersPrevious7Days === "number" && (
-                          <DeltaBadge current={metrics.ordersLast7Days} previous={metrics.ordersPrevious7Days} />
-                        )}
-                      </div>
-                    )}
-                    {typeof metrics.revenueLast7Days === "number" && (
-                      <div className="stat">
-                        <span className="stat-value">
-                          {metrics.revenueLast7Days} {metrics.currency ?? ""}
-                        </span>
-                        <span className="stat-label">omsætning, 7 dage</span>
-                        {typeof metrics.revenuePrevious7Days === "number" && (
-                          <DeltaBadge current={metrics.revenueLast7Days} previous={metrics.revenuePrevious7Days} />
-                        )}
-                      </div>
-                    )}
-                    {typeof metrics.ordersLast14Days === "number" && (
-                      <div className="stat">
-                        <span className="stat-value">{metrics.ordersLast14Days}</span>
-                        <span className="stat-label">ordrer, 14 dage</span>
-                      </div>
-                    )}
-                    {typeof metrics.revenueLast14Days === "number" && (
-                      <div className="stat">
-                        <span className="stat-value">
-                          {metrics.revenueLast14Days} {metrics.currency ?? ""}
-                        </span>
-                        <span className="stat-label">omsætning, 14 dage</span>
-                      </div>
-                    )}
-                    {typeof metrics.ordersLast30Days === "number" && (
-                      <div className="stat">
-                        <span className="stat-value">{metrics.ordersLast30Days}</span>
-                        <span className="stat-label">ordrer, 30 dage</span>
-                      </div>
-                    )}
-                    {typeof metrics.revenueLast30Days === "number" && (
-                      <div className="stat">
-                        <span className="stat-value">
-                          {metrics.revenueLast30Days} {metrics.currency ?? ""}
-                        </span>
-                        <span className="stat-label">omsætning, 30 dage</span>
-                      </div>
-                    )}
-                    {typeof metrics.totalCustomers === "number" && (
-                      <div className="stat">
-                        <span className="stat-value">{metrics.totalCustomers}</span>
-                        <span className="stat-label">kunder i alt</span>
-                      </div>
-                    )}
-                    {typeof metrics.revenueLast30Days === "number" && typeof metrics.ordersLast30Days === "number" && metrics.ordersLast30Days > 0 && (
-                      <div className="stat">
-                        <span className="stat-value">
-                          {Math.round((metrics.revenueLast30Days / metrics.ordersLast30Days) * 100) / 100} {metrics.currency ?? ""}
-                        </span>
-                        <span className="stat-label">gns. ordreværdi, 30 dage</span>
-                      </div>
-                    )}
+              )}
+              {metrics.customerStats && (
+                <>
+                  <div>
+                    <span className="mini-value">{metrics.customerStats.newCustomersThisMonth}</span>
+                    <span className="mini-label">nye i måneden</span>
                   </div>
-                )}
-                {trendPoints.length >= 2 && (
-                  <div className="sparkline-block">
-                    <Sparkline
-                      points={trendPoints}
-                      formatValue={(v) => `${v.toFixed(0)} ${metrics.currency ?? ""}`}
-                      ariaLabel="Omsætning de sidste 7 dage"
-                    />
-                    <span className="stat-label">omsætning, 7-dages trend</span>
+                  <div>
+                    <span className="mini-value">{metrics.customerStats.returningCustomersPercent}%</span>
+                    <span className="mini-label">tilbagevendende</span>
                   </div>
-                )}
-                {hasOrderMetrics && metrics.productProfitLast30Days === null && (
-                  <p className="product-profit-note">
-                    Vare-profit kræver <code>read_products</code>-adgang på Shopify-appen — ikke sat op endnu.
-                  </p>
-                )}
-                {hasOrderMetrics && metrics.productProfitLast30Days && metrics.productProfitLast30Days.length > 0 && (
-                  <div className="product-profit-block">
-                    <p className="stat-label">indtjening pr. vare, 30 dage</p>
-                    {typeof metrics.costDataCoveragePercent === "number" && metrics.costDataCoveragePercent < 95 && (
-                      <p className="product-profit-note">
-                        Baseret på {metrics.costDataCoveragePercent}% af omsætningen — resten mangler vareomkostning i Shopify.
-                      </p>
-                    )}
-                    <table className="product-profit-table">
+                  <div>
+                    <span className="mini-value">{metrics.customerStats.repeatPurchaseRatePercent}%</span>
+                    <span className="mini-label">genkøbsrate</span>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {products === null && (
+            <p className="note">
+              Vare-profit kræver <code>read_products</code>-adgang på Shopify-appen.
+            </p>
+          )}
+          {products && products.length > 0 && (
+            <div className="disclosure">
+              <button type="button" className={`disclosure-toggle${showProducts ? " open" : ""}`} onClick={() => setShowProducts((v) => !v)}>
+                Indtjening pr. vare, 30 dage
+                <IconChevron />
+              </button>
+              {showProducts && (
+                <>
+                  {typeof metrics.costDataCoveragePercent === "number" && metrics.costDataCoveragePercent < 95 && (
+                    <p className="note">Baseret på {metrics.costDataCoveragePercent}% af omsætningen — resten mangler vareomkostning i Shopify.</p>
+                  )}
+                  <div className="table-wrap">
+                    <table className="data-table">
                       <thead>
                         <tr>
                           <th>Vare</th>
                           <th>Antal</th>
                           <th>Omsætning</th>
                           <th>Profit</th>
-                          <th>DG%</th>
+                          <th>DG</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {metrics.productProfitLast30Days.slice(0, PRODUCT_PROFIT_VISIBLE_LIMIT).map((p) => (
+                        {products.slice(0, PRODUCT_PROFIT_VISIBLE_LIMIT).map((p) => (
                           <tr key={p.title}>
                             <td>{p.title}</td>
                             <td>{p.quantity}</td>
-                            <td>
-                              {p.revenue} {metrics.currency ?? ""}
-                            </td>
-                            <td>{p.profit === null ? "–" : `${p.profit} ${metrics.currency ?? ""}`}</td>
+                            <td>{money(p.revenue, currency)}</td>
+                            <td>{p.profit === null ? "–" : money(p.profit, currency)}</td>
                             <td>{p.marginPercent === null ? "–" : `${p.marginPercent}%`}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                )}
-                <div className="meta">
-                  {hasOrderMetrics ? "" : (status.note ?? "")} {formatDate(status.recorded_at)}
-                </div>
-              </div>
-            );
-          })}
+                </>
+              )}
+            </div>
+          )}
+
+          <p className="updated">Opdateret {formatDate(status.recorded_at)}</p>
         </>
       )}
     </section>
@@ -367,9 +348,9 @@ const GOAL_STATUS_LABELS: Record<string, string> = { done: "Nået", paused: "Pau
 // rather than an arbitrary hue.
 const CATEGORY_ORDER = ["Salg", "Økonomi", "Kunder"];
 const CATEGORY_COLORS: Record<string, string> = {
-  Salg: "#00c2ff",
-  Økonomi: "#2fe08a",
-  Kunder: "#9757f5",
+  Salg: "#38bdf8",
+  Økonomi: "#34d399",
+  Kunder: "#a78bfa",
 };
 const FALLBACK_CATEGORY_COLOR = "#8b93a7";
 
@@ -399,126 +380,64 @@ function groupGoalsByCategory(goals: GoalRow[]): [string, GoalRow[]][] {
   return orderedKeys.map((key) => [key, groups.get(key)!]);
 }
 
-interface CustomerOpsStats {
-  totalCustomers: number | null;
-  newCustomersThisMonth: number | null;
-  returningCustomersPercent: number | null;
-  repeatPurchaseRatePercent: number | null;
-}
-
-/** A milestone like "250 kunder" tells you the destination, not how the business is actually
- *  moving right now - this sits above that category's milestones with the operational numbers
- *  that answer "how are we doing today", not just "how far from the goalpost". */
-function CustomerOpsBlock({ stats }: { stats: CustomerOpsStats }) {
-  if (stats.totalCustomers === null && stats.newCustomersThisMonth === null) {
-    return (
-      <p className="product-profit-note" style={{ marginBottom: "0.8rem" }}>
-        Kundetal kræver <code>read_customers</code>-adgang på Shopify-appen — ikke sat op endnu.
-      </p>
-    );
-  }
-  return (
-    <div className="status-stats customer-ops-stats">
-      {stats.totalCustomers !== null && (
-        <div className="stat">
-          <span className="stat-value">{stats.totalCustomers}</span>
-          <span className="stat-label">kunder i alt</span>
-        </div>
-      )}
-      {stats.newCustomersThisMonth !== null && (
-        <div className="stat">
-          <span className="stat-value">{stats.newCustomersThisMonth}</span>
-          <span className="stat-label">nye denne måned</span>
-        </div>
-      )}
-      {stats.returningCustomersPercent !== null && (
-        <div className="stat">
-          <span className="stat-value">{stats.returningCustomersPercent}%</span>
-          <span className="stat-label">tilbagevendende kunder</span>
-        </div>
-      )}
-      {stats.repeatPurchaseRatePercent !== null && (
-        <div className="stat">
-          <span className="stat-value">{stats.repeatPurchaseRatePercent}%</span>
-          <span className="stat-label">repeat purchase rate</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function GoalsPanel({
-  goals,
-  isLoading,
-  flash,
-  onToggleDone,
-  customerStats,
-}: LiveProps & { goals: GoalRow[]; onToggleDone: (id: string) => void; customerStats?: CustomerOpsStats }) {
+export function GoalsPanel({ goals, isLoading, flash, onToggleDone }: LiveProps & { goals: GoalRow[]; onToggleDone: (id: string) => void }) {
   const visible = goals.filter((g) => g.status !== "cancelled");
   const wonCount = visible.filter((g) => g.status === "done").length;
   const grouped = groupGoalsByCategory(visible);
 
   return (
     <section className={panelClass(flash && "panel-flash")}>
-      <PanelHeader icon={<IconTarget />} title="Mål" subtitle="AMSW's vision - salg, økonomi og udvidelse til udlandet" />
+      <PanelHeader
+        icon={<IconTarget />}
+        title="Mål"
+        aside={
+          visible.length > 0 && (
+            <span className="count-pill">
+              <IconTrophy /> {wonCount}/{visible.length}
+            </span>
+          )
+        }
+      />
       {isLoading ? (
         <Skeleton lines={3} />
       ) : (
         <>
-          {visible.length > 0 && (
-            <div className="goal-summary">
-              <IconTrophy className="goal-summary-icon" />
-              {wonCount} af {visible.length} mål nået
-            </div>
-          )}
           {visible.length === 0 && <p className="empty">Ingen mål endnu.</p>}
-          {grouped.map(([category, categoryGoals]) => (
-            <div className="goal-group" key={category}>
-              <div className="goal-group-label" style={{ color: categoryColor(category === "Andet" ? null : category) }}>
-                {category}
-              </div>
-              {category === "Kunder" && customerStats && <CustomerOpsBlock stats={customerStats} />}
-              {categoryGoals.map((goal) => {
-                const done = goal.status === "done";
-                const color = categoryColor(goal.category);
-                return (
-                  <label className={`goal-item${done ? " goal-item-won" : ""}`} key={goal.id}>
-                    <input type="checkbox" checked={done} disabled={done} onChange={() => onToggleDone(goal.id)} />
-                    <div className="goal-item-body">
-                      <div className="goal-item-top">
-                        <span className="goal-title">
-                          <span className="goal-dot" style={{ background: done ? "var(--green)" : color }} />
-                          {goal.title}
-                        </span>
-                        {done ? (
-                          <span className="goal-won-badge">
-                            <IconTrophy /> Nået!
+          <div className="goal-groups">
+            {grouped.map(([category, categoryGoals]) => (
+              <div className="goal-group" key={category}>
+                <p className="sub-label" style={{ color: categoryColor(category === "Andet" ? null : category) }}>
+                  {category}
+                </p>
+                {categoryGoals.map((goal) => {
+                  const done = goal.status === "done";
+                  const color = categoryColor(goal.category);
+                  return (
+                    <label className={`goal${done ? " goal-done" : ""}`} key={goal.id}>
+                      <input type="checkbox" checked={done} disabled={done} onChange={() => onToggleDone(goal.id)} />
+                      <div className="goal-body">
+                        <div className="goal-top">
+                          <span className="goal-title">{goal.title}</span>
+                          <span className="goal-value">{done ? <IconTrophy /> : `${goal.progress}%`}</span>
+                        </div>
+                        {!done && (
+                          <div className="progress">
+                            <div style={{ width: `${goal.progress}%`, background: color }} />
+                          </div>
+                        )}
+                        {(goal.status === "paused" || goal.target_date) && (
+                          <span className="meta">
+                            {goal.status === "paused" && `${GOAL_STATUS_LABELS.paused} · `}
+                            {goal.target_date ? `mål ${new Date(goal.target_date).toLocaleDateString("da-DK", { dateStyle: "medium" })}` : ""}
                           </span>
-                        ) : (
-                          <span className="goal-progress-value">{goal.progress}%</span>
                         )}
                       </div>
-                      {!done && (
-                        <div className="progress-bar">
-                          <div style={{ width: `${goal.progress}%`, background: `linear-gradient(90deg, ${color}55, ${color})`, boxShadow: `0 0 12px ${color}99` }} />
-                        </div>
-                      )}
-                      {(goal.status === "paused" || goal.target_date) && (
-                        <div className="meta">
-                          {goal.status === "paused" && (
-                            <span className={`status-pill yellow`} style={{ marginRight: "0.5rem" }}>
-                              {GOAL_STATUS_LABELS.paused}
-                            </span>
-                          )}
-                          {goal.target_date ? `mål: ${new Date(goal.target_date).toLocaleDateString("da-DK", { dateStyle: "medium" })}` : ""}
-                        </div>
-                      )}
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-          ))}
+                    </label>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         </>
       )}
     </section>
@@ -561,54 +480,51 @@ export function WhoopPanel({ statuses, isLoading, flash }: LiveProps & { statuse
 
   return (
     <section className={panelClass(flash && "panel-flash")}>
-      <PanelHeader icon={<IconRing />} title="Whoop" subtitle="Recovery, søvn og strain fra din Whoop" />
+      <PanelHeader icon={<IconRing />} title="Krop · Whoop" />
       {isLoading ? (
         <Skeleton lines={3} />
       ) : !metrics ? (
         <p className="empty">Ingen Whoop-data endnu.</p>
       ) : (
         <>
-          <div className="whoop-rings">
-            <div className="whoop-ring-item">
-              <div className="whoop-ring whoop-ring-sleep" style={ringStyle(metrics.sleepPerformancePercentage ?? 0)}>
-                <span className="whoop-ring-value">{metrics.sleepPerformancePercentage ?? "–"}%</span>
+          <div className="rings">
+            <div className="ring-item">
+              <div className={`ring ring-${state}`} style={ringStyle(metrics.recoveryScore ?? 0)}>
+                <span className="ring-value">{metrics.recoveryScore ?? "–"}%</span>
               </div>
-              <span className="whoop-ring-label">Søvn</span>
+              <span className="ring-label">Recovery</span>
             </div>
-            <div className="whoop-ring-item">
-              <div className={`whoop-ring whoop-ring-${state}`} style={ringStyle(metrics.recoveryScore ?? 0)}>
-                <span className="whoop-ring-value">{metrics.recoveryScore ?? "–"}%</span>
+            <div className="ring-item">
+              <div className="ring ring-sleep" style={ringStyle(metrics.sleepPerformancePercentage ?? 0)}>
+                <span className="ring-value">{metrics.sleepPerformancePercentage ?? "–"}%</span>
               </div>
-              <span className="whoop-ring-label">Recovery</span>
+              <span className="ring-label">Søvn</span>
             </div>
-            <div className="whoop-ring-item">
-              <div
-                className="whoop-ring whoop-ring-strain"
-                style={ringStyle(((metrics.strain ?? 0) / WHOOP_STRAIN_MAX) * 100)}
-              >
-                <span className="whoop-ring-value">{typeof metrics.strain === "number" ? metrics.strain.toFixed(1) : "–"}</span>
+            <div className="ring-item">
+              <div className="ring ring-strain" style={ringStyle(((metrics.strain ?? 0) / WHOOP_STRAIN_MAX) * 100)}>
+                <span className="ring-value">{typeof metrics.strain === "number" ? metrics.strain.toFixed(1) : "–"}</span>
               </div>
-              <span className="whoop-ring-label">Strain</span>
+              <span className="ring-label">Strain</span>
             </div>
           </div>
-          <p className={`whoop-message whoop-message-${state}`}>{WHOOP_MESSAGES[state]}</p>
+          <p className={`callout callout-${state}`}>{WHOOP_MESSAGES[state]}</p>
           {(typeof metrics.sleepDurationHours === "number" || typeof metrics.restingHeartRate === "number") && (
-            <div className="status-stats whoop-stats">
+            <div className="mini-stats">
               {typeof metrics.sleepDurationHours === "number" && (
-                <div className="stat">
-                  <span className="stat-value">{metrics.sleepDurationHours}t</span>
-                  <span className="stat-label">søvn i alt</span>
+                <div>
+                  <span className="mini-value">{metrics.sleepDurationHours}t</span>
+                  <span className="mini-label">søvn</span>
                 </div>
               )}
               {typeof metrics.restingHeartRate === "number" && (
-                <div className="stat">
-                  <span className="stat-value">{metrics.restingHeartRate}</span>
-                  <span className="stat-label">hvilepuls</span>
+                <div>
+                  <span className="mini-value">{metrics.restingHeartRate}</span>
+                  <span className="mini-label">hvilepuls</span>
                 </div>
               )}
             </div>
           )}
-          <div className="meta">Sidst opdateret: {formatDate(latest.recorded_at)}</div>
+          <p className="updated">Opdateret {formatDate(latest.recorded_at)}</p>
         </>
       )}
     </section>
@@ -617,6 +533,7 @@ export function WhoopPanel({ statuses, isLoading, flash }: LiveProps & { statuse
 
 function DraftCard({ draft, onDelete }: { draft: DraftRow; onDelete: (id: string) => void }) {
   const [copied, setCopied] = useState(false);
+  const [open, setOpen] = useState(false);
 
   async function handleCopy() {
     await navigator.clipboard.writeText(draft.content);
@@ -625,21 +542,21 @@ function DraftCard({ draft, onDelete }: { draft: DraftRow; onDelete: (id: string
   }
 
   return (
-    <div className="draft-card">
-      <div className="draft-card-header">
-        <label className="draft-request-row">
-          <input type="checkbox" onChange={() => onDelete(draft.id)} />
-          <div>
-            <div className="draft-request">{draft.request}</div>
-            <div className="meta">{formatDate(draft.created_at)}</div>
-          </div>
+    <div className="draft">
+      <div className="draft-header">
+        <label className="draft-check">
+          <input type="checkbox" onChange={() => onDelete(draft.id)} aria-label="Færdig – fjern udkast" />
         </label>
-        <button className="copy-button" onClick={handleCopy} type="button">
+        <button type="button" className="draft-request" onClick={() => setOpen((v) => !v)}>
+          <span>{draft.request}</span>
+          <span className="meta">{formatDate(draft.created_at)}</span>
+        </button>
+        <button className="ghost-button" onClick={handleCopy} type="button">
           <IconCopy />
-          {copied ? "Kopieret!" : "Kopiér"}
+          {copied ? "Kopieret" : "Kopiér"}
         </button>
       </div>
-      <pre className="draft-content">{draft.content}</pre>
+      {open && <pre className="draft-content">{draft.content}</pre>}
     </div>
   );
 }
@@ -647,8 +564,8 @@ function DraftCard({ draft, onDelete }: { draft: DraftRow; onDelete: (id: string
 export function DraftsPanel({ drafts, isLoading, flash, onDelete }: LiveProps & { drafts: DraftRow[]; onDelete: (id: string) => void }) {
   const recent = [...drafts].reverse().slice(0, 10);
   return (
-    <section className={panelClass("panel-wide", flash && "panel-flash")}>
-      <PanelHeader icon={<IconDraft />} title="Udkast" subtitle="Analyser, opsummeringer og tekster du beder botten skrive med det samme" />
+    <section className={panelClass(flash && "panel-flash")}>
+      <PanelHeader icon={<IconDraft />} title="Udkast" aside={recent.length > 0 && <span className="count">{recent.length}</span>} />
       {isLoading ? (
         <Skeleton lines={2} />
       ) : (

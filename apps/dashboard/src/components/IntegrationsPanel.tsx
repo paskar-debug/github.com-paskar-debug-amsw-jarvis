@@ -141,7 +141,7 @@ function Skeleton() {
 export function IntegrationsPanel({ states, isLoading, flash }: { states: SyncRow[]; isLoading?: boolean; flash?: boolean }) {
   if (isLoading) return <Skeleton />;
   return (
-    <div className={["integrations-strip", flash && "integrations-strip-flash"].filter(Boolean).join(" ")}>
+    <div id="system" className={["integrations-strip", flash && "integrations-strip-flash"].filter(Boolean).join(" ")}>
       {SOURCES.map((meta) => (
         <LogoChip meta={meta} state={states.find((s) => s.source === meta.key)} key={meta.key} />
       ))}
@@ -150,5 +150,23 @@ export function IntegrationsPanel({ states, isLoading, flash }: { states: SyncRo
         <ManualToolChip {...tool} key={tool.label} />
       ))}
     </div>
+  );
+}
+
+/** Compact top-bar version: one pill that says whether anything needs a look, linking down to the
+ *  full strip - the per-service detail is rarely needed, so it shouldn't take prime space. */
+export function IntegrationsSummary({ states, isLoading }: { states: SyncRow[]; isLoading?: boolean }) {
+  if (isLoading) return null;
+  const keys = [...SOURCES.map((s) => s.key), "whoop" as SyncRow["source"]];
+  const statuses = keys.map((key) => statusOf(states.find((s) => s.source === key)).status);
+  const errors = statuses.filter((s) => s === "red").length;
+  const missing = statuses.filter((s) => s === "yellow").length;
+  const tone: Status = errors > 0 ? "red" : missing > 0 ? "yellow" : "green";
+  const label = errors > 0 ? `${errors} fejl` : missing > 0 ? `${missing} ikke sat op` : "Alle systemer OK";
+  return (
+    <a href="#system" className={`system-pill system-pill-${tone}`}>
+      <span className="system-pill-dot" />
+      {label}
+    </a>
   );
 }

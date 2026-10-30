@@ -313,3 +313,19 @@ export function IconKey(props: IconProps) {
     </svg>
   );
 }
+
+export function IconSparkle(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M12 3.5 13.8 9a2 2 0 0 0 1.2 1.2l5.5 1.8-5.5 1.8a2 2 0 0 0-1.2 1.2L12 20.5 10.2 15A2 2 0 0 0 9 13.8L3.5 12 9 10.2A2 2 0 0 0 10.2 9Z" />
+    </svg>
+  );
+}
+
+export function IconChevron(props: IconProps) {
+  return (
+    <svg {...common} {...props}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}

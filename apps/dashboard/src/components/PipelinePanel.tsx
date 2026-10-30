@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import type { Database } from "@amsw/db";
-import { IconClose, IconMail, IconTasks, IconTrophy } from "./icons";
+import { IconChevron, IconClose, IconMail, IconTasks } from "./icons";
 import { panelClass, PanelHeader, QuickAdd, Skeleton } from "./panels";
 
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
@@ -11,21 +12,22 @@ interface LiveProps {
   flash?: boolean;
 }
 
-const VISIBLE_LIMIT = 6;
+const VISIBLE_LIMIT = 8;
+const DONE_LIMIT = 5;
 
-function Card({ task, onDone, onDelete }: { task: TaskRow; onDone?: () => void; onDelete: () => void }) {
+function TaskItem({ task, onDone, onDelete }: { task: TaskRow; onDone?: () => void; onDelete: () => void }) {
   return (
-    <div className="pipeline-card">
-      {onDone && (
-        <label className="pipeline-done-check">
-          <input type="checkbox" onChange={onDone} />
-        </label>
+    <div className={`task${onDone ? "" : " task-done"}`}>
+      {onDone ? (
+        <input type="checkbox" className="task-check" onChange={onDone} aria-label="Marker som udført" />
+      ) : (
+        <span className="task-check task-check-done" aria-hidden="true" />
       )}
-      <span className="pipeline-card-title">
-        {task.origin === "email_triage" && <IconMail className="pipeline-card-origin" />}
+      <span className="task-title">
+        {task.origin === "email_triage" && <IconMail className="task-origin" />}
         {task.title}
       </span>
-      <button type="button" className="task-delete-button" onClick={onDelete} aria-label="Slet">
+      <button type="button" className="row-delete" onClick={onDelete} aria-label="Slet">
         <IconClose />
       </button>
     </div>
@@ -45,41 +47,54 @@ export function PipelinePanel({
   onDelete: (id: string) => void;
   onCreate: (title: string) => Promise<void>;
 }) {
-  if (isLoading) return <Skeleton lines={3} />;
+  const [showAll, setShowAll] = useState(false);
+  const [showDone, setShowDone] = useState(false);
 
   const open = tasks
     .filter((t) => t.status === "todo" || t.status === "in_progress")
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  const visibleOpen = open.slice(0, VISIBLE_LIMIT);
+  const visibleOpen = showAll ? open : open.slice(0, VISIBLE_LIMIT);
   const done = tasks
     .filter((t) => t.status === "done")
     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-    .slice(0, VISIBLE_LIMIT);
+    .slice(0, DONE_LIMIT);
 
   return (
     <section className={panelClass(flash && "panel-flash")}>
-      <PanelHeader icon={<IconTasks />} title="Opgaver" subtitle="Godkendte forslag lander her, sammen med det du selv opretter" />
-      <QuickAdd placeholder="Tilføj opgave..." onSubmit={onCreate} />
-      <div className="pipeline-columns pipeline-columns-2">
-        <div className="pipeline-column">
-          <p className="pipeline-column-label">Åbne ({open.length})</p>
-          {open.length === 0 && <p className="empty">Ingen åbne opgaver.</p>}
-          {visibleOpen.map((task) => (
-            <Card task={task} key={task.id} onDone={() => onToggleDone(task.id)} onDelete={() => onDelete(task.id)} />
-          ))}
-          {open.length > visibleOpen.length && <p className="empty">+{open.length - visibleOpen.length} flere.</p>}
-        </div>
-
-        <div className="pipeline-column">
-          <p className="pipeline-column-label">
-            <IconTrophy className="pipeline-column-icon" /> Udført
-          </p>
-          {done.length === 0 && <p className="empty">Ingen færdige endnu.</p>}
-          {done.map((task) => (
-            <Card task={task} key={task.id} onDelete={() => onDelete(task.id)} />
-          ))}
-        </div>
-      </div>
+      <PanelHeader icon={<IconTasks />} title="Opgaver" aside={!isLoading && <span className="count">{open.length}</span>} />
+      {isLoading ? (
+        <Skeleton lines={3} />
+      ) : (
+        <>
+          <QuickAdd placeholder="Ny opgave…" onSubmit={onCreate} />
+          <div className="task-list">
+            {open.length === 0 && <p className="empty">Ingen åbne opgaver. Godt gået.</p>}
+            {visibleOpen.map((task) => (
+              <TaskItem task={task} key={task.id} onDone={() => onToggleDone(task.id)} onDelete={() => onDelete(task.id)} />
+            ))}
+          </div>
+          {open.length > VISIBLE_LIMIT && (
+            <button type="button" className="more-button" onClick={() => setShowAll((v) => !v)}>
+              {showAll ? "Vis færre" : `Vis alle ${open.length}`}
+            </button>
+          )}
+          {done.length > 0 && (
+            <div className="disclosure">
+              <button type="button" className={`disclosure-toggle${showDone ? " open" : ""}`} onClick={() => setShowDone((v) => !v)}>
+                Senest udført
+                <IconChevron />
+              </button>
+              {showDone && (
+                <div className="task-list">
+                  {done.map((task) => (
+                    <TaskItem task={task} key={task.id} onDelete={() => onDelete(task.id)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </section>
   );
 }

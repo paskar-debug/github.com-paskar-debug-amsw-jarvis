@@ -9,17 +9,28 @@ interface Message {
   content: string;
 }
 
+// Palmas stemmer (gpt-4o-mini-tts). Coral er standard: en rolig kvindestemme.
 const VOICES: { id: string; label: string }[] = [
-  { id: "alloy", label: "Alloy" },
-  { id: "echo", label: "Echo" },
-  { id: "fable", label: "Fable" },
-  { id: "onyx", label: "Onyx" },
+  { id: "coral", label: "Coral" },
+  { id: "sage", label: "Sage" },
   { id: "nova", label: "Nova" },
   { id: "shimmer", label: "Shimmer" },
+  { id: "ballad", label: "Ballad" },
 ];
-const VOICE_PREVIEW_TEXT = "Hej, sådan lyder jeg. Er det en stemme du kan lide?";
+const DEFAULT_VOICE = "coral";
+const VOICE_PREVIEW_TEXT = "Hej Paskar, jeg hedder Palma. Sådan lyder jeg.";
 const VOICE_ENABLED_KEY = "assistant-voice-enabled";
-const VOICE_NAME_KEY = "assistant-voice-name";
+// Ny nøgle, så gamle valg (fx "alloy") ikke overskriver Palmas standardstemme.
+const VOICE_NAME_KEY = "palma-voice-name";
+
+export type PalmaState = "idle" | "listening" | "thinking" | "speaking";
+/** Palma-kernen og chat-panelet taler sammen via to vindues-events, så kernen kan sidde
+ *  midt på siden uden at chat-logikken skal flyttes. */
+export const PALMA_TALK_EVENT = "palma:talk";
+export const PALMA_STATE_EVENT = "palma:state";
+function emitState(state: PalmaState) {
+  window.dispatchEvent(new CustomEvent<PalmaState>(PALMA_STATE_EVENT, { detail: state }));
+}
 
 async function authHeader(): Promise<Record<string, string>> {
   const { data } = await getSupabaseClient().auth.getSession();
@@ -36,7 +47,7 @@ export function AssistantWidget() {
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [voiceName, setVoiceName] = useState("alloy");
+  const [voiceName, setVoiceName] = useState(DEFAULT_VOICE);
   const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -47,7 +58,7 @@ export function AssistantWidget() {
     const storedEnabled = localStorage.getItem(VOICE_ENABLED_KEY);
     if (storedEnabled !== null) setVoiceEnabled(storedEnabled === "true");
     const storedVoice = localStorage.getItem(VOICE_NAME_KEY);
-    if (storedVoice) setVoiceName(storedVoice);
+    if (storedVoice && VOICES.some((v) => v.id === storedVoice)) setVoiceName(storedVoice);
   }, []);
 
   useEffect(() => {
@@ -78,8 +89,12 @@ export function AssistantWidget() {
       if (!res.ok) return;
       const blob = await res.blob();
       const audio = new Audio(URL.createObjectURL(blob));
+      emitState("speaking");
+      audio.onended = () => emitState("idle");
+      audio.onerror = () => emitState("idle");
       await audio.play();
     } catch {
+      emitState("idle");
       // Voice playback is a nice-to-have, not worth surfacing an error for.
     }
   }
@@ -96,6 +111,7 @@ export function AssistantWidget() {
     setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     setSending(true);
+    emitState("thinking");
     try {
       const headers = await authHeader();
       const res = await fetch("/api/assistant", {
@@ -107,8 +123,10 @@ export function AssistantWidget() {
       if (!res.ok || !data.reply) throw new Error(data.error ?? "Ukendt fejl.");
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply! }]);
       if (spoken && voiceEnabled) void playReply(data.reply);
+      else emitState("idle");
     } catch (err) {
       setError((err as Error).message);
+      emitState("idle");
     } finally {
       setSending(false);
     }
@@ -139,27 +157,48 @@ export function AssistantWidget() {
         } catch (err) {
           setError((err as Error).message);
           setSending(false);
+          emitState("idle");
         }
       };
       recorder.start();
       mediaRecorderRef.current = recorder;
       setRecording(true);
+      emitState("listening");
     } catch {
       setError("Ingen adgang til mikrofonen.");
+      emitState("idle");
     }
   }
 
   function stopRecording() {
     mediaRecorderRef.current?.stop();
     setRecording(false);
+    emitState("thinking");
   }
+
+  // Tryk på Palma-kernen: åbn panelet og start/stop optagelse.
+  // Ref til den nyeste udgave af funktionerne, så event-lytteren ikke bruger forældet state (fx valgt stemme).
+  const talkRef = useRef<() => void>(() => {});
+  talkRef.current = () => {
+    setOpen(true);
+    if (recording) stopRecording();
+    else void startRecording();
+  };
+  useEffect(() => {
+    function onTalk() {
+      talkRef.current();
+    }
+    window.addEventListener(PALMA_TALK_EVENT, onTalk);
+    return () => window.removeEventListener(PALMA_TALK_EVENT, onTalk);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="assistant-widget">
       {open && (
         <div className="assistant-panel">
           <div className="assistant-panel-header">
-            <span>Din assistent</span>
+            <span>Palma</span>
             <div className="assistant-header-actions">
               <button
                 type="button"
@@ -205,7 +244,7 @@ export function AssistantWidget() {
           )}
           <div className="assistant-messages" ref={scrollRef}>
             {messages.length === 0 && !sending && (
-              <p className="empty">Spørg om noget, eller bed mig oprette en opgave/aftale, huske et fakta, eller skrive et udkast.</p>
+              <p className="empty">Hej Paskar, det er Palma. Spørg om noget, eller bed mig oprette en opgave eller aftale, huske noget eller skrive et udkast.</p>
             )}
             {messages.map((m, i) => (
               <div className={`assistant-bubble assistant-bubble-${m.role}`} key={i}>
@@ -252,7 +291,7 @@ export function AssistantWidget() {
         type="button"
         className="assistant-fab"
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Luk assistent" : "Åbn assistent"}
+        aria-label={open ? "Luk chat med Palma" : "Skriv til Palma"}
       >
         <IconChat />
       </button>

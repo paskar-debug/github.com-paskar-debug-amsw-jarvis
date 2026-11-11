@@ -8,7 +8,9 @@ import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useLiveTable } from "@/lib/useLiveTable";
 import { CalendarPanel, DraftsPanel, GoalsPanel, ShopifyPanel, WhoopPanel } from "@/components/panels";
 import { PipelinePanel } from "@/components/PipelinePanel";
-import { ApprovalsPanel, TodayHero } from "@/components/TodayPanel";
+import { ApprovalsPanel } from "@/components/TodayPanel";
+import { QuotePanel } from "@/components/QuotePanel";
+import { PalmaCore } from "@/components/PalmaCore";
 import { Clock } from "@/components/Clock";
 import { WeatherPanel } from "@/components/WeatherPanel";
 import { IntegrationsPanel } from "@/components/IntegrationsPanel";
@@ -118,25 +120,19 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <TodayHero />
-
       <div className="systems-bar">
         <IntegrationsPanel states={integrationsLive.rows} isLoading={integrationsLive.isLoading} flash={integrationsLive.flash} />
       </div>
 
-      <div className="layout">
-        <div className="col col-main">
+      <div className="hud">
+        <div className="hud-side">
           <ShopifyPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
         </div>
-        <div className="col col-side">
+        <PalmaCore />
+        <div className="hud-side">
           <WhoopPanel statuses={statusesLive.rows} isLoading={statusesLive.isLoading} flash={statusesLive.flash} />
           <WeatherPanel />
         </div>
-      </div>
-
-      <div className="stack">
-        <GoalsPanel goals={goalsLive.rows} isLoading={goalsLive.isLoading} flash={goalsLive.flash} onToggleDone={handleToggleGoalDone} />
-        <ApprovalsPanel tasks={tasksLive.rows} onApprove={handleApproveSuggestion} onReject={handleRejectSuggestion} />
       </div>
 
       <div className="layout">
@@ -155,7 +151,16 @@ export default function DashboardPage() {
         </div>
         <div className="col col-side">
           <CalendarPanel events={eventsLive.rows} isLoading={eventsLive.isLoading} flash={eventsLive.flash} />
+          <section className="panel hud-quote">
+            <h2 className="hud-quote-title">Dagens tanke</h2>
+            <QuotePanel />
+          </section>
         </div>
+      </div>
+
+      <div className="stack">
+        <GoalsPanel goals={goalsLive.rows} isLoading={goalsLive.isLoading} flash={goalsLive.flash} onToggleDone={handleToggleGoalDone} />
+        <ApprovalsPanel tasks={tasksLive.rows} onApprove={handleApproveSuggestion} onReject={handleRejectSuggestion} />
       </div>
 
       <AssistantWidget />

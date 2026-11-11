@@ -10,7 +10,15 @@ async function synthesizeWithOpenAi(text: string, voice: string): Promise<TtsRes
       Authorization: `Bearer ${Deno.env.get("OPENAI_API_KEY") ?? ""}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ model: "tts-1", voice, input: text, response_format: "opus" }),
+    body: JSON.stringify({
+      // gpt-4o-mini-tts kan styres med instruktioner, så den taler dansk med dansk udtale
+      // i stedet for tts-1's amerikanske accent.
+      model: "gpt-4o-mini-tts",
+      voice,
+      input: text,
+      instructions: "Tal dansk med naturlig dansk udtale, roligt og klart, som en professionel personlig assistent.",
+      response_format: "opus",
+    }),
   });
   if (!response.ok) {
     throw new Error(`OpenAI TTS fejlede: ${response.status} ${await response.text()}`);

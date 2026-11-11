@@ -2,6 +2,8 @@ export async function transcribeVoice(audio: Uint8Array, mimeType: string, filen
   const form = new FormData();
   form.append("file", new Blob([audio], { type: mimeType }), filename);
   form.append("model", "whisper-1");
+  // Fast dansk: uden sprog-hint gætter Whisper nogle gange forkert sprog på korte beskeder.
+  form.append("language", "da");
 
   const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
     method: "POST",

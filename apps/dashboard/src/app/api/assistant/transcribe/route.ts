@@ -12,6 +12,18 @@ export async function POST(req: NextRequest) {
     headers: { Authorization: `Bearer ${getBearerToken(req)}`, "Content-Type": contentType },
     body: audio,
   });
-  if (!res.ok) return NextResponse.json({ error: await res.text() }, { status: 502 });
+  if (!res.ok) {
+    // Vis en læsbar besked i stedet for rå JSON fra OpenAI.
+    const raw = await res.text();
+    let message = "Jeg kunne ikke høre optagelsen. Prøv igen.";
+    try {
+      const parsed = JSON.parse(raw) as { error?: string };
+      if (parsed.error && !parsed.error.includes("{")) message = parsed.error;
+    } catch {
+      /* behold standardbeskeden */
+    }
+    console.error("transcribe fejl:", raw);
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
   return NextResponse.json(await res.json());
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
-import { connectMic, connectPlayback, disconnectAudio } from "@/lib/palmaAudio";
+import { connectMic, disconnectAudio, playBuffer, unlockAudio } from "@/lib/palmaAudio";
 import { IconChat, IconCheck, IconClose, IconMic, IconSend, IconSettings, IconVolume, IconVolumeOff } from "./icons";
 
 interface Message {
@@ -37,24 +37,6 @@ async function authHeader(): Promise<Record<string, string>> {
   const { data } = await getSupabaseClient().auth.getSession();
   const token = data.session?.access_token;
   return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-/** Reserve-stemme: Mac'ens egen danske stemme (kører lokalt), hvis serverens stemme fejler. */
-function speakInBrowser(text: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-    emitState("idle");
-    return;
-  }
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "da-DK";
-  const voices = window.speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith("da"));
-  const female = voices.find((v) => /sara|female|kvinde/i.test(v.name));
-  if (female ?? voices[0]) u.voice = (female ?? voices[0])!;
-  u.onstart = () => emitState("speaking");
-  u.onend = () => emitState("idle");
-  u.onerror = () => emitState("idle");
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(u);
 }
 
 export function AssistantWidget() {
@@ -106,25 +88,15 @@ export function AssistantWidget() {
         body: JSON.stringify({ text, voice: voiceOverride ?? voiceName }),
       });
       if (!res.ok) {
-        speakInBrowser(text);
-        return;
+        const detail = await res.text().catch(() => "");
+        console.error("Palma stemme fejl:", res.status, detail);
+        throw new Error(`Stemmen svarede ikke (${res.status}).`);
       }
-      const blob = await res.blob();
-      const audio = new Audio(URL.createObjectURL(blob));
-      connectPlayback(audio);
       emitState("speaking");
-      audio.onended = () => {
-        disconnectAudio();
-        emitState("idle");
-      };
-      audio.onerror = () => {
-        disconnectAudio();
-        emitState("idle");
-      };
-      await audio.play();
-    } catch {
-      speakInBrowser(text);
-      // Voice playback is a nice-to-have, not worth surfacing an error for.
+      await playBuffer(await res.arrayBuffer(), () => emitState("idle"));
+    } catch (err) {
+      emitState("idle");
+      setError(`Kunne ikke afspille Palmas stemme: ${(err as Error).message}`);
     }
   }
 
@@ -211,6 +183,7 @@ export function AssistantWidget() {
   // Ref til den nyeste udgave af funktionerne, så event-lytteren ikke bruger forældet state (fx valgt stemme).
   const talkRef = useRef<() => void>(() => {});
   talkRef.current = () => {
+    unlockAudio();
     setOpen(true);
     if (recording) stopRecording();
     else void startRecording();
@@ -261,7 +234,7 @@ export function AssistantWidget() {
                       <button
                         type="button"
                         className="assistant-icon-button assistant-voice-preview"
-                        onClick={() => previewVoice(v.id)}
+                        onClick={() => { unlockAudio(); void previewVoice(v.id); }}
                         disabled={previewingVoice !== null}
                         aria-label={`Afspil eksempel med ${v.label}`}
                       >
@@ -294,13 +267,18 @@ export function AssistantWidget() {
             className="assistant-input-row"
             onSubmit={(e) => {
               e.preventDefault();
+              unlockAudio();
               sendMessage(input, false);
             }}
           >
             <button
               type="button"
               className={`assistant-icon-button assistant-mic${recording ? " assistant-mic-active" : ""}`}
-              onClick={recording ? stopRecording : startRecording}
+              onClick={() => {
+                unlockAudio();
+                if (recording) stopRecording();
+                else void startRecording();
+              }}
               aria-label={recording ? "Stop optagelse" : "Indtal besked"}
             >
               <IconMic />

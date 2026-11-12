@@ -15,5 +15,5 @@ export async function POST(req: NextRequest) {
   if (!res.ok) return NextResponse.json({ error: await res.text() }, { status: 502 });
 
   const audio = Buffer.from(await res.arrayBuffer());
-  return new NextResponse(audio, { headers: { "Content-Type": res.headers.get("content-type") ?? "audio/ogg" } });
+  return new NextResponse(audio, { headers: { "Content-Type": res.headers.get("content-type") ?? "audio/mpeg" } });
 }

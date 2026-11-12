@@ -55,6 +55,30 @@ export function connectMic(stream: MediaStream) {
   swap(src);
 }
 
+/** Skal kaldes direkte i et tryk (klik på kuglen/send). Safari tillader kun lyd,
+ *  hvis lyd-motoren er startet af brugeren – ellers faldt den tilbage til robotstemmen. */
+export function unlockAudio() {
+  ensure();
+}
+
+/** Afspil Palmas stemme gennem lyd-motoren (virker i Safari efter unlockAudio). */
+export async function playBuffer(data: ArrayBuffer, onEnd: () => void): Promise<void> {
+  const a = ensure();
+  if (!a || !ctx) throw new Error("Browseren understøtter ikke lydafspilning.");
+  if (ctx.state === "suspended") await ctx.resume();
+  const buffer = await ctx.decodeAudioData(data);
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.connect(a);
+  a.connect(ctx.destination);
+  swap(src);
+  src.onended = () => {
+    if (current === src) swap(null);
+    onEnd();
+  };
+  src.start();
+}
+
 export function disconnectAudio() {
   swap(null);
 }

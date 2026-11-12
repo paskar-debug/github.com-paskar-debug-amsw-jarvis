@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Inter, Bebas_Neue, DM_Mono, Noto_Serif, Source_Sans_3, Rajdhani, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const bebasNeue = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--font-display" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const bebasNeue = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--font-display", display: "swap" });
 // AMSW labels/kickers, as on amsw.dk.
 const dmMono = DM_Mono({ subsets: ["latin"], weight: "400", variable: "--font-mono" });
 // Engvang's own typography, as on engvangskole.dk.

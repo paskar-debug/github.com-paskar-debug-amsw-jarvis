@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PALMA_STATE_EVENT, PALMA_TALK_EVENT, type PalmaState } from "./AssistantWidget";
+import { PalmaOrb } from "./PalmaOrb";
 
 const STATUS: Record<PalmaState, string> = {
   idle: "Klar · tryk for at tale",
@@ -39,12 +40,7 @@ export function PalmaCore() {
         onClick={() => window.dispatchEvent(new Event(PALMA_TALK_EVENT))}
         aria-label={state === "listening" ? "Stop optagelse" : "Tal til Palma"}
       >
-        <span aria-hidden="true" className="palma-ring palma-ring-1" />
-        <span aria-hidden="true" className="palma-ring palma-ring-2" />
-        <span aria-hidden="true" className="palma-ring palma-ring-3" />
-        <span aria-hidden="true" className="palma-ring palma-ring-4" />
-        {state === "listening" && <span aria-hidden="true" className="palma-ping" />}
-        <span aria-hidden="true" className="palma-glow" />
+        <PalmaOrb state={state} />
         <span className="palma-name">PALMA</span>
       </button>
       <p className="palma-status" aria-live="polite">

@@ -58,7 +58,7 @@ body {
     var(--bg);
   background-attachment: fixed;
   color: var(--text);
-  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-inter, system-ui), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 15px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
@@ -108,7 +108,7 @@ code {
 }
 
 .brand-text {
-  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-family: var(--font-display, var(--font-hud, system-ui)), var(--font-inter, system-ui), sans-serif;
   font-size: 1.35rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -283,7 +283,7 @@ code {
 }
 
 .kpi-value {
-  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-family: var(--font-display, var(--font-hud, system-ui)), var(--font-inter, system-ui), sans-serif;
   font-size: 2.3rem;
   line-height: 1.05;
   letter-spacing: 0.02em;
@@ -913,7 +913,7 @@ input[type="checkbox"]:disabled {
 }
 
 .metric-value {
-  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-family: var(--font-display, var(--font-hud, system-ui)), var(--font-inter, system-ui), sans-serif;
   font-size: 2rem;
   line-height: 1.1;
   letter-spacing: 0.02em;
@@ -1183,7 +1183,7 @@ input[type="checkbox"]:disabled {
 }
 
 .weather-now-temp {
-  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-family: var(--font-display, var(--font-hud, system-ui)), var(--font-inter, system-ui), sans-serif;
   font-size: 2.6rem;
   line-height: 1;
 }
@@ -1540,7 +1540,7 @@ input[type="checkbox"]:disabled {
   background: linear-gradient(135deg, var(--brand-bright), var(--brand));
   border: none;
   color: #04121a;
-  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-family: var(--font-display, var(--font-hud, system-ui)), var(--font-inter, system-ui), sans-serif;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1563,7 +1563,7 @@ input[type="checkbox"]:disabled {
   background: none;
   box-shadow: none;
   color: var(--muted);
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--font-inter, system-ui), sans-serif;
   font-size: 0.8rem;
   text-transform: none;
   letter-spacing: 0;
@@ -1633,7 +1633,7 @@ input[type="checkbox"]:disabled {
   justify-content: space-between;
   padding: 0.9rem 1rem;
   border-bottom: 1px solid var(--border);
-  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-family: var(--font-display, var(--font-hud, system-ui)), var(--font-inter, system-ui), sans-serif;
   font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -2034,7 +2034,7 @@ body {
 .panel-header h2,
 .hero-title,
 .zone-header h2 {
-  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-family: var(--font-display, var(--font-hud, system-ui)), var(--font-inter, system-ui), sans-serif;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2067,7 +2067,7 @@ body {
 .more-button,
 .ghost-button,
 .delta-label {
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--font-mono, var(--font-hud-mono, monospace)), ui-monospace, monospace;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   font-weight: 400;
@@ -2146,7 +2146,7 @@ body {
 
 .hero-quote {
   margin-top: 1rem;
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--font-mono, var(--font-hud-mono, monospace)), ui-monospace, monospace;
   font-style: normal;
   font-size: 0.82rem;
   color: var(--muted);
@@ -2226,7 +2226,7 @@ input[type="checkbox"]:hover {
 
 .approvals-header {
   color: var(--text);
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--font-mono, var(--font-hud-mono, monospace)), ui-monospace, monospace;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   font-size: 0.7rem;
@@ -2288,7 +2288,7 @@ input[type="checkbox"]:hover {
   padding: 2.5rem 1.75rem;
   background: var(--engvang-paper);
   color: var(--engvang-text);
-  font-family: var(--font-engvang-sans), var(--font-inter), sans-serif;
+  font-family: var(--font-engvang-sans), var(--font-inter, system-ui), sans-serif;
   border-top: 6px solid var(--engvang-accent);
 }
 
@@ -2489,7 +2489,7 @@ input[type="checkbox"]:hover {
 .approval-age {
   flex-shrink: 0;
   padding-top: 0.45rem;
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--font-mono, var(--font-hud-mono, monospace)), ui-monospace, monospace;
   font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -2537,7 +2537,7 @@ body {
 .brand-text,
 .panel-header h2,
 .hud-quote-title {
-  font-family: var(--font-hud), var(--font-inter), sans-serif;
+  font-family: var(--font-hud), var(--font-inter, system-ui), sans-serif;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -2636,3 +2636,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .palma-ring, .palma-glow, .palma-ping, .palma-status { animation: none; }
 }
+
+/* ─── Palmas partikelkugle (WebGL) og lydbølger ─── */
+.palma-orb { position: absolute; inset: 0; pointer-events: none; }
+.palma-orb-gl { position: absolute; inset: -30%; -webkit-mask-image: radial-gradient(circle, #000 52%, transparent 70%); mask-image: radial-gradient(circle, #000 52%, transparent 70%); }
+.palma-wave { position: absolute; left: 12%; right: 12%; bottom: -14%; height: 56px; width: 76%; }
+.palma-core .palma-name { color: rgba(255, 236, 244, 0.92); text-shadow: 0 0 18px rgba(255, 126, 182, 0.9); font-size: 1.15rem; align-items: flex-end; padding-bottom: 6%; }
+.palma { padding-bottom: 3rem; }
+.palma-status { margin-top: 2.2rem; }

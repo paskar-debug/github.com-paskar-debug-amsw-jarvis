@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
+import { connectMic, connectPlayback, disconnectAudio } from "@/lib/palmaAudio";
 import { IconChat, IconCheck, IconClose, IconMic, IconSend, IconSettings, IconVolume, IconVolumeOff } from "./icons";
 
 interface Message {
@@ -36,6 +37,24 @@ async function authHeader(): Promise<Record<string, string>> {
   const { data } = await getSupabaseClient().auth.getSession();
   const token = data.session?.access_token;
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+/** Reserve-stemme: Mac'ens egen danske stemme (kører lokalt), hvis serverens stemme fejler. */
+function speakInBrowser(text: string) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    emitState("idle");
+    return;
+  }
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "da-DK";
+  const voices = window.speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith("da"));
+  const female = voices.find((v) => /sara|female|kvinde/i.test(v.name));
+  if (female ?? voices[0]) u.voice = (female ?? voices[0])!;
+  u.onstart = () => emitState("speaking");
+  u.onend = () => emitState("idle");
+  u.onerror = () => emitState("idle");
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
 }
 
 export function AssistantWidget() {
@@ -86,15 +105,25 @@ export function AssistantWidget() {
         headers: { ...headers, "Content-Type": "application/json" },
         body: JSON.stringify({ text, voice: voiceOverride ?? voiceName }),
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        speakInBrowser(text);
+        return;
+      }
       const blob = await res.blob();
       const audio = new Audio(URL.createObjectURL(blob));
+      connectPlayback(audio);
       emitState("speaking");
-      audio.onended = () => emitState("idle");
-      audio.onerror = () => emitState("idle");
+      audio.onended = () => {
+        disconnectAudio();
+        emitState("idle");
+      };
+      audio.onerror = () => {
+        disconnectAudio();
+        emitState("idle");
+      };
       await audio.play();
     } catch {
-      emitState("idle");
+      speakInBrowser(text);
       // Voice playback is a nice-to-have, not worth surfacing an error for.
     }
   }
@@ -135,6 +164,7 @@ export function AssistantWidget() {
   async function startRecording() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      connectMic(stream);
       const recorder = new MediaRecorder(stream);
       chunksRef.current = [];
       recorder.ondataavailable = (e) => {
@@ -142,6 +172,7 @@ export function AssistantWidget() {
       };
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
+        disconnectAudio();
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
         setSending(true);
         try {

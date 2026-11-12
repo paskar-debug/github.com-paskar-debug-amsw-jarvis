@@ -77,7 +77,8 @@ async function callClaude(system: string, messages: unknown[]): Promise<{ conten
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-5",
+      // Haiku: hurtig og billig til hverdagsspørgsmål (ca. 1/20 af prisen for Sonnet).
+      model: "claude-haiku-5-5",
       max_tokens: 1200,
       system,
       messages,

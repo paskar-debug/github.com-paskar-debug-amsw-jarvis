@@ -16,7 +16,11 @@ async function synthesizeWithOpenAi(text: string, voice: string): Promise<TtsRes
       model: "gpt-4o-mini-tts",
       voice,
       input: text,
-      instructions: "Tal dansk med naturlig dansk udtale, roligt og klart, som en professionel personlig assistent.",
+      instructions:
+        "Du er Palma, en varm og nærværende dansk kvinde midt i 30'erne fra København. Tal naturligt, afslappet og " +
+        "venligt, som når man taler med en kollega man holder af – ikke som en oplæser eller en telefonsvarer. " +
+        "Brug et roligt tempo med små naturlige pauser, let smil i stemmen og tydelig, ægte dansk udtale med bløde d'er og stød. " +
+        "Undgå monoton og robotagtig betoning.",
       // mp3 i stedet for opus: Safari kan ikke afspille Ogg/Opus, og så faldt den tilbage til Mac'ens robotstemme.
       response_format: "mp3",
     }),

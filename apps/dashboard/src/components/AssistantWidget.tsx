@@ -10,19 +10,20 @@ interface Message {
   content: string;
 }
 
-// Palmas stemmer (gpt-4o-mini-tts). Coral er standard: en rolig kvindestemme.
+// Palmas stemmer (gpt-4o-mini-tts). Marin er OpenAI's mest naturlige kvindestemme; de andre kan prøves i indstillingerne.
 const VOICES: { id: string; label: string }[] = [
+  { id: "marin", label: "Marin (mest naturlig)" },
   { id: "coral", label: "Coral" },
   { id: "sage", label: "Sage" },
-  { id: "nova", label: "Nova" },
   { id: "shimmer", label: "Shimmer" },
+  { id: "nova", label: "Nova" },
   { id: "ballad", label: "Ballad" },
 ];
-const DEFAULT_VOICE = "coral";
-const VOICE_PREVIEW_TEXT = "Hej Paskar, jeg hedder Palma. Sådan lyder jeg.";
+const DEFAULT_VOICE = "marin";
+const VOICE_PREVIEW_TEXT = "Hej Paskar, det er Palma. Hvordan går det med dig i dag?";
 const VOICE_ENABLED_KEY = "assistant-voice-enabled";
 // Ny nøgle, så gamle valg (fx "alloy") ikke overskriver Palmas standardstemme.
-const VOICE_NAME_KEY = "palma-voice-name";
+const VOICE_NAME_KEY = "palma-voice-v2";
 
 export type PalmaState = "idle" | "listening" | "thinking" | "speaking";
 /** Palma-kernen og chat-panelet taler sammen via to vindues-events, så kernen kan sidde

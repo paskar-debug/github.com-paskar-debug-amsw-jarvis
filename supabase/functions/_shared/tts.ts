@@ -17,13 +17,14 @@ async function synthesizeWithOpenAi(text: string, voice: string): Promise<TtsRes
       voice,
       input: text,
       instructions: "Tal dansk med naturlig dansk udtale, roligt og klart, som en professionel personlig assistent.",
-      response_format: "opus",
+      // mp3 i stedet for opus: Safari kan ikke afspille Ogg/Opus, og så faldt den tilbage til Mac'ens robotstemme.
+      response_format: "mp3",
     }),
   });
   if (!response.ok) {
     throw new Error(`OpenAI TTS fejlede: ${response.status} ${await response.text()}`);
   }
-  return { audio: await response.arrayBuffer(), format: "ogg" };
+  return { audio: await response.arrayBuffer(), format: "mp3" };
 }
 
 async function synthesizeWithElevenLabs(text: string, voiceId: string): Promise<TtsResult> {

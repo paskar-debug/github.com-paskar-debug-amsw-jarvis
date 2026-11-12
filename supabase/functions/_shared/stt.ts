@@ -4,6 +4,8 @@ export async function transcribeVoice(audio: Uint8Array, mimeType: string, filen
   form.append("model", "gpt-4o-mini-transcribe");
   // Fast dansk: uden sprog-hint gætter Whisper nogle gange forkert sprog på korte beskeder.
   form.append("language", "da");
+  // Hjælper genkendelsen med navne og fagord, Paskar typisk siger.
+  form.append("prompt", "Paskar taler dansk til sin assistent Palma om AMSW, Shopify, ordrer, salg, Whoop, Todoist, kalender, Engvang og Dinero.");
 
   const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
     method: "POST",

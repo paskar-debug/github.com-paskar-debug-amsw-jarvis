@@ -32,18 +32,21 @@ async function synthesizeWithOpenAi(text: string, voice: string): Promise<TtsRes
 }
 
 async function synthesizeWithElevenLabs(text: string, voiceId: string): Promise<TtsResult> {
-  const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=opus_48000_64`, {
+  // Eleven v4: ElevenLabs' mest følelsesfulde model. mp3, så Safari kan afspille den.
+  const model = Deno.env.get("ELEVENLABS_MODEL") ?? "eleven_v4";
+  const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
     method: "POST",
     headers: {
       "xi-api-key": Deno.env.get("ELEVENLABS_API_KEY") ?? "",
       "Content-Type": "application/json",
+      Accept: "audio/mpeg",
     },
-    body: JSON.stringify({ text, model_id: "eleven_multilingual_v2" }),
+    body: JSON.stringify({ text, model_id: model, language_code: "da" }),
   });
   if (!response.ok) {
     throw new Error(`ElevenLabs TTS fejlede: ${response.status} ${await response.text()}`);
   }
-  return { audio: await response.arrayBuffer(), format: "ogg" };
+  return { audio: await response.arrayBuffer(), format: "mp3" };
 }
 
 /** `voiceOverride` lets the caller pick a specific OpenAI voice per-request (ignored for ElevenLabs,

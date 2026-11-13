@@ -2518,8 +2518,8 @@ input[type="checkbox"]:hover {
   --accent-soft: rgba(127, 216, 255, 0.14);
   --brand: #7fd8ff;
   --brand-bright: #7fd8ff;
-  --palma: #ff7eb6;
-  --palma-soft: rgba(255, 126, 182, 0.35);
+  --palma: #4fd6ff;
+  --palma-soft: rgba(79, 214, 255, 0.35);
   --radius: 6px;
   --radius-sm: 4px;
 }
@@ -2580,13 +2580,13 @@ body {
 }
 .palma-core:focus-visible { outline: 2px solid var(--palma); outline-offset: 6px; }
 .palma-ring, .palma-ping, .palma-glow { position: absolute; border-radius: 50%; pointer-events: none; }
-.palma-ring-1 { inset: 0; border: 1px dashed rgba(255, 126, 182, 0.35); animation: palma-spin 24s linear infinite; }
-.palma-ring-2 { inset: 6%; border: 2px solid transparent; border-top-color: rgba(255, 126, 182, 0.85); border-bottom-color: rgba(255, 126, 182, 0.25); animation: palma-spin-rev 38s linear infinite; }
-.palma-ring-3 { inset: 14%; border: 1px solid rgba(255, 126, 182, 0.25); border-left-color: var(--palma); border-right-color: var(--palma); animation: palma-spin 24s linear infinite; }
-.palma-ring-4 { inset: 22%; border: 6px solid transparent; border-top-color: rgba(255, 126, 182, 0.55); animation: palma-spin-rev 38s linear infinite; }
+.palma-ring-1 { inset: 0; border: 1px dashed rgba(79, 214, 255, 0.35); animation: palma-spin 24s linear infinite; }
+.palma-ring-2 { inset: 6%; border: 2px solid transparent; border-top-color: rgba(79, 214, 255, 0.85); border-bottom-color: rgba(79, 214, 255, 0.25); animation: palma-spin-rev 38s linear infinite; }
+.palma-ring-3 { inset: 14%; border: 1px solid rgba(79, 214, 255, 0.25); border-left-color: var(--palma); border-right-color: var(--palma); animation: palma-spin 24s linear infinite; }
+.palma-ring-4 { inset: 22%; border: 6px solid transparent; border-top-color: rgba(79, 214, 255, 0.55); animation: palma-spin-rev 38s linear infinite; }
 .palma-glow {
   inset: 31%;
-  background: radial-gradient(circle, rgba(255, 214, 233, 0.97) 0%, rgba(255, 126, 182, 0.6) 30%, rgba(140, 30, 80, 0.28) 62%, transparent 72%);
+  background: radial-gradient(circle, rgba(220, 246, 255, 0.97) 0%, rgba(79, 214, 255, 0.6) 30%, rgba(20, 80, 140, 0.28) 62%, transparent 72%);
   box-shadow: 0 0 60px var(--palma-soft), inset 0 0 30px rgba(255, 255, 255, 0.35);
   animation: palma-breathe 4.2s ease-in-out infinite;
 }
@@ -2594,7 +2594,7 @@ body {
 .palma-name {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   font-family: var(--font-hud), sans-serif; font-weight: 700; font-size: 1.6rem; letter-spacing: 0.4em; padding-left: 0.4em;
-  color: #2a0614;
+  color: #021622;
 }
 .palma-listening .palma-ring-1, .palma-listening .palma-ring-3 { animation-duration: 5s; }
 .palma-listening .palma-ring-2, .palma-listening .palma-ring-4 { animation-duration: 8s; }
@@ -2619,10 +2619,10 @@ body {
 .hud-quote .hero-quote-author { display: block; margin-top: 0.4rem; font-family: var(--font-hud-mono), monospace; font-size: 0.72rem; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; }
 
 /* Chat-knappen og panelet i Palmas farve */
-.assistant-fab { background: var(--palma); color: #2a0614; border-radius: 50%; box-shadow: 0 0 24px var(--palma-soft); }
-.assistant-panel { background: rgba(6, 12, 20, 0.96); border: 1px solid rgba(255, 126, 182, 0.35); border-radius: var(--radius); }
+.assistant-fab { background: var(--palma); color: #021622; border-radius: 50%; box-shadow: 0 0 24px var(--palma-soft); }
+.assistant-panel { background: rgba(6, 12, 20, 0.96); border: 1px solid rgba(79, 214, 255, 0.35); border-radius: var(--radius); }
 .assistant-panel-header { font-family: var(--font-hud), sans-serif; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--palma); }
-.assistant-mic-active { background: var(--palma); color: #2a0614; }
+.assistant-mic-active { background: var(--palma); color: #021622; }
 
 @media (max-width: 1080px) {
   .hud { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -2641,6 +2641,6 @@ body {
 .palma-orb { position: absolute; inset: 0; pointer-events: none; }
 .palma-orb-gl { position: absolute; inset: -30%; -webkit-mask-image: radial-gradient(circle, #000 52%, transparent 70%); mask-image: radial-gradient(circle, #000 52%, transparent 70%); }
 .palma-wave { position: absolute; left: 12%; right: 12%; bottom: -14%; height: 56px; width: 76%; }
-.palma-core .palma-name { color: rgba(255, 236, 244, 0.92); text-shadow: 0 0 18px rgba(255, 126, 182, 0.9); font-size: 1.15rem; align-items: flex-end; padding-bottom: 6%; }
+.palma-core .palma-name { color: rgba(234, 248, 255, 0.95); text-shadow: 0 0 18px rgba(79, 214, 255, 0.9); font-size: 1.15rem; align-items: flex-end; padding-bottom: 6%; }
 .palma { padding-bottom: 3rem; }
 .palma-status { margin-top: 2.2rem; }

@@ -17,7 +17,7 @@ async function synthesizeWithOpenAi(text: string, voice: string): Promise<TtsRes
       voice,
       input: text,
       instructions:
-        "Du er Palma, en varm og nærværende dansk kvinde midt i 30'erne fra København. Tal naturligt, afslappet og " +
+        "Du er en varm og nærværende dansk mand midt i 30'erne fra København. Tal naturligt, afslappet og " +
         "venligt, som når man taler med en kollega man holder af – ikke som en oplæser eller en telefonsvarer. " +
         "Brug et roligt tempo med små naturlige pauser, let smil i stemmen og tydelig, ægte dansk udtale med bløde d'er og stød. " +
         "Undgå monoton og robotagtig betoning.",

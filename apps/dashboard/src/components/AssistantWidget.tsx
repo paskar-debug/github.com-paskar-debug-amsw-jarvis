@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { connectMic, disconnectAudio, playBuffer, unlockAudio } from "@/lib/palmaAudio";
+import { ASSISTANT_NAME } from "@/lib/assistantName";
 import { IconChat, IconCheck, IconClose, IconMic, IconSend, IconSettings, IconVolume, IconVolumeOff } from "./icons";
 
 interface Message {
@@ -10,20 +11,19 @@ interface Message {
   content: string;
 }
 
-// Palmas stemmer (gpt-4o-mini-tts). Marin er OpenAI's mest naturlige kvindestemme; de andre kan prøves i indstillingerne.
+// Assistentens stemmer (gpt-4o-mini-tts). Cedar er OpenAI's mest naturlige mandsstemme.
 const VOICES: { id: string; label: string }[] = [
-  { id: "marin", label: "Marin (mest naturlig)" },
-  { id: "coral", label: "Coral" },
-  { id: "sage", label: "Sage" },
-  { id: "shimmer", label: "Shimmer" },
-  { id: "nova", label: "Nova" },
-  { id: "ballad", label: "Ballad" },
+  { id: "cedar", label: "Cedar (mest naturlig)" },
+  { id: "ash", label: "Ash" },
+  { id: "verse", label: "Verse" },
+  { id: "echo", label: "Echo" },
+  { id: "onyx", label: "Onyx" },
 ];
-const DEFAULT_VOICE = "marin";
-const VOICE_PREVIEW_TEXT = "Hej Paskar, det er Palma. Hvordan går det med dig i dag?";
+const DEFAULT_VOICE = "cedar";
+const VOICE_PREVIEW_TEXT = `Hej Paskar, det er ${ASSISTANT_NAME}. Hvordan går det med dig i dag?`;
 const VOICE_ENABLED_KEY = "assistant-voice-enabled";
 // Ny nøgle, så gamle valg (fx "alloy") ikke overskriver Palmas standardstemme.
-const VOICE_NAME_KEY = "palma-voice-v2";
+const VOICE_NAME_KEY = "assistant-voice-v3";
 
 export type PalmaState = "idle" | "listening" | "thinking" | "speaking";
 /** Palma-kernen og chat-panelet taler sammen via to vindues-events, så kernen kan sidde
@@ -97,7 +97,7 @@ export function AssistantWidget() {
       await playBuffer(await res.arrayBuffer(), () => emitState("idle"));
     } catch (err) {
       emitState("idle");
-      setError(`Kunne ikke afspille Palmas stemme: ${(err as Error).message}`);
+      setError(`Kunne ikke afspille stemmen: ${(err as Error).message}`);
     }
   }
 
@@ -203,7 +203,7 @@ export function AssistantWidget() {
       {open && (
         <div className="assistant-panel">
           <div className="assistant-panel-header">
-            <span>Palma</span>
+            <span>{ASSISTANT_NAME}</span>
             <div className="assistant-header-actions">
               <button
                 type="button"
@@ -249,7 +249,7 @@ export function AssistantWidget() {
           )}
           <div className="assistant-messages" ref={scrollRef}>
             {messages.length === 0 && !sending && (
-              <p className="empty">Hej Paskar, det er Palma. Spørg om noget, eller bed mig oprette en opgave eller aftale, huske noget eller skrive et udkast.</p>
+              <p className="empty">Hej Paskar, det er {ASSISTANT_NAME}. Spørg om noget, eller bed mig oprette en opgave eller aftale, huske noget eller skrive et udkast.</p>
             )}
             {messages.map((m, i) => (
               <div className={`assistant-bubble assistant-bubble-${m.role}`} key={i}>
@@ -301,7 +301,7 @@ export function AssistantWidget() {
         type="button"
         className="assistant-fab"
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Luk chat med Palma" : "Skriv til Palma"}
+        aria-label={open ? `Luk chat med ${ASSISTANT_NAME}` : `Skriv til ${ASSISTANT_NAME}`}
       >
         <IconChat />
       </button>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { PALMA_STATE_EVENT, PALMA_TALK_EVENT, type PalmaState } from "./AssistantWidget";
 import { PalmaOrb } from "./PalmaOrb";
+import { ASSISTANT_NAME } from "@/lib/assistantName";
 
 const STATUS: Record<PalmaState, string> = {
   idle: "Klar · tryk for at tale",
@@ -18,7 +19,7 @@ function greeting(): string {
   return "God aften";
 }
 
-/** Palma i midten af Kontoret: en lysende kerne der pulserer efter hvad hun laver. */
+/** Assistenten i midten af Kontoret: en lysende kerne der pulserer efter hvad hun laver. */
 export function PalmaCore() {
   const [state, setState] = useState<PalmaState>("idle");
   const [hello, setHello] = useState("");
@@ -33,15 +34,15 @@ export function PalmaCore() {
   }, []);
 
   return (
-    <section className="palma" aria-label="Palma">
+    <section className="palma" aria-label={ASSISTANT_NAME}>
       <button
         type="button"
         className={`palma-core palma-${state}`}
         onClick={() => window.dispatchEvent(new Event(PALMA_TALK_EVENT))}
-        aria-label={state === "listening" ? "Stop optagelse" : "Tal til Palma"}
+        aria-label={state === "listening" ? "Stop optagelse" : `Tal til ${ASSISTANT_NAME}`}
       >
         <PalmaOrb state={state} />
-        <span className="palma-name">PALMA</span>
+        <span className="palma-name">{ASSISTANT_NAME.toUpperCase()}</span>
       </button>
       <p className="palma-status" aria-live="polite">
         {STATUS[state]}

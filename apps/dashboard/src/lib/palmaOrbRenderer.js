@@ -1,24 +1,24 @@
 "use client";
 // @ts-nocheck
 /*
- * Partikelkugle til Palma. Tilpasset (farver) fra bertrandmbanwi/Jarvis
+ * Partikelkugle til Palma. Fra bertrandmbanwi/Jarvis
  * https://github.com/bertrandmbanwi/Jarvis – MIT License, Copyright (c) 2026 bertrandmbanwi.
  */
 
 const C = {
-  // Palma: lyserød udgave af den originale cyan-palet.
-  cyan: [1.0, 0.494, 0.714],
-  cyanBrite: [1.0, 0.761, 0.867],
-  cyanDeep: [0.839, 0.2, 0.494],
-  cyanPale: [1.0, 0.612, 0.796],
-  speakCore: [1.0, 0.93, 0.95],
-  speakPart: [1.0, 0.55, 0.78],
-  speakGlow: [0.86, 0.3, 0.6],
+  // Assistentens kugle: den originale blå palet.
+  cyan: [0.0, 0.832, 1.0],
+  cyanBrite: [0.549, 0.882, 1.0],
+  cyanDeep: [0.0, 0.549, 0.863],
+  cyanPale: [0.314, 0.784, 1.0],
+  speakCore: [1.0, 0.92, 0.78],
+  speakPart: [0.2, 0.78, 0.92],
+  speakGlow: [0.1, 0.62, 0.82],
   white: [1.0, 1.0, 1.0],
   errRed: [1.0, 0.314, 0.157],
   errPale: [1.0, 0.627, 0.549],
-  thinkA: [1.0, 0.68, 0.88],
-  thinkB: [0.8, 0.35, 0.7],
+  thinkA: [0.35, 0.72, 0.95],
+  thinkB: [0.2, 0.58, 0.88],
 };
 
 export const ORB_STATES = {
@@ -631,7 +631,7 @@ export function createJarvisOrbRenderer(THREE, mount, options = {}) {
     }
     const rGeom = new THREE.BufferGeometry().setFromPoints(pts);
     const rMat = new THREE.LineBasicMaterial({
-      color: 0xff7eb6,
+      color: 0x00d4ff,
       transparent: true,
       opacity: 0.12,
       blending: THREE.AdditiveBlending,

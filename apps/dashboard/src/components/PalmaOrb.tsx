@@ -59,7 +59,7 @@ export function PalmaOrb({ state }: { state: PalmaOrbState }) {
           const v = freq ? freq[idx] / 255 : 0;
           const idle = 0.06 + 0.04 * Math.sin(performance.now() / 600 + i * 0.5);
           const bh = Math.max(2, (freq ? v : idle) * h * (1 - d * 0.35));
-          g.fillStyle = `rgba(255, ${Math.round(126 + 80 * (1 - d))}, ${Math.round(182 + 40 * (1 - d))}, ${0.35 + 0.6 * (1 - d)})`;
+          g.fillStyle = `rgba(${Math.round(60 + 90 * (1 - d))}, ${Math.round(200 + 35 * (1 - d))}, 255, ${0.35 + 0.6 * (1 - d)})`;
           g.fillRect(i * (bw + gap), (h - bh) / 2, bw, bh);
         }
       }
